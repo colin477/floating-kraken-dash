@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { User, UserProfile, Recipe } from '@/types';
 import { storage } from '@/lib/storage';
 import { AuthForm } from '@/components/AuthForm';
+import { useAuth } from '@/contexts/AuthContext';
 import { TableSettingChoice } from '@/components/TableSettingChoice';
 import { ProfileSetup } from '@/components/ProfileSetup';
 import { Dashboard } from '@/components/Dashboard';
@@ -19,14 +20,29 @@ import { ShoppingListBuilder } from '@/components/ShoppingListBuilder';
 import { ShoppingListManager } from '@/components/ShoppingListManager';
 import { LeftoverManager } from '@/components/LeftoverManager';
 import { FamilyMembers } from '@/components/FamilyMembers';
+import { shouldBypassAuth, isDemoModeEnabled } from '@/lib/demoMode';
 
 const Index = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const { user: authUser, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  
+  // Demo mode support
+  const demoModeEnabled = isDemoModeEnabled();
+  const bypassAuth = shouldBypassAuth();
+  const effectivelyAuthenticated = isAuthenticated || bypassAuth;
+  
+  // Create a demo user when in demo mode
+  const effectiveUser = authUser || (bypassAuth ? {
+    id: 'demo-user',
+    email: 'demo@example.com',
+    name: 'Demo User',
+    createdAt: new Date().toISOString(),
+    subscription: 'basic' as const,
+    token: 'demo-token'
+  } : null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [setupLevel, setSetupLevel] = useState<'basic' | 'medium' | 'full' | null>(null);
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
   const [editingListId, setEditingListId] = useState<string | null>(null);
 
@@ -42,21 +58,15 @@ const Index = () => {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
     
-    // Check for existing user session
-    const savedUser = storage.getUser();
-    const savedProfile = storage.getProfile();
-    
-    if (savedUser) {
-      setUser(savedUser);
+    // Load profile when user is authenticated (or in demo mode)
+    if (effectivelyAuthenticated && effectiveUser) {
+      const savedProfile = storage.getProfile();
       setProfile(savedProfile);
       setIsNewUser(false); // Existing user
     }
-    
-    setIsLoading(false);
-  }, []);
+  }, [isAuthenticated, authUser]);
 
   const handleAuthSuccess = (newUser: User, isNewUserFlag: boolean) => {
-    setUser(newUser);
     setIsNewUser(isNewUserFlag);
     
     if (!isNewUserFlag) {
@@ -76,22 +86,21 @@ const Index = () => {
     setProfile(savedProfile);
     
     // Update user subscription based on selected level
-    if (user) {
+    if (authUser) {
       const subscriptionMapping = {
         'basic': 'free' as const,
-        'medium': 'basic' as const, 
+        'medium': 'basic' as const,
         'full': 'premium' as const
       };
       
       const updatedUser = {
-        ...user,
+        ...authUser,
         subscription: subscriptionMapping[selectedLevel],
         // Remove trial end date for premium users
         ...(selectedLevel === 'full' ? { trialEndsAt: undefined } : {})
       };
       
       storage.setUser(updatedUser);
-      setUser(updatedUser);
     }
     
     setSetupLevel(null); // Clear setup level after completion
@@ -99,8 +108,7 @@ const Index = () => {
   };
 
   const handleLogout = () => {
-    storage.clearUser();
-    setUser(null);
+    logout();
     setProfile(null);
     setSetupLevel(null);
     setCurrentPage('dashboard');
@@ -118,6 +126,12 @@ const Index = () => {
         setCurrentPage('recipe-detail');
       }
     } else {
+      // Refresh profile data when navigating back to dashboard
+      if (page === 'dashboard') {
+        const updatedProfile = storage.getProfile();
+        setProfile(updatedProfile);
+      }
+      
       setCurrentPage(page);
       setSelectedRecipe(null);
       setEditingListId(null);
@@ -134,7 +148,7 @@ const Index = () => {
     setCurrentPage('edit-shopping-list');
   };
 
-  if (isLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -145,18 +159,18 @@ const Index = () => {
     );
   }
 
-  // Show auth form if no user
-  if (!user) {
+  // Show auth form if not authenticated (unless demo mode bypasses auth)
+  if (!effectivelyAuthenticated || !effectiveUser) {
     return <AuthForm onAuthSuccess={handleAuthSuccess} />;
   }
 
   // For existing users (login), skip plan selection and go to dashboard
-  if (!isNewUser && user) {
+  if (!isNewUser && effectiveUser) {
     // Render current page for existing users
     const renderCurrentPage = () => {
       switch (currentPage) {
         case 'dashboard':
-          return <Dashboard user={user} profile={profile} onNavigate={handleNavigate} />;
+          return <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />;
         case 'receipt-scan':
           return <ReceiptScan onBack={() => handleNavigate('dashboard')} />;
         case 'meal-photo':
@@ -167,9 +181,9 @@ const Index = () => {
           return <CreateRecipe onBack={() => handleNavigate('dashboard')} />;
         case 'meal-planner':
           return profile ? (
-            <MealPlanner user={user} profile={profile} onBack={() => handleNavigate('dashboard')} />
+            <MealPlanner user={effectiveUser} profile={profile} onBack={() => handleNavigate('dashboard')} />
           ) : (
-            <Dashboard user={user} profile={profile} onNavigate={handleNavigate} />
+            <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />
           );
         case 'shopping-lists':
           return (
@@ -186,31 +200,31 @@ const Index = () => {
         case 'leftovers':
           return <LeftoverManager onBack={() => handleNavigate('dashboard')} />;
         case 'community':
-          return <Community user={user} onBack={() => handleNavigate('dashboard')} />;
+          return <Community user={effectiveUser} onBack={() => handleNavigate('dashboard')} />;
         case 'profile':
           return profile ? (
-            <Profile user={user} profile={profile} onBack={() => handleNavigate('dashboard')} onLogout={handleLogout} />
+            <Profile user={effectiveUser} profile={profile} onBack={() => handleNavigate('dashboard')} onLogout={handleLogout} />
           ) : (
-            <Dashboard user={user} profile={profile} onNavigate={handleNavigate} />
+            <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />
           );
         case 'family-members':
           return profile ? (
-            <FamilyMembers user={user} profile={profile} onBack={() => handleNavigate('dashboard')} />
+            <FamilyMembers user={effectiveUser} profile={profile} onBack={() => handleNavigate('dashboard')} />
           ) : (
-            <Dashboard user={user} profile={profile} onNavigate={handleNavigate} />
+            <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />
           );
         case 'recipes':
-          return <Recipes user={user} onBack={() => handleNavigate('dashboard')} onRecipeSelect={handleRecipeSelect} onNavigate={handleNavigate} />;
+          return <Recipes user={effectiveUser} onBack={() => handleNavigate('dashboard')} onRecipeSelect={handleRecipeSelect} onNavigate={handleNavigate} />;
         case 'recipe-detail':
           return selectedRecipe ? (
             <RecipeDetail recipe={selectedRecipe} onBack={() => handleNavigate('recipes')} />
           ) : (
-            <Dashboard user={user} profile={profile} onNavigate={handleNavigate} />
+            <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />
           );
         case 'pantry':
           return <Pantry onBack={() => handleNavigate('dashboard')} />;
         default:
-          return <Dashboard user={user} profile={profile} onNavigate={handleNavigate} />;
+          return <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />;
       }
     };
 
@@ -246,16 +260,16 @@ const Index = () => {
   // Show profile setup if new user exists, setup level chosen, but no profile
   if (isNewUser && !profile && setupLevel) {
     return (
-      <ProfileSetup 
-        userId={user.id} 
+      <ProfileSetup
+        userId={effectiveUser.id}
         level={setupLevel}
-        onComplete={() => handleProfileComplete(setupLevel)} 
+        onComplete={() => handleProfileComplete(setupLevel)}
       />
     );
   }
 
   // Fallback to dashboard
-  return <Dashboard user={user} profile={profile} onNavigate={handleNavigate} />;
+  return <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />;
 };
 
 export default Index;

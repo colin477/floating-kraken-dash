@@ -5,6 +5,7 @@ export interface User {
   createdAt: string;
   subscription: 'free' | 'basic' | 'premium';
   trialEndsAt?: string;
+  token?: string; // JWT token for API authentication
   monthlyUsage?: {
     receiptScans: number;
     mealPlans: number;
@@ -37,12 +38,98 @@ export interface FamilyMember {
 
 export interface PantryItem {
   id: string;
+  user_id: string;
   name: string;
+  category: PantryCategory;
   quantity: number;
-  unit: string;
-  expirationDate?: string;
-  source: 'receipt' | 'manual';
-  addedAt: string;
+  unit: PantryUnit;
+  expiration_date?: string;
+  purchase_date?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  days_until_expiration?: number;
+}
+
+export interface PantryItemCreate {
+  name: string;
+  category: PantryCategory;
+  quantity: number;
+  unit: PantryUnit;
+  expiration_date?: string;
+  purchase_date?: string;
+  notes?: string;
+}
+
+export interface PantryItemUpdate {
+  name?: string;
+  category?: PantryCategory;
+  quantity?: number;
+  unit?: PantryUnit;
+  expiration_date?: string;
+  purchase_date?: string;
+  notes?: string;
+}
+
+export enum PantryCategory {
+  PRODUCE = "produce",
+  DAIRY = "dairy",
+  MEAT = "meat",
+  SEAFOOD = "seafood",
+  GRAINS = "grains",
+  CANNED_GOODS = "canned_goods",
+  FROZEN = "frozen",
+  BEVERAGES = "beverages",
+  SNACKS = "snacks",
+  CONDIMENTS = "condiments",
+  SPICES = "spices",
+  BAKING = "baking",
+  OTHER = "other"
+}
+
+export enum PantryUnit {
+  PIECE = "piece",
+  POUND = "lb",
+  OUNCE = "oz",
+  GRAM = "g",
+  KILOGRAM = "kg",
+  CUP = "cup",
+  TABLESPOON = "tbsp",
+  TEASPOON = "tsp",
+  LITER = "L",
+  MILLILITER = "ml",
+  GALLON = "gal",
+  QUART = "qt",
+  PINT = "pt",
+  FLUID_OUNCE = "fl oz",
+  PACKAGE = "package",
+  CAN = "can",
+  BOTTLE = "bottle",
+  BAG = "bag",
+  BOX = "box",
+  CONTAINER = "container"
+}
+
+export interface PantryItemsListResponse {
+  items: PantryItem[];
+  total_count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface ExpiringItemsResponse {
+  expiring_soon: PantryItem[];
+  expired: PantryItem[];
+  days_threshold: number;
+}
+
+export interface PantryStatsResponse {
+  total_items: number;
+  items_by_category: Record<string, number>;
+  expiring_soon_count: number;
+  expired_count: number;
+  total_value_estimate?: number;
 }
 
 export interface Recipe {

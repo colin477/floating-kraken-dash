@@ -3,7 +3,8 @@ Authentication router for user signup, login, and logout
 """
 
 from datetime import timedelta
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Form
+from fastapi.security import OAuth2PasswordRequestForm
 from app.models.responses import SuccessResponse
 from app.models.auth import UserCreate, UserLogin, LoginResponse, UserResponse
 from app.crud.users import create_user, authenticate_user, update_user_last_login, create_user_indexes
@@ -71,16 +72,83 @@ async def signup(user_data: UserCreate):
         )
 
 
+@router.post("/register", response_model=LoginResponse, status_code=status.HTTP_201_CREATED)
+async def register(user_data: UserCreate):
+    """
+    User registration endpoint (alias for signup)
+    
+    Creates a new user account with email and password validation.
+    This endpoint provides compatibility with frontend expectations.
+    """
+    return await signup(user_data)
+
+
 @router.post("/login", response_model=LoginResponse)
 async def login(user_credentials: UserLogin):
     """
-    User login endpoint
+    User login endpoint (JSON format)
     
     Authenticates user with email and password, returns JWT token on success.
     """
     try:
         # Authenticate user
         user = await authenticate_user(user_credentials.email, user_credentials.password)
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Create access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": str(user["_id"]), "email": user["email"]},
+            expires_delta=access_token_expires
+        )
+        
+        # Update last login
+        await update_user_last_login(str(user["_id"]))
+        
+        # Prepare user response
+        user_response = UserResponse(
+            id=str(user["_id"]),
+            email=user["email"],
+            full_name=user["full_name"],
+            created_at=user["created_at"],
+            updated_at=user["updated_at"],
+            is_active=user["is_active"]
+        )
+        
+        # Return login response with token and user info
+        return LoginResponse(
+            access_token=access_token,
+            token_type="bearer",
+            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convert to seconds
+            user=user_response
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error during login"
+        )
+
+
+@router.post("/login-form", response_model=LoginResponse)
+async def login_form(form_data: OAuth2PasswordRequestForm = Depends()):
+    """
+    User login endpoint (form data format)
+    
+    Authenticates user with form data (username/password), returns JWT token on success.
+    This endpoint provides compatibility with frontend form submissions.
+    """
+    try:
+        # Authenticate user (username field contains email)
+        user = await authenticate_user(form_data.username, form_data.password)
         
         if not user:
             raise HTTPException(

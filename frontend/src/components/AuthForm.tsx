@@ -8,12 +8,14 @@ import { Separator } from '@/components/ui/separator';
 import { User, UserProfile } from '@/types';
 import { storage } from '@/lib/storage';
 import { showSuccess, showError } from '@/utils/toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AuthFormProps {
   onAuthSuccess: (user: User, isNewUser: boolean) => void;
 }
 
 export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
+  const { login, register } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -48,47 +50,30 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Check if user already exists
-    const existingUser = storage.getUser();
-    if (existingUser) {
-      // Ensure user has a profile
+    try {
+      await login(formData.email, formData.password);
+      
+      // Create default profile if needed
       let existingProfile = storage.getProfile();
       if (!existingProfile) {
-        existingProfile = createDefaultProfile(existingUser.id);
-        storage.setProfile(existingProfile);
+        const storedUser = storage.getUser();
+        if (storedUser) {
+          existingProfile = createDefaultProfile(storedUser.id);
+          storage.setProfile(existingProfile);
+        }
       }
       
       showSuccess('Welcome back to EZ Eatin\'!');
-      onAuthSuccess(existingUser, false); // false = existing user
+      const user = storage.getUser();
+      if (user) {
+        onAuthSuccess(user, false); // false = existing user
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+      showError(error instanceof Error ? error.message : 'Login failed');
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    // Simulate login for demo purposes - treat as existing user
-    setTimeout(() => {
-      const user: User = {
-        id: Date.now().toString(),
-        email: formData.email,
-        name: formData.email.split('@')[0],
-        createdAt: new Date().toISOString(),
-        subscription: 'basic', // Default to basic for login
-        monthlyUsage: {
-          receiptScans: 0,
-          mealPlans: 0,
-          communityPosts: 0
-        }
-      };
-
-      // Create default profile for login
-      const defaultProfile = createDefaultProfile(user.id);
-      
-      storage.setUser(user);
-      storage.setProfile(defaultProfile);
-      
-      showSuccess('Welcome back to EZ Eatin\'!');
-      onAuthSuccess(user, false); // false = existing user (skip plan selection)
-      setIsLoading(false);
-    }, 1000);
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -101,26 +86,20 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
 
     setIsLoading(true);
 
-    // Simulate signup - this should go through plan selection
-    setTimeout(() => {
-      const user: User = {
-        id: Date.now().toString(),
-        email: formData.email,
-        name: formData.name,
-        createdAt: new Date().toISOString(),
-        subscription: 'free',
-        monthlyUsage: {
-          receiptScans: 0,
-          mealPlans: 0,
-          communityPosts: 0
-        }
-      };
-
-      storage.setUser(user);
+    try {
+      await register(formData.email, formData.password, formData.name);
+      
       showSuccess('Welcome to EZ Eatin\'! Choose your plan to get started.');
-      onAuthSuccess(user, true); // true = new user (show plan selection)
+      const user = storage.getUser();
+      if (user) {
+        onAuthSuccess(user, true); // true = new user (show plan selection)
+      }
+    } catch (error) {
+      console.error('Registration failed:', error);
+      showError(error instanceof Error ? error.message : 'Registration failed');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleGoogleSignIn = async () => {

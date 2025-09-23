@@ -48,18 +48,67 @@ interface Grocer {
   type: 'local' | 'delivery';
   distance?: string;
   services?: string[];
+  address: string;
 }
 
 // National delivery services (available everywhere)
 const DELIVERY_GROCERS: Grocer[] = [
-  { id: 'amazon-fresh', name: 'Amazon Fresh', type: 'delivery', services: ['Delivery', 'Same-day'] },
-  { id: 'walmart-delivery', name: 'Walmart Grocery', type: 'delivery', services: ['Delivery', 'Pickup'] },
-  { id: 'costco-delivery', name: 'Costco Same-Day', type: 'delivery', services: ['Delivery', 'Bulk orders'] },
-  { id: 'target-shipt', name: 'Target (Shipt)', type: 'delivery', services: ['Delivery', 'Same-day'] },
-  { id: 'instacart', name: 'Instacart', type: 'delivery', services: ['Multiple stores', 'Fast delivery'] },
-  { id: 'kroger-delivery', name: 'Kroger Delivery', type: 'delivery', services: ['Delivery', 'Pickup'] },
-  { id: 'safeway-delivery', name: 'Safeway Delivery', type: 'delivery', services: ['Delivery', 'DriveUp'] },
-  { id: 'whole-foods', name: 'Whole Foods (Amazon)', type: 'delivery', services: ['Prime delivery', 'Pickup'] }
+  {
+    id: 'amazon-fresh',
+    name: 'Amazon Fresh',
+    type: 'delivery',
+    services: ['Delivery', 'Same-day'],
+    address: 'Multiple fulfillment centers nationwide'
+  },
+  {
+    id: 'walmart-delivery',
+    name: 'Walmart Grocery',
+    type: 'delivery',
+    services: ['Delivery', 'Pickup'],
+    address: 'Available from local Walmart stores'
+  },
+  {
+    id: 'costco-delivery',
+    name: 'Costco Same-Day',
+    type: 'delivery',
+    services: ['Delivery', 'Bulk orders'],
+    address: 'Delivered from nearby Costco warehouses'
+  },
+  {
+    id: 'target-shipt',
+    name: 'Target (Shipt)',
+    type: 'delivery',
+    services: ['Delivery', 'Same-day'],
+    address: 'Powered by Shipt from local Target stores'
+  },
+  {
+    id: 'instacart',
+    name: 'Instacart',
+    type: 'delivery',
+    services: ['Multiple stores', 'Fast delivery'],
+    address: 'Partners with local grocery stores'
+  },
+  {
+    id: 'kroger-delivery',
+    name: 'Kroger Delivery',
+    type: 'delivery',
+    services: ['Delivery', 'Pickup'],
+    address: 'Available from Kroger family stores'
+  },
+  {
+    id: 'safeway-delivery',
+    name: 'Safeway Delivery',
+    type: 'delivery',
+    services: ['Delivery', 'DriveUp'],
+    address: 'Delivered from local Safeway locations'
+  },
+  {
+    id: 'whole-foods',
+    name: 'Whole Foods (Amazon)',
+    type: 'delivery',
+    services: ['Prime delivery', 'Pickup'],
+    address: 'Available from Whole Foods Market stores'
+  }
 ];
 
 // Function to get local grocers based on zip code
@@ -68,14 +117,70 @@ const getLocalGrocers = (zipCode: string): Grocer[] => {
   
   // Mock local grocers - in a real app, this would be an API call
   const localGrocers: Grocer[] = [
-    { id: 'kroger-local', name: 'Kroger', type: 'local', distance: '0.8 mi', services: ['In-store', 'Pickup'] },
-    { id: 'safeway-local', name: 'Safeway', type: 'local', distance: '1.2 mi', services: ['In-store', 'Pickup'] },
-    { id: 'walmart-local', name: 'Walmart Supercenter', type: 'local', distance: '1.5 mi', services: ['In-store', 'Pickup'] },
-    { id: 'target-local', name: 'Target', type: 'local', distance: '2.1 mi', services: ['In-store', 'Pickup'] },
-    { id: 'whole-foods-local', name: 'Whole Foods Market', type: 'local', distance: '2.3 mi', services: ['In-store', 'Pickup'] },
-    { id: 'costco-local', name: 'Costco Wholesale', type: 'local', distance: '3.2 mi', services: ['In-store', 'Bulk shopping'] },
-    { id: 'trader-joes', name: 'Trader Joe\'s', type: 'local', distance: '2.8 mi', services: ['In-store only'] },
-    { id: 'aldi-local', name: 'ALDI', type: 'local', distance: '1.9 mi', services: ['In-store', 'Curbside'] }
+    {
+      id: 'kroger-local',
+      name: 'Kroger',
+      type: 'local',
+      distance: '0.8 mi',
+      services: ['In-store', 'Pickup'],
+      address: '1234 Main Street, Denver, CO 80202'
+    },
+    {
+      id: 'safeway-local',
+      name: 'Safeway',
+      type: 'local',
+      distance: '1.2 mi',
+      services: ['In-store', 'Pickup'],
+      address: '5678 Broadway Ave, Denver, CO 80203'
+    },
+    {
+      id: 'walmart-local',
+      name: 'Walmart Supercenter',
+      type: 'local',
+      distance: '1.5 mi',
+      services: ['In-store', 'Pickup'],
+      address: '9012 Federal Blvd, Westminster, CO 80031'
+    },
+    {
+      id: 'target-local',
+      name: 'Target',
+      type: 'local',
+      distance: '2.1 mi',
+      services: ['In-store', 'Pickup'],
+      address: '3456 Colorado Blvd, Denver, CO 80207'
+    },
+    {
+      id: 'whole-foods-local',
+      name: 'Whole Foods Market',
+      type: 'local',
+      distance: '2.3 mi',
+      services: ['In-store', 'Pickup'],
+      address: '7890 Cherry Creek Dr, Denver, CO 80209'
+    },
+    {
+      id: 'costco-local',
+      name: 'Costco Wholesale',
+      type: 'local',
+      distance: '3.2 mi',
+      services: ['In-store', 'Bulk shopping'],
+      address: '1357 Sheridan Blvd, Lakewood, CO 80214'
+    },
+    {
+      id: 'trader-joes',
+      name: 'Trader Joe\'s',
+      type: 'local',
+      distance: '2.8 mi',
+      services: ['In-store only'],
+      address: '2468 17th Street, Denver, CO 80202'
+    },
+    {
+      id: 'aldi-local',
+      name: 'ALDI',
+      type: 'local',
+      distance: '1.9 mi',
+      services: ['In-store', 'Curbside'],
+      address: '8024 Wadsworth Blvd, Arvada, CO 80003'
+    }
   ];
   
   return localGrocers;
@@ -85,6 +190,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [editedProfile, setEditedProfile] = useState<UserProfile>(profile);
+  const [editedUser, setEditedUser] = useState<UserType>(user);
   const [localGrocers, setLocalGrocers] = useState<Grocer[]>([]);
   const [newMember, setNewMember] = useState({
     name: '',
@@ -93,6 +199,16 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
     allergies: [] as string[],
     lovedFoods: [] as string[],
     dislikedFoods: [] as string[]
+  });
+
+  // Section-specific editing states
+  const [sectionEditing, setSectionEditing] = useState({
+    account: false,
+    dietary: false,
+    budget: false,
+    kitchen: false,
+    family: false,
+    grocers: false
   });
 
   const availableDietaryRestrictions = [
@@ -118,9 +234,10 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
 
   useEffect(() => {
     setEditedProfile(profile);
+    setEditedUser(user);
     // Update local grocers when zip code changes
     setLocalGrocers(getLocalGrocers(profile.zipCode));
-  }, [profile]);
+  }, [profile, user]);
 
   // Update local grocers when zip code is edited
   useEffect(() => {
@@ -129,13 +246,61 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
 
   const handleSave = () => {
     storage.setProfile(editedProfile);
+    storage.setUser(editedUser);
     setIsEditing(false);
+    setSectionEditing({
+      account: false,
+      dietary: false,
+      budget: false,
+      kitchen: false,
+      family: false,
+      grocers: false
+    });
     showSuccess('Profile updated successfully!');
   };
 
   const handleCancel = () => {
     setEditedProfile(profile);
+    setEditedUser(user);
     setIsEditing(false);
+    setSectionEditing({
+      account: false,
+      dietary: false,
+      budget: false,
+      kitchen: false,
+      family: false,
+      grocers: false
+    });
+  };
+
+  // Section-specific handlers
+  const handleSectionEdit = (section: keyof typeof sectionEditing) => {
+    setSectionEditing(prev => ({ ...prev, [section]: true }));
+  };
+
+  const handleSectionSave = (section: keyof typeof sectionEditing) => {
+    storage.setProfile(editedProfile);
+    if (section === 'account') {
+      storage.setUser(editedUser);
+    }
+    setSectionEditing(prev => ({ ...prev, [section]: false }));
+    showSuccess(`${section.charAt(0).toUpperCase() + section.slice(1)} section updated successfully!`);
+  };
+
+  const handleSectionCancel = (section: keyof typeof sectionEditing) => {
+    setEditedProfile(profile);
+    if (section === 'account') {
+      setEditedUser(user);
+    }
+    setSectionEditing(prev => ({ ...prev, [section]: false }));
+  };
+
+  // Helper to check if any section is being edited
+  const isAnySectionEditing = Object.values(sectionEditing).some(editing => editing);
+
+  // Helper to determine if a field should be editable
+  const isFieldEditable = (section: keyof typeof sectionEditing) => {
+    return isEditing || sectionEditing[section];
   };
 
   const handleArrayToggle = (array: keyof UserProfile, item: string) => {
@@ -227,6 +392,50 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
 
   const selectedGrocers = editedProfile.preferredGrocers || [];
 
+  // Subscription tier management
+  const handleSubscriptionChange = (newTier: 'free' | 'basic' | 'premium') => {
+    const updatedUser = { ...editedUser, subscription: newTier };
+    
+    // Handle trial status based on tier
+    if (newTier === 'premium') {
+      // Remove trial end date for premium users
+      delete updatedUser.trialEndsAt;
+    } else if (newTier === 'free' && !updatedUser.trialEndsAt) {
+      // Set trial end date for free users (30 days from now)
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 30);
+      updatedUser.trialEndsAt = trialEnd.toISOString();
+    }
+    
+    setEditedUser(updatedUser);
+  };
+
+  const getSubscriptionDescription = (tier: 'free' | 'basic' | 'premium') => {
+    switch (tier) {
+      case 'free':
+        return {
+          name: 'Free',
+          price: 'Free',
+          description: '5 receipt scans/month, 1 shopping list/week, browse community',
+          features: ['5 receipt scans per month', '1 shopping list per week', 'Browse community posts', 'Basic pantry management']
+        };
+      case 'basic':
+        return {
+          name: 'Basic',
+          price: '$5-7/month',
+          description: 'Unlimited scans & meal plans, community posting, 2 store deals',
+          features: ['Unlimited receipt scans', 'Unlimited meal plans', 'Unlimited shopping lists', 'Community posting', 'Up to 2 store deals']
+        };
+      case 'premium':
+        return {
+          name: 'Premium',
+          price: '$9-12/month',
+          description: 'All features + family profiles, all store deals, priority support',
+          features: ['Everything in Basic', 'Unlimited family profiles', 'All store deals', 'Priority support', 'Advanced meal planning']
+        };
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -247,17 +456,17 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
               {isEditing ? (
                 <>
                   <Button variant="outline" onClick={handleCancel}>
-                    Cancel
+                    Cancel All
                   </Button>
                   <Button onClick={handleSave}>
                     <Save className="h-4 w-4 mr-2" />
-                    Save Changes
+                    Save All Changes
                   </Button>
                 </>
               ) : (
-                <Button onClick={() => setIsEditing(true)}>
+                <Button onClick={() => setIsEditing(true)} disabled={isAnySectionEditing}>
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit Profile
+                  Edit All
                 </Button>
               )}
             </div>
@@ -269,9 +478,31 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
         {/* Account Information */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <User className="h-5 w-5 mr-2" />
-              Account Information
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <User className="h-5 w-5 mr-2" />
+                Account Information
+              </div>
+              {!isEditing && (
+                <div className="flex gap-2">
+                  {sectionEditing.account ? (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => handleSectionCancel('account')}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={() => handleSectionSave('account')}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={() => handleSectionEdit('account')}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -285,12 +516,6 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                 <div className="mt-1 text-sm text-gray-900">{user.email}</div>
               </div>
               <div>
-                <Label>Subscription</Label>
-                <Badge variant={user.subscription === 'premium' ? 'default' : 'secondary'} className="mt-1">
-                  {user.subscription.charAt(0).toUpperCase() + user.subscription.slice(1)}
-                </Badge>
-              </div>
-              <div>
                 <Label>Member Since</Label>
                 <div className="mt-1 text-sm text-gray-900">
                   {new Date(user.createdAt).toLocaleDateString()}
@@ -298,13 +523,13 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
               </div>
               <div>
                 <Label htmlFor="zipcode">Zip Code</Label>
-                {isEditing ? (
+                {isFieldEditable('account') ? (
                   <Input
                     id="zipcode"
                     value={editedProfile.zipCode}
-                    onChange={(e) => setEditedProfile(prev => ({ 
-                      ...prev, 
-                      zipCode: e.target.value 
+                    onChange={(e) => setEditedProfile(prev => ({
+                      ...prev,
+                      zipCode: e.target.value
                     }))}
                     placeholder="Enter your zip code"
                     className="mt-1"
@@ -315,6 +540,104 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Subscription Tier Management */}
+            <div className="mt-6 pt-6 border-t">
+              <Label className="text-base font-medium mb-4 block">Subscription Plan</Label>
+              
+              {isFieldEditable('account') ? (
+                <div className="space-y-4">
+                  {(['free', 'basic', 'premium'] as const).map((tier) => {
+                    const tierInfo = getSubscriptionDescription(tier);
+                    const isSelected = editedUser.subscription === tier;
+                    
+                    return (
+                      <div
+                        key={tier}
+                        className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                          isSelected
+                            ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                        onClick={() => handleSubscriptionChange(tier)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start space-x-3">
+                            <input
+                              type="radio"
+                              name="subscription"
+                              value={tier}
+                              checked={isSelected}
+                              onChange={() => handleSubscriptionChange(tier)}
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="font-medium text-lg">{tierInfo.name}</span>
+                                <Badge variant={tier === 'premium' ? 'default' : tier === 'basic' ? 'secondary' : 'outline'}>
+                                  {tierInfo.price}
+                                </Badge>
+                                {tier === user.subscription && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Current Plan
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-600 mb-3">{tierInfo.description}</p>
+                              <ul className="text-xs text-gray-500 space-y-1">
+                                {tierInfo.features.map((feature, index) => (
+                                  <li key={index} className="flex items-center">
+                                    <span className="w-1 h-1 bg-gray-400 rounded-full mr-2"></span>
+                                    {feature}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {/* Trial Status Display */}
+                  {editedUser.trialEndsAt && (
+                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-center text-yellow-800">
+                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        <span className="text-sm font-medium">
+                          Trial ends on {new Date(editedUser.trialEndsAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Badge variant={editedUser.subscription === 'premium' ? 'default' : editedUser.subscription === 'basic' ? 'secondary' : 'outline'} className="text-sm">
+                      {getSubscriptionDescription(editedUser.subscription).name}
+                    </Badge>
+                    <span className="text-sm text-gray-600">
+                      {getSubscriptionDescription(editedUser.subscription).price}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {getSubscriptionDescription(editedUser.subscription).description}
+                  </p>
+                  
+                  {editedUser.trialEndsAt && (
+                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-center text-yellow-800">
+                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        <span className="text-sm">
+                          Trial ends on {new Date(editedUser.trialEndsAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             
             <div className="pt-4 border-t">
@@ -328,10 +651,34 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
         {/* Dietary Preferences */}
         <Card>
           <CardHeader>
-            <CardTitle>Dietary Preferences</CardTitle>
-            <CardDescription>
-              Your dietary restrictions and food preferences
-            </CardDescription>
+            <CardTitle className="flex items-center justify-between">
+              <div>
+                <div>Dietary Preferences</div>
+                <CardDescription>
+                  Your dietary restrictions and food preferences
+                </CardDescription>
+              </div>
+              {!isEditing && (
+                <div className="flex gap-2">
+                  {sectionEditing.dietary ? (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => handleSectionCancel('dietary')}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={() => handleSectionSave('dietary')}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={() => handleSectionEdit('dietary')}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
@@ -344,7 +691,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                       id={`dietary-${restriction}`}
                       checked={editedProfile.dietaryRestrictions.includes(restriction)}
                       onChange={() => handleArrayToggle('dietaryRestrictions', restriction)}
-                      disabled={!isEditing}
+                      disabled={!isFieldEditable('dietary')}
                       className="rounded border-gray-300"
                     />
                     <Label htmlFor={`dietary-${restriction}`} className="text-sm">
@@ -365,7 +712,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                       id={`taste-${preference}`}
                       checked={editedProfile.tastePreferences.includes(preference)}
                       onChange={() => handleArrayToggle('tastePreferences', preference)}
-                      disabled={!isEditing}
+                      disabled={!isFieldEditable('dietary')}
                       className="rounded border-gray-300"
                     />
                     <Label htmlFor={`taste-${preference}`} className="text-sm">
@@ -386,7 +733,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                       id={`meal-${preference}`}
                       checked={editedProfile.mealPreferences.includes(preference)}
                       onChange={() => handleArrayToggle('mealPreferences', preference)}
-                      disabled={!isEditing}
+                      disabled={!isFieldEditable('dietary')}
                       className="rounded border-gray-300"
                     />
                     <Label htmlFor={`meal-${preference}`} className="text-sm">
@@ -402,28 +749,68 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
         {/* Budget */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <DollarSign className="h-5 w-5 mr-2" />
-              Budget
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <DollarSign className="h-5 w-5 mr-2" />
+                <div>
+                  <div>Budget</div>
+                  <CardDescription>
+                    Your weekly grocery budget
+                  </CardDescription>
+                </div>
+              </div>
+              {!isEditing && (
+                <div className="flex gap-2">
+                  {sectionEditing.budget ? (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => handleSectionCancel('budget')}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={() => handleSectionSave('budget')}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={() => handleSectionEdit('budget')}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
+              )}
             </CardTitle>
-            <CardDescription>
-              Your weekly grocery budget
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="max-w-sm">
               <Label htmlFor="budget">Weekly Budget ($)</Label>
               <Input
                 id="budget"
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 min="0"
                 step="10"
-                value={editedProfile.weeklyBudget}
-                onChange={(e) => setEditedProfile(prev => ({ 
-                  ...prev, 
-                  weeklyBudget: parseInt(e.target.value) || 0 
-                }))}
-                disabled={!isEditing}
+                value={editedProfile.weeklyBudget === 0 ? '' : editedProfile.weeklyBudget.toString()}
+                onChange={(e) => {
+                  const value = e.target.value.trim();
+                  // Only allow digits
+                  if (value === '' || /^\d+$/.test(value)) {
+                    const numValue = value === '' ? 0 : parseInt(value, 10);
+                    if (numValue >= 0) {
+                      setEditedProfile(prev => ({
+                        ...prev,
+                        weeklyBudget: numValue
+                      }));
+                    }
+                  }
+                }}
+                onFocus={(e) => {
+                  // Select all text when focused
+                  e.target.select();
+                }}
+                placeholder="Enter weekly budget"
+                disabled={!isFieldEditable('budget')}
                 className="mt-1"
               />
             </div>
@@ -433,13 +820,37 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
         {/* Kitchen Equipment */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <ChefHat className="h-5 w-5 mr-2" />
-              Kitchen Equipment
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <ChefHat className="h-5 w-5 mr-2" />
+                <div>
+                  <div>Kitchen Equipment</div>
+                  <CardDescription>
+                    Select the kitchen appliances and tools you have available
+                  </CardDescription>
+                </div>
+              </div>
+              {!isEditing && (
+                <div className="flex gap-2">
+                  {sectionEditing.kitchen ? (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => handleSectionCancel('kitchen')}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={() => handleSectionSave('kitchen')}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={() => handleSectionEdit('kitchen')}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
+              )}
             </CardTitle>
-            <CardDescription>
-              Select the kitchen appliances and tools you have available
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -450,7 +861,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                     id={`equipment-${equipment}`}
                     checked={editedProfile.kitchenEquipment.includes(equipment)}
                     onChange={() => handleArrayToggle('kitchenEquipment', equipment)}
-                    disabled={!isEditing}
+                    disabled={!isFieldEditable('kitchen')}
                     className="rounded border-gray-300"
                   />
                   <Label htmlFor={`equipment-${equipment}`} className="text-sm">
@@ -470,16 +881,38 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                 <Users className="h-5 w-5 mr-2" />
                 Family Members ({editedProfile.familyMembers.length})
               </div>
-              {isEditing && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowAddMember(!showAddMember)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Member
-                </Button>
-              )}
+              <div className="flex gap-2">
+                {(isEditing || sectionEditing.family) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAddMember(!showAddMember)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Member
+                  </Button>
+                )}
+                {!isEditing && (
+                  <>
+                    {sectionEditing.family ? (
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => handleSectionCancel('family')}>
+                          Cancel
+                        </Button>
+                        <Button size="sm" onClick={() => handleSectionSave('family')}>
+                          <Save className="h-4 w-4 mr-2" />
+                          Save
+                        </Button>
+                      </>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={() => handleSectionEdit('family')}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -614,7 +1047,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                             <span className="text-gray-600 ml-2">({member.age} years old)</span>
                           </div>
                         </div>
-                        {isEditing && (
+                        {isFieldEditable('family') && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -704,7 +1137,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
               <div className="text-center py-8 text-gray-500">
                 <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />
                 <p>No family members added yet</p>
-                {isEditing && (
+                {isFieldEditable('family') && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -723,13 +1156,37 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
         {/* My Grocers */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Store className="h-5 w-5 mr-2" />
-              My Grocers
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Store className="h-5 w-5 mr-2" />
+                <div>
+                  <div>My Grocers</div>
+                  <CardDescription>
+                    Select your preferred grocery stores and delivery services
+                  </CardDescription>
+                </div>
+              </div>
+              {!isEditing && (
+                <div className="flex gap-2">
+                  {sectionEditing.grocers ? (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => handleSectionCancel('grocers')}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={() => handleSectionSave('grocers')}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={() => handleSectionEdit('grocers')}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
+              )}
             </CardTitle>
-            <CardDescription>
-              Select your preferred grocery stores and delivery services
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Local Grocers */}
@@ -744,19 +1201,19 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                     </Badge>
                   )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   {localGrocers.map(grocer => (
-                    <div key={grocer.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                      <div className="flex items-center space-x-3">
+                    <div key={grocer.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-gray-50">
+                      <div className="flex items-start space-x-3">
                         <input
                           type="checkbox"
                           id={`grocer-${grocer.id}`}
                           checked={selectedGrocers.includes(grocer.id)}
                           onChange={() => handleGrocerToggle(grocer.id)}
-                          disabled={!isEditing}
-                          className="rounded border-gray-300"
+                          disabled={!isFieldEditable('grocers')}
+                          className="rounded border-gray-300 mt-1"
                         />
-                        <div>
+                        <div className="flex-1">
                           <Label htmlFor={`grocer-${grocer.id}`} className="text-sm font-medium cursor-pointer">
                             {grocer.name}
                           </Label>
@@ -769,6 +1226,10 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                                 </Badge>
                               ))}
                             </div>
+                          </div>
+                          <div className="flex items-center mt-2 text-xs text-gray-600">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {grocer.address}
                           </div>
                         </div>
                       </div>
@@ -796,19 +1257,19 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                   Available Nationwide
                 </Badge>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 {DELIVERY_GROCERS.map(grocer => (
-                  <div key={grocer.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                    <div className="flex items-center space-x-3">
+                  <div key={grocer.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-gray-50">
+                    <div className="flex items-start space-x-3">
                       <input
                         type="checkbox"
                         id={`grocer-${grocer.id}`}
                         checked={selectedGrocers.includes(grocer.id)}
                         onChange={() => handleGrocerToggle(grocer.id)}
-                        disabled={!isEditing}
-                        className="rounded border-gray-300"
+                        disabled={!isFieldEditable('grocers')}
+                        className="rounded border-gray-300 mt-1"
                       />
-                      <div>
+                      <div className="flex-1">
                         <Label htmlFor={`grocer-${grocer.id}`} className="text-sm font-medium cursor-pointer">
                           {grocer.name}
                         </Label>
@@ -818,6 +1279,10 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                               {service}
                             </Badge>
                           ))}
+                        </div>
+                        <div className="flex items-center mt-2 text-xs text-gray-600">
+                          <Truck className="h-3 w-3 mr-1" />
+                          {grocer.address}
                         </div>
                       </div>
                     </div>
