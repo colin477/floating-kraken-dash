@@ -4,11 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Heart, MessageCircle, Share2, Plus, DollarSign, Lightbulb, ChefHat } from 'lucide-react';
-import { User, CommunityPost } from '@/types';
+import { ArrowLeft, Heart, MessageCircle, Share2, Plus, DollarSign, Lightbulb, ChefHat, Loader2 } from 'lucide-react';
+import { User, CommunityPost, CommunityPostCreate } from '@/types';
+import { communityApi } from '@/services/api';
+import { shouldUseMockData } from '@/lib/demoMode';
 import { storage } from '@/lib/storage';
 import { mockCommunityPosts } from '@/lib/mockData';
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
 
 interface CommunityProps {
   user: User;
@@ -19,63 +21,128 @@ export const Community = ({ user, onBack }: CommunityProps) => {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'recipes' | 'tips' | 'savings'>('all');
   const [showNewPost, setShowNewPost] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [newPost, setNewPost] = useState({
     title: '',
     content: '',
-    type: 'tip' as 'recipe' | 'tip' | 'savings-story'
+    post_type: 'tip' as 'recipe' | 'tip' | 'savings_story' | 'general'
   });
 
   useEffect(() => {
-    // Load community posts (in a real app, this would be from an API)
-    const savedPosts = storage.getCommunityPosts();
-    if (savedPosts.length === 0) {
-      // Initialize with mock data
-      storage.setCommunityPosts(mockCommunityPosts);
-      setPosts(mockCommunityPosts);
-    } else {
-      setPosts(savedPosts);
-    }
+    loadPosts();
   }, []);
 
-  const handleCreatePost = () => {
-    if (!newPost.title.trim() || !newPost.content.trim()) return;
-
-    const post: CommunityPost = {
-      id: Date.now().toString(),
-      userId: user.id,
-      userName: user.name,
-      title: newPost.title,
-      content: newPost.content,
-      type: newPost.type,
-      likes: 0,
-      comments: [],
-      createdAt: new Date().toISOString()
-    };
-
-    const updatedPosts = [post, ...posts];
-    setPosts(updatedPosts);
-    storage.setCommunityPosts(updatedPosts);
-    
-    setNewPost({ title: '', content: '', type: 'tip' });
-    setShowNewPost(false);
-    showSuccess('Your post has been shared with the community!');
+  const loadPosts = async () => {
+    try {
+      setLoading(true);
+      
+      if (shouldUseMockData()) {
+        console.log('🧪 [Demo Mode] Using mock community posts');
+        const savedPosts = storage.getCommunityPosts();
+        if (savedPosts.length === 0) {
+          storage.setCommunityPosts(mockCommunityPosts);
+          setPosts(mockCommunityPosts);
+        } else {
+          setPosts(savedPosts);
+        }
+      } else {
+        const response = await communityApi.getPosts({ page_size: 50 });
+        setPosts(response.posts || []);
+      }
+    } catch (error) {
+      console.warn('🧪 [Demo Mode] API failed, falling back to mock data:', error);
+      const savedPosts = storage.getCommunityPosts();
+      if (savedPosts.length === 0) {
+        storage.setCommunityPosts(mockCommunityPosts);
+        setPosts(mockCommunityPosts);
+      } else {
+        setPosts(savedPosts);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleLike = (postId: string) => {
-    const updatedPosts = posts.map(post => 
-      post.id === postId 
-        ? { ...post, likes: post.likes + 1 }
-        : post
-    );
-    setPosts(updatedPosts);
-    storage.setCommunityPosts(updatedPosts);
+  const handleCreatePost = async () => {
+    if (!newPost.title.trim() || !newPost.content.trim()) return;
+
+    try {
+      setSubmitting(true);
+
+      if (shouldUseMockData()) {
+        console.log('🧪 [Demo Mode] Creating mock community post');
+        const post: CommunityPost = {
+          id: Date.now().toString(),
+          user_id: user.id,
+          title: newPost.title,
+          content: newPost.content,
+          post_type: newPost.post_type,
+          tags: [],
+          likes_count: 0,
+          comments_count: 0,
+          is_public: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          user_display_name: user.name
+        };
+
+        const updatedPosts = [post, ...posts];
+        setPosts(updatedPosts);
+        storage.setCommunityPosts(updatedPosts);
+      } else {
+        const postData: CommunityPostCreate = {
+          title: newPost.title,
+          content: newPost.content,
+          post_type: newPost.post_type,
+          is_public: true
+        };
+
+        const createdPost = await communityApi.createPost(postData);
+        setPosts(prevPosts => [createdPost, ...prevPosts]);
+      }
+      
+      setNewPost({ title: '', content: '', post_type: 'tip' });
+      setShowNewPost(false);
+      showSuccess('Your post has been shared with the community!');
+    } catch (error) {
+      console.error('Failed to create post:', error);
+      showError('Failed to create post. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleLike = async (postId: string) => {
+    try {
+      if (shouldUseMockData()) {
+        console.log('🧪 [Demo Mode] Liking mock post:', postId);
+        const updatedPosts = posts.map(post => 
+          post.id === postId 
+            ? { ...post, likes_count: post.likes_count + 1, is_liked_by_user: true }
+            : post
+        );
+        setPosts(updatedPosts);
+        storage.setCommunityPosts(updatedPosts);
+      } else {
+        const updatedPost = await communityApi.likePost(postId);
+        setPosts(prevPosts => 
+          prevPosts.map(post => 
+            post.id === postId ? updatedPost : post
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Failed to like post:', error);
+      showError('Failed to like post. Please try again.');
+    }
   };
 
   const filteredPosts = posts.filter(post => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'recipes') return post.type === 'recipe';
-    if (activeTab === 'tips') return post.type === 'tip';
-    if (activeTab === 'savings') return post.type === 'savings-story';
+    if (activeTab === 'recipes') return post.post_type === 'recipe';
+    if (activeTab === 'tips') return post.post_type === 'tip';
+    if (activeTab === 'savings') return post.post_type === 'savings_story';
     return true;
   });
 
@@ -83,7 +150,7 @@ export const Community = ({ user, onBack }: CommunityProps) => {
     switch (type) {
       case 'recipe': return <ChefHat className="h-4 w-4" />;
       case 'tip': return <Lightbulb className="h-4 w-4" />;
-      case 'savings-story': return <DollarSign className="h-4 w-4" />;
+      case 'savings_story': return <DollarSign className="h-4 w-4" />;
       default: return <MessageCircle className="h-4 w-4" />;
     }
   };
@@ -92,10 +159,21 @@ export const Community = ({ user, onBack }: CommunityProps) => {
     switch (type) {
       case 'recipe': return 'bg-blue-100 text-blue-600';
       case 'tip': return 'bg-yellow-100 text-yellow-600';
-      case 'savings-story': return 'bg-green-100 text-green-600';
+      case 'savings_story': return 'bg-green-100 text-green-600';
       default: return 'bg-gray-100 text-gray-600';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading community posts...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -159,13 +237,13 @@ export const Community = ({ user, onBack }: CommunityProps) => {
                   {[
                     { key: 'recipe', label: 'Recipe', icon: ChefHat },
                     { key: 'tip', label: 'Tip', icon: Lightbulb },
-                    { key: 'savings-story', label: 'Savings Story', icon: DollarSign }
+                    { key: 'savings_story', label: 'Savings Story', icon: DollarSign }
                   ].map(type => (
                     <Button
                       key={type.key}
-                      variant={newPost.type === type.key ? 'default' : 'outline'}
+                      variant={newPost.post_type === type.key ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setNewPost(prev => ({ ...prev, type: type.key as any }))}
+                      onClick={() => setNewPost(prev => ({ ...prev, post_type: type.key as any }))}
                     >
                       <type.icon className="h-4 w-4 mr-1" />
                       {type.label}
@@ -194,8 +272,17 @@ export const Community = ({ user, onBack }: CommunityProps) => {
               </div>
 
               <div className="flex gap-2">
-                <Button onClick={handleCreatePost}>Share Post</Button>
-                <Button variant="outline" onClick={() => setShowNewPost(false)}>
+                <Button onClick={handleCreatePost} disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Sharing...
+                    </>
+                  ) : (
+                    'Share Post'
+                  )}
+                </Button>
+                <Button variant="outline" onClick={() => setShowNewPost(false)} disabled={submitting}>
                   Cancel
                 </Button>
               </div>
@@ -211,17 +298,17 @@ export const Community = ({ user, onBack }: CommunityProps) => {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className={`p-1 rounded ${getPostTypeColor(post.type)}`}>
-                        {getPostIcon(post.type)}
+                      <div className={`p-1 rounded ${getPostTypeColor(post.post_type)}`}>
+                        {getPostIcon(post.post_type)}
                       </div>
                       <Badge variant="outline" className="text-xs capitalize">
-                        {post.type.replace('-', ' ')}
+                        {post.post_type.replace('_', ' ')}
                       </Badge>
                       <span className="text-sm text-gray-500">
-                        by {post.userName}
+                        by {post.user_display_name || 'Anonymous'}
                       </span>
                       <span className="text-sm text-gray-400">
-                        {new Date(post.createdAt).toLocaleDateString()}
+                        {new Date(post.created_at).toLocaleDateString()}
                       </span>
                     </div>
                     <CardTitle className="text-lg">{post.title}</CardTitle>
@@ -238,13 +325,13 @@ export const Community = ({ user, onBack }: CommunityProps) => {
                     onClick={() => handleLike(post.id)}
                     className="text-gray-600 hover:text-red-600"
                   >
-                    <Heart className="h-4 w-4 mr-1" />
-                    {post.likes}
+                    <Heart className={`h-4 w-4 mr-1 ${post.is_liked_by_user ? 'fill-red-500 text-red-500' : ''}`} />
+                    {post.likes_count}
                   </Button>
                   
                   <Button variant="ghost" size="sm" className="text-gray-600">
                     <MessageCircle className="h-4 w-4 mr-1" />
-                    {post.comments.length}
+                    {post.comments_count}
                   </Button>
                   
                   <Button variant="ghost" size="sm" className="text-gray-600">
@@ -253,22 +340,12 @@ export const Community = ({ user, onBack }: CommunityProps) => {
                   </Button>
                 </div>
 
-                {/* Comments */}
-                {post.comments.length > 0 && (
+                {/* Comments - Note: Comments will be loaded separately in a future enhancement */}
+                {post.comments_count > 0 && (
                   <div className="mt-4 pt-4 border-t">
-                    <div className="space-y-3">
-                      {post.comments.map(comment => (
-                        <div key={comment.id} className="bg-gray-50 p-3 rounded-lg">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-sm">{comment.userName}</span>
-                            <span className="text-xs text-gray-500">
-                              {new Date(comment.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-700">{comment.content}</p>
-                        </div>
-                      ))}
-                    </div>
+                    <p className="text-sm text-gray-500">
+                      {post.comments_count} comment{post.comments_count !== 1 ? 's' : ''} - Click to view
+                    </p>
                   </div>
                 )}
               </CardContent>

@@ -30,6 +30,18 @@ const Index = () => {
   const bypassAuth = shouldBypassAuth();
   const effectivelyAuthenticated = isAuthenticated || bypassAuth;
   
+  // DEBUG: Enhanced logging for authentication and demo mode state
+  console.log('[Index] AUTH STATE:', {
+    authUser: !!authUser,
+    isAuthenticated,
+    demoModeEnabled,
+    bypassAuth,
+    effectivelyAuthenticated,
+    authLoading,
+    timestamp: new Date().toISOString(),
+    windowOverride: (window as any).__DEMO_MODE_OVERRIDE__
+  });
+  
   // Create a demo user when in demo mode
   const effectiveUser = authUser || (bypassAuth ? {
     id: 'demo-user',
@@ -60,7 +72,27 @@ const Index = () => {
     
     // Load profile when user is authenticated (or in demo mode)
     if (effectivelyAuthenticated && effectiveUser) {
-      const savedProfile = storage.getProfile();
+      let savedProfile = storage.getProfile();
+      
+      // If in demo mode and no profile exists, create a demo profile
+      if (bypassAuth && !savedProfile) {
+        const demoProfile: UserProfile = {
+          userId: effectiveUser.id,
+          dietaryRestrictions: ['Vegetarian'],
+          allergies: [],
+          tastePreferences: ['Savory', 'Comfort food'],
+          mealPreferences: ['Quick meals (under 30 min)', 'Kid-friendly'],
+          kitchenEquipment: ['Oven', 'Stovetop', 'Microwave'],
+          weeklyBudget: 150,
+          zipCode: '80202',
+          familyMembers: [],
+          preferredGrocers: ['kroger-local', 'safeway-local']
+        };
+        storage.setProfile(demoProfile);
+        savedProfile = demoProfile;
+        console.log('🧪 [Demo Mode] Created demo profile');
+      }
+      
       setProfile(savedProfile);
       setIsNewUser(false); // Existing user
     }
@@ -108,11 +140,35 @@ const Index = () => {
   };
 
   const handleLogout = () => {
+    console.log('[Index] LOGOUT: Starting handleLogout...');
+    console.log('[Index] LOGOUT: Current authUser:', authUser);
+    console.log('[Index] LOGOUT: Current isAuthenticated:', isAuthenticated);
+    console.log('[Index] LOGOUT: Demo mode enabled:', demoModeEnabled);
+    console.log('[Index] LOGOUT: Should bypass auth:', bypassAuth);
+    console.log('[Index] LOGOUT: Effectively authenticated before logout:', effectivelyAuthenticated);
+    console.log('[Index] LOGOUT: Window override before logout:', (window as any).__DEMO_MODE_OVERRIDE__);
+    
     logout();
     setProfile(null);
     setSetupLevel(null);
     setCurrentPage('dashboard');
     setIsNewUser(false);
+    
+    console.log('[Index] LOGOUT: Logout completed, state cleared');
+    console.log('[Index] LOGOUT: Window override after logout:', (window as any).__DEMO_MODE_OVERRIDE__);
+    
+    // DEBUG: Check demo mode state before page reload
+    console.log('[Index] LOGOUT: Demo mode state before reload:', {
+      demoModeEnabled: isDemoModeEnabled(),
+      bypassAuth: shouldBypassAuth(),
+      windowOverride: (window as any).__DEMO_MODE_OVERRIDE__
+    });
+    
+    // Force a page reload to ensure clean state after logout
+    setTimeout(() => {
+      console.log('[Index] LOGOUT: Forcing page reload for clean state');
+      window.location.reload();
+    }, 100);
   };
 
   const handleNavigate = (page: string) => {

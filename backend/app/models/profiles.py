@@ -12,9 +12,11 @@ class FamilyMember(BaseModel):
     """Embedded model for family members within user profiles"""
     id: str = Field(..., description="Unique identifier for the family member")
     name: str = Field(..., min_length=1, max_length=100, description="Family member's name")
-    age: Optional[int] = Field(None, ge=0, le=150, description="Family member's age")
+    age: int = Field(..., ge=0, le=150, description="Family member's age")
     allergies: List[str] = Field(default_factory=list, description="List of allergies")
     dietary_restrictions: List[str] = Field(default_factory=list, description="List of dietary restrictions")
+    loved_foods: List[str] = Field(default_factory=list, description="List of foods they love")
+    disliked_foods: List[str] = Field(default_factory=list, description="List of foods they dislike")
 
     @validator('name')
     def validate_name(cls, v):
@@ -27,9 +29,11 @@ class FamilyMember(BaseModel):
 class FamilyMemberCreate(BaseModel):
     """Schema for creating new family members"""
     name: str = Field(..., min_length=1, max_length=100, description="Family member's name")
-    age: Optional[int] = Field(None, ge=0, le=150, description="Family member's age")
+    age: int = Field(..., ge=0, le=150, description="Family member's age")
     allergies: List[str] = Field(default_factory=list, description="List of allergies")
     dietary_restrictions: List[str] = Field(default_factory=list, description="List of dietary restrictions")
+    loved_foods: List[str] = Field(default_factory=list, description="List of foods they love")
+    disliked_foods: List[str] = Field(default_factory=list, description="List of foods they dislike")
 
     @validator('name')
     def validate_name(cls, v):
@@ -45,6 +49,8 @@ class FamilyMemberUpdate(BaseModel):
     age: Optional[int] = Field(None, ge=0, le=150, description="Family member's age")
     allergies: Optional[List[str]] = Field(None, description="List of allergies")
     dietary_restrictions: Optional[List[str]] = Field(None, description="List of dietary restrictions")
+    loved_foods: Optional[List[str]] = Field(None, description="List of foods they love")
+    disliked_foods: Optional[List[str]] = Field(None, description="List of foods they dislike")
 
     @validator('name')
     def validate_name(cls, v):

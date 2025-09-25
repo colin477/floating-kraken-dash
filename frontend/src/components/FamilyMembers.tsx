@@ -62,109 +62,182 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
     setFamilyMembers(profile.familyMembers);
   }, [profile.familyMembers]);
 
-  const handleAddMember = () => {
+  const handleAddMember = async () => {
+    console.log('🔍 [DEBUG] handleAddMember called');
+    console.log('🔍 [DEBUG] Current newMember state:', newMember);
+    console.log('🔍 [DEBUG] Current showAddForm state:', showAddForm);
+    console.log('🔍 [DEBUG] Current editingMember state:', editingMember);
+
     if (!newMember.name.trim() || !newMember.age) {
+      console.log('❌ [DEBUG] Validation failed - missing name or age');
       showError('Please enter name and age for the family member');
       return;
     }
 
-    const familyMember: FamilyMember = {
-      id: Date.now().toString(),
-      name: newMember.name.trim(),
-      age: parseInt(newMember.age),
-      dietaryRestrictions: newMember.dietaryRestrictions,
-      allergies: newMember.allergies,
-      lovedFoods: newMember.lovedFoods,
-      dislikedFoods: newMember.dislikedFoods
-    };
+    try {
+      // Convert camelCase to snake_case for API
+      const memberData = {
+        name: newMember.name.trim(),
+        age: parseInt(newMember.age),
+        dietary_restrictions: newMember.dietaryRestrictions,
+        allergies: newMember.allergies,
+        loved_foods: newMember.lovedFoods,
+        disliked_foods: newMember.dislikedFoods
+      };
 
-    const updatedMembers = [...familyMembers, familyMember];
-    setFamilyMembers(updatedMembers);
-    
-    // Update profile in storage
-    const updatedProfile = { ...profile, familyMembers: updatedMembers };
-    storage.setProfile(updatedProfile);
+      console.log('🔍 [DEBUG] Prepared memberData for API:', memberData);
 
-    // Reset form
-    setNewMember({
-      name: '',
-      age: '',
-      dietaryRestrictions: [],
-      allergies: [],
-      lovedFoods: [],
-      dislikedFoods: []
-    });
+      // Call API to add family member
+      console.log('🔍 [DEBUG] Calling profileApi.addFamilyMember...');
+      const { profileApi } = await import('@/services/api');
+      const updatedProfile = await profileApi.addFamilyMember(memberData);
+      
+      console.log('✅ [DEBUG] API call successful, received updatedProfile:', updatedProfile);
+      console.log('🔍 [DEBUG] Updated family members:', updatedProfile.familyMembers);
+      
+      // Update local state with API response
+      console.log('🔍 [DEBUG] Updating local state...');
+      setFamilyMembers(updatedProfile.familyMembers);
+      storage.setProfile(updatedProfile);
 
-    setShowAddForm(false);
-    showSuccess(`Added ${familyMember.name} to your family!`);
+      // Reset form
+      console.log('🔍 [DEBUG] Resetting form state...');
+      setNewMember({
+        name: '',
+        age: '',
+        dietaryRestrictions: [],
+        allergies: [],
+        lovedFoods: [],
+        dislikedFoods: []
+      });
+
+      console.log('🔍 [DEBUG] Setting showAddForm to false...');
+      setShowAddForm(false);
+      console.log('🔍 [DEBUG] Setting editingMember to null...');
+      setEditingMember(null);
+      
+      console.log('✅ [DEBUG] handleAddMember completed successfully');
+      showSuccess(`Added ${memberData.name} to your family!`);
+    } catch (error) {
+      console.error('❌ [DEBUG] Error in handleAddMember:', error);
+      console.error('❌ [DEBUG] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      showError(`Failed to add family member: ${error.message}`);
+    }
   };
 
   const handleEditMember = (member: FamilyMember) => {
+    console.log('🔍 [DEBUG] handleEditMember called with member:', member);
+    
     setEditingMember(member);
-    setNewMember({
+    const editFormData = {
       name: member.name,
       age: member.age.toString(),
       dietaryRestrictions: [...member.dietaryRestrictions],
       allergies: [...member.allergies],
       lovedFoods: [...member.lovedFoods],
       dislikedFoods: [...member.dislikedFoods]
-    });
+    };
+    
+    console.log('🔍 [DEBUG] Setting form data for editing:', editFormData);
+    setNewMember(editFormData);
+    
+    console.log('🔍 [DEBUG] Setting showAddForm to true for editing');
     setShowAddForm(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
+    console.log('🔍 [DEBUG] handleSaveEdit called');
+    console.log('🔍 [DEBUG] Current newMember state:', newMember);
+    console.log('🔍 [DEBUG] Current editingMember state:', editingMember);
+    console.log('🔍 [DEBUG] Current showAddForm state:', showAddForm);
+
     if (!newMember.name.trim() || !newMember.age) {
+      console.log('❌ [DEBUG] Validation failed - missing name or age');
       showError('Please enter name and age for the family member');
       return;
     }
 
-    if (!editingMember) return;
+    if (!editingMember) {
+      console.log('❌ [DEBUG] No editingMember found, returning');
+      return;
+    }
 
-    const updatedMember: FamilyMember = {
-      ...editingMember,
-      name: newMember.name.trim(),
-      age: parseInt(newMember.age),
-      dietaryRestrictions: newMember.dietaryRestrictions,
-      allergies: newMember.allergies,
-      lovedFoods: newMember.lovedFoods,
-      dislikedFoods: newMember.dislikedFoods
-    };
+    try {
+      // Convert camelCase to snake_case for API
+      const memberData = {
+        name: newMember.name.trim(),
+        age: parseInt(newMember.age),
+        dietary_restrictions: newMember.dietaryRestrictions,
+        allergies: newMember.allergies,
+        loved_foods: newMember.lovedFoods,
+        disliked_foods: newMember.dislikedFoods
+      };
 
-    const updatedMembers = familyMembers.map(member => 
-      member.id === editingMember.id ? updatedMember : member
-    );
-    
-    setFamilyMembers(updatedMembers);
-    
-    // Update profile in storage
-    const updatedProfile = { ...profile, familyMembers: updatedMembers };
-    storage.setProfile(updatedProfile);
+      console.log('🔍 [DEBUG] Prepared memberData for API:', memberData);
+      console.log('🔍 [DEBUG] Updating member with ID:', editingMember.id);
 
-    // Reset form
-    setNewMember({
-      name: '',
-      age: '',
-      dietaryRestrictions: [],
-      allergies: [],
-      lovedFoods: [],
-      dislikedFoods: []
-    });
+      // Call API to update family member
+      console.log('🔍 [DEBUG] Calling profileApi.updateFamilyMember...');
+      const { profileApi } = await import('@/services/api');
+      const updatedProfile = await profileApi.updateFamilyMember(editingMember.id, memberData);
+      
+      console.log('✅ [DEBUG] API call successful, received updatedProfile:', updatedProfile);
+      console.log('🔍 [DEBUG] Updated family members:', updatedProfile.familyMembers);
+      
+      // Update local state with API response
+      console.log('🔍 [DEBUG] Updating local state...');
+      setFamilyMembers(updatedProfile.familyMembers);
+      storage.setProfile(updatedProfile);
 
-    setEditingMember(null);
-    setShowAddForm(false);
-    showSuccess(`Updated ${updatedMember.name}'s information!`);
+      // Reset form
+      console.log('🔍 [DEBUG] Resetting form state...');
+      setNewMember({
+        name: '',
+        age: '',
+        dietaryRestrictions: [],
+        allergies: [],
+        lovedFoods: [],
+        dislikedFoods: []
+      });
+
+      console.log('🔍 [DEBUG] Setting editingMember to null...');
+      setEditingMember(null);
+      console.log('🔍 [DEBUG] Setting showAddForm to false...');
+      setShowAddForm(false);
+      
+      console.log('✅ [DEBUG] handleSaveEdit completed successfully');
+      showSuccess(`Updated ${memberData.name}'s information!`);
+    } catch (error) {
+      console.error('❌ [DEBUG] Error in handleSaveEdit:', error);
+      console.error('❌ [DEBUG] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      showError(`Failed to update family member: ${error.message}`);
+    }
   };
 
-  const handleRemoveMember = (id: string) => {
+  const handleRemoveMember = async (id: string) => {
     const memberToRemove = familyMembers.find(member => member.id === id);
-    const updatedMembers = familyMembers.filter(member => member.id !== id);
-    setFamilyMembers(updatedMembers);
     
-    // Update profile in storage
-    const updatedProfile = { ...profile, familyMembers: updatedMembers };
-    storage.setProfile(updatedProfile);
-
-    showSuccess(`Removed ${memberToRemove?.name} from your family`);
+    try {
+      // Call API to remove family member
+      const { profileApi } = await import('@/services/api');
+      const updatedProfile = await profileApi.removeFamilyMember(id);
+      
+      // Update local state with API response
+      setFamilyMembers(updatedProfile.familyMembers);
+      storage.setProfile(updatedProfile);
+      showSuccess(`Removed ${memberToRemove?.name} from your family`);
+    } catch (error) {
+      console.error('Error removing family member:', error);
+      showError(`Failed to remove family member: ${error.message}`);
+    }
   };
 
   const handleDietaryRestrictionToggle = (restriction: string) => {
@@ -177,6 +250,13 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
   };
 
   const handleCancelForm = () => {
+    console.log('🔍 [DEBUG] handleCancelForm called');
+    console.log('🔍 [DEBUG] Current states before cancel:', {
+      showAddForm,
+      editingMember,
+      newMember
+    });
+    
     setNewMember({
       name: '',
       age: '',
@@ -187,6 +267,8 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
     });
     setEditingMember(null);
     setShowAddForm(false);
+    
+    console.log('🔍 [DEBUG] Form cancelled and states reset');
   };
 
   return (
@@ -205,7 +287,16 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
               </div>
             </div>
             
-            <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+            <Dialog open={showAddForm} onOpenChange={(open) => {
+              console.log('🔍 [DEBUG] Dialog onOpenChange called with:', open);
+              if (!open) {
+                // Dialog is being closed
+                console.log('🔍 [DEBUG] Dialog closing, resetting form state');
+                handleCancelForm();
+              } else {
+                setShowAddForm(open);
+              }
+            }}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />

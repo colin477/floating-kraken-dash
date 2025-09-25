@@ -331,54 +331,65 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
     });
   };
 
-  const handleAddMember = () => {
+  const handleAddMember = async () => {
     if (!newMember.name.trim() || !newMember.age) {
       showError('Please enter name and age for the family member');
       return;
     }
 
-    const familyMember: FamilyMember = {
-      id: Date.now().toString(),
-      name: newMember.name.trim(),
-      age: parseInt(newMember.age),
-      dietaryRestrictions: newMember.dietaryRestrictions,
-      allergies: newMember.allergies,
-      lovedFoods: newMember.lovedFoods,
-      dislikedFoods: newMember.dislikedFoods
-    };
+    try {
+      // Convert camelCase to snake_case for API
+      const memberData = {
+        name: newMember.name.trim(),
+        age: parseInt(newMember.age),
+        dietary_restrictions: newMember.dietaryRestrictions,
+        allergies: newMember.allergies,
+        loved_foods: newMember.lovedFoods,
+        disliked_foods: newMember.dislikedFoods
+      };
 
-    const updatedProfile = {
-      ...editedProfile,
-      familyMembers: [...editedProfile.familyMembers, familyMember]
-    };
+      // Call API to add family member
+      const { profileApi } = await import('@/services/api');
+      const updatedProfile = await profileApi.addFamilyMember(memberData);
+      
+      // Update local state with API response
+      setEditedProfile(updatedProfile);
+      storage.setProfile(updatedProfile);
 
-    setEditedProfile(updatedProfile);
-    storage.setProfile(updatedProfile);
+      // Reset form
+      setNewMember({
+        name: '',
+        age: '',
+        dietaryRestrictions: [],
+        allergies: [],
+        lovedFoods: [],
+        dislikedFoods: []
+      });
 
-    // Reset form
-    setNewMember({
-      name: '',
-      age: '',
-      dietaryRestrictions: [],
-      allergies: [],
-      lovedFoods: [],
-      dislikedFoods: []
-    });
-
-    setShowAddMember(false);
-    showSuccess(`Added ${familyMember.name} to your family!`);
+      setShowAddMember(false);
+      showSuccess(`Added ${memberData.name} to your family!`);
+    } catch (error) {
+      console.error('Error adding family member:', error);
+      showError(`Failed to add family member: ${error.message}`);
+    }
   };
 
-  const handleRemoveMember = (id: string) => {
+  const handleRemoveMember = async (id: string) => {
     const memberToRemove = editedProfile.familyMembers.find(member => member.id === id);
-    const updatedProfile = {
-      ...editedProfile,
-      familyMembers: editedProfile.familyMembers.filter(member => member.id !== id)
-    };
-
-    setEditedProfile(updatedProfile);
-    storage.setProfile(updatedProfile);
-    showSuccess(`Removed ${memberToRemove?.name} from your family`);
+    
+    try {
+      // Call API to remove family member
+      const { profileApi } = await import('@/services/api');
+      const updatedProfile = await profileApi.removeFamilyMember(id);
+      
+      // Update local state with API response
+      setEditedProfile(updatedProfile);
+      storage.setProfile(updatedProfile);
+      showSuccess(`Removed ${memberToRemove?.name} from your family`);
+    } catch (error) {
+      console.error('Error removing family member:', error);
+      showError(`Failed to remove family member: ${error.message}`);
+    }
   };
 
   const handleDietaryRestrictionToggle = (restriction: string) => {

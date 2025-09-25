@@ -18,38 +18,78 @@ export const DEMO_MODE: DemoModeConfig = {
 
 // Easy toggle functions for development
 export const enableDemoMode = () => {
-  (window as any).__DEMO_MODE_OVERRIDE__ = {
+  const config = {
     enabled: true,
     bypassAuth: true,
     useMockData: true,
     showDemoIndicator: true,
   };
+  
+  // Set both window override and persistent storage
+  (window as any).__DEMO_MODE_OVERRIDE__ = config;
+  localStorage.setItem('__DEMO_MODE_OVERRIDE__', JSON.stringify(config));
+  
   console.log('🧪 Demo Mode ENABLED - Authentication bypassed for testing');
 };
 
 export const disableDemoMode = () => {
-  (window as any).__DEMO_MODE_OVERRIDE__ = {
+  const config = {
     enabled: false,
     bypassAuth: false,
     useMockData: false,
     showDemoIndicator: false,
   };
+  
+  // Set both window override and persistent storage
+  (window as any).__DEMO_MODE_OVERRIDE__ = config;
+  localStorage.setItem('__DEMO_MODE_OVERRIDE__', JSON.stringify(config));
+  
   console.log('🔒 Demo Mode DISABLED - Full authentication required');
 };
 
 export const getDemoModeConfig = (): DemoModeConfig => {
-  // Allow runtime override via window object for easy testing
-  const override = (window as any).__DEMO_MODE_OVERRIDE__;
-  return override || DEMO_MODE;
+  // Check for persistent override in localStorage first
+  let persistentOverride = null;
+  try {
+    const stored = localStorage.getItem('__DEMO_MODE_OVERRIDE__');
+    if (stored) {
+      persistentOverride = JSON.parse(stored);
+    }
+  } catch (error) {
+    console.warn('[DemoMode] Failed to parse stored demo mode override:', error);
+  }
+  
+  // Allow runtime override via window object for easy testing (takes precedence)
+  const windowOverride = (window as any).__DEMO_MODE_OVERRIDE__;
+  
+  // Priority: window override > localStorage override > default config
+  const result = windowOverride || persistentOverride || DEMO_MODE;
+  
+  // DEBUG: Log demo mode configuration decisions
+  console.log('[DemoMode] getDemoModeConfig:', {
+    hasWindowOverride: !!windowOverride,
+    windowOverride,
+    hasPersistentOverride: !!persistentOverride,
+    persistentOverride,
+    defaultConfig: DEMO_MODE,
+    finalResult: result,
+    timestamp: new Date().toISOString()
+  });
+  
+  return result;
 };
 
 export const isDemoModeEnabled = (): boolean => {
-  return getDemoModeConfig().enabled;
+  const result = getDemoModeConfig().enabled;
+  console.log('[DemoMode] isDemoModeEnabled:', result);
+  return result;
 };
 
 export const shouldBypassAuth = (): boolean => {
   const config = getDemoModeConfig();
-  return config.enabled && config.bypassAuth;
+  const result = config.enabled && config.bypassAuth;
+  console.log('[DemoMode] shouldBypassAuth:', { config, result });
+  return result;
 };
 
 export const shouldUseMockData = (): boolean => {

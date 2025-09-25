@@ -301,3 +301,323 @@ export const authApi = {
     return response.json();
   },
 };
+
+// Community API service
+export const communityApi = {
+  // Get all posts
+  getPosts: async (params?: {
+    page?: number;
+    page_size?: number;
+    post_type?: string;
+    tags?: string[];
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
+    if (params?.post_type) searchParams.append('post_type', params.post_type);
+    if (params?.tags) {
+      params.tags.forEach(tag => searchParams.append('tags', tag));
+    }
+    
+    const query = searchParams.toString();
+    const endpoint = `/community/posts/${query ? `?${query}` : ''}`;
+    
+    const response = await apiRequest(endpoint);
+    return response.json();
+  },
+
+  // Get single post
+  getPost: async (postId: string) => {
+    const response = await apiRequest(`/community/posts/${postId}`);
+    return response.json();
+  },
+
+  // Create new post
+  createPost: async (postData: {
+    title: string;
+    content: string;
+    post_type: 'recipe' | 'tip' | 'savings_story' | 'general';
+    recipe_id?: string;
+    tags?: string[];
+    is_public?: boolean;
+  }) => {
+    const response = await apiRequest('/community/posts/', {
+      method: 'POST',
+      body: JSON.stringify(postData),
+    });
+    return response.json();
+  },
+
+  // Update post
+  updatePost: async (postId: string, updateData: {
+    title?: string;
+    content?: string;
+    post_type?: 'recipe' | 'tip' | 'savings_story' | 'general';
+    recipe_id?: string;
+    tags?: string[];
+    is_public?: boolean;
+  }) => {
+    const response = await apiRequest(`/community/posts/${postId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData),
+    });
+    return response.json();
+  },
+
+  // Delete post
+  deletePost: async (postId: string) => {
+    const response = await apiRequest(`/community/posts/${postId}`, {
+      method: 'DELETE',
+    });
+    return response.status === 204;
+  },
+
+  // Like/unlike post
+  likePost: async (postId: string) => {
+    const response = await apiRequest(`/community/posts/${postId}/like`, {
+      method: 'POST',
+    });
+    return response.json();
+  },
+
+  // Get comments for a post
+  getComments: async (postId: string, params?: {
+    page?: number;
+    page_size?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
+    
+    const query = searchParams.toString();
+    const endpoint = `/community/posts/${postId}/comments/${query ? `?${query}` : ''}`;
+    
+    const response = await apiRequest(endpoint);
+    return response.json();
+  },
+
+  // Add comment to post
+  addComment: async (postId: string, commentData: {
+    content: string;
+    parent_comment_id?: string;
+  }) => {
+    const response = await apiRequest(`/community/posts/${postId}/comments/`, {
+      method: 'POST',
+      body: JSON.stringify(commentData),
+    });
+    return response.json();
+  },
+
+  // Update comment
+  updateComment: async (commentId: string, updateData: {
+    content?: string;
+  }) => {
+    const response = await apiRequest(`/community/comments/${commentId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData),
+    });
+    return response.json();
+  },
+
+  // Delete comment
+  deleteComment: async (commentId: string) => {
+    const response = await apiRequest(`/community/comments/${commentId}`, {
+      method: 'DELETE',
+    });
+    return response.status === 204;
+  },
+
+  // Like/unlike comment
+  likeComment: async (commentId: string) => {
+    const response = await apiRequest(`/community/comments/${commentId}/like`, {
+      method: 'POST',
+    });
+    return response.json();
+  },
+};
+
+// Leftover Suggestions API service
+export const leftoverApi = {
+  // Get recipe suggestions based on current pantry items
+  getPantrySuggestions: async (filters?: {
+    max_suggestions?: number;
+    min_match_percentage?: number;
+    max_prep_time?: number;
+    max_cook_time?: number;
+    difficulty_levels?: string[];
+    meal_types?: string[];
+    dietary_restrictions?: string[];
+    exclude_expired?: boolean;
+    prioritize_expiring?: boolean;
+    include_substitutes?: boolean;
+  }) => {
+    const searchParams = new URLSearchParams();
+    
+    if (filters?.max_suggestions) searchParams.append('max_suggestions', filters.max_suggestions.toString());
+    if (filters?.min_match_percentage) searchParams.append('min_match_percentage', filters.min_match_percentage.toString());
+    if (filters?.max_prep_time) searchParams.append('max_prep_time', filters.max_prep_time.toString());
+    if (filters?.max_cook_time) searchParams.append('max_cook_time', filters.max_cook_time.toString());
+    if (filters?.difficulty_levels && filters.difficulty_levels.length > 0) {
+      searchParams.append('difficulty_level', filters.difficulty_levels[0]);
+    }
+    if (filters?.meal_types && filters.meal_types.length > 0) {
+      searchParams.append('meal_type', filters.meal_types[0]);
+    }
+    if (filters?.exclude_expired !== undefined) searchParams.append('exclude_expired', filters.exclude_expired.toString());
+    if (filters?.prioritize_expiring !== undefined) searchParams.append('include_expiring', filters.prioritize_expiring.toString());
+    
+    const query = searchParams.toString();
+    const endpoint = `/leftovers/suggestions${query ? `?${query}` : ''}`;
+    
+    const response = await apiRequest(endpoint);
+    return response.json();
+  },
+
+  // Get custom suggestions with filter object
+  getCustomSuggestions: async (filters: {
+    max_suggestions?: number;
+    min_match_percentage?: number;
+    max_prep_time?: number;
+    max_cook_time?: number;
+    difficulty_levels?: string[];
+    meal_types?: string[];
+    dietary_restrictions?: string[];
+    exclude_expired?: boolean;
+    prioritize_expiring?: boolean;
+    include_substitutes?: boolean;
+  }) => {
+    const response = await apiRequest('/leftovers/suggestions/custom', {
+      method: 'POST',
+      body: JSON.stringify(filters),
+    });
+    return response.json();
+  },
+
+  // Get available ingredients
+  getAvailableIngredients: async () => {
+    const response = await apiRequest('/leftovers/ingredients');
+    return response.json();
+  },
+
+  // Get debug suggestions
+  getDebugSuggestions: async (filters?: {
+    max_suggestions?: number;
+    min_match_percentage?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    
+    if (filters?.max_suggestions) searchParams.append('max_suggestions', filters.max_suggestions.toString());
+    if (filters?.min_match_percentage) searchParams.append('min_match_percentage', filters.min_match_percentage.toString());
+    
+    const query = searchParams.toString();
+    const endpoint = `/leftovers/suggestions/debug${query ? `?${query}` : ''}`;
+    
+    const response = await apiRequest(endpoint);
+    return response.json();
+  },
+};
+
+// Profile API service
+export const profileApi = {
+  // Get user profile
+  getProfile: async () => {
+    const response = await apiRequest('/profile/');
+    return response.json();
+  },
+
+  // Create or update user profile
+  updateProfile: async (profileData: {
+    dietary_restrictions?: string[];
+    allergies?: string[];
+    taste_preferences?: string[];
+    meal_preferences?: string[];
+    kitchen_equipment?: string[];
+    weekly_budget?: number;
+    zip_code?: string;
+    preferred_grocers?: string[];
+    subscription?: string;
+    trial_ends_at?: string;
+  }) => {
+    const response = await apiRequest('/profile/', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+    return response.json();
+  },
+
+  // Add family member
+  addFamilyMember: async (memberData: {
+    name: string;
+    age: number;
+    dietary_restrictions?: string[];
+    allergies?: string[];
+    loved_foods?: string[];
+    disliked_foods?: string[];
+  }) => {
+    console.log('🌐 [API] addFamilyMember called with data:', memberData);
+    
+    try {
+      const response = await apiRequest('/profile/family-members', {
+        method: 'POST',
+        body: JSON.stringify(memberData),
+      });
+      
+      console.log('🌐 [API] addFamilyMember response status:', response.status);
+      const result = await response.json();
+      console.log('🌐 [API] addFamilyMember response data:', result);
+      
+      return result;
+    } catch (error) {
+      console.error('🌐 [API] addFamilyMember error:', error);
+      throw error;
+    }
+  },
+
+  // Update family member
+  updateFamilyMember: async (memberId: string, memberData: {
+    name?: string;
+    age?: number;
+    dietary_restrictions?: string[];
+    allergies?: string[];
+    loved_foods?: string[];
+    disliked_foods?: string[];
+  }) => {
+    console.log('🌐 [API] updateFamilyMember called with:', { memberId, memberData });
+    
+    try {
+      const response = await apiRequest(`/profile/family-members/${memberId}`, {
+        method: 'PUT',
+        body: JSON.stringify(memberData),
+      });
+      
+      console.log('🌐 [API] updateFamilyMember response status:', response.status);
+      const result = await response.json();
+      console.log('🌐 [API] updateFamilyMember response data:', result);
+      
+      return result;
+    } catch (error) {
+      console.error('🌐 [API] updateFamilyMember error:', error);
+      throw error;
+    }
+  },
+
+  // Remove family member
+  removeFamilyMember: async (memberId: string) => {
+    console.log('🌐 [API] removeFamilyMember called with memberId:', memberId);
+    
+    try {
+      const response = await apiRequest(`/profile/family-members/${memberId}`, {
+        method: 'DELETE',
+      });
+      
+      console.log('🌐 [API] removeFamilyMember response status:', response.status);
+      const result = await response.json();
+      console.log('🌐 [API] removeFamilyMember response data:', result);
+      
+      return result;
+    } catch (error) {
+      console.error('🌐 [API] removeFamilyMember error:', error);
+      throw error;
+    }
+  },
+};

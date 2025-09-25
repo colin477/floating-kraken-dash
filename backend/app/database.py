@@ -6,10 +6,11 @@ import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ConnectionFailure, DuplicateKeyError
 import logging
+import structlog
+from app.middleware.performance import DatabasePoolConfig
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Configure structured logging
+logger = structlog.get_logger(__name__)
 
 class Database:
     client: AsyncIOMotorClient = None
@@ -21,64 +22,318 @@ async def get_database():
     """Get database instance"""
     return db.database
 
-async def create_indexes():
-    """Create database indexes for optimal query performance"""
+async def create_comprehensive_indexes():
+    """Create comprehensive database indexes for optimal query performance"""
     try:
-        # Get profiles collection
-        profiles_collection = await get_collection("profiles")
+        # Users collection indexes
+        await create_users_indexes()
         
-        # Get existing indexes
+        # Profiles collection indexes
+        await create_profiles_indexes()
+        
+        # Pantry items collection indexes
+        await create_pantry_indexes()
+        
+        # Recipes collection indexes
+        await create_recipes_indexes()
+        
+        # Meal plans collection indexes
+        await create_meal_plans_indexes()
+        
+        # Shopping lists collection indexes
+        await create_shopping_lists_indexes()
+        
+        # Community collections indexes
+        await create_community_indexes()
+        
+        # Receipts collection indexes
+        await create_receipts_indexes()
+        
+        logger.info("All database indexes created successfully")
+        
+    except Exception as e:
+        logger.error(f"Error creating comprehensive database indexes: {e}")
+
+async def create_users_indexes():
+    """Create indexes for users collection"""
+    try:
+        users_collection = await get_collection("users")
+        existing_indexes = await users_collection.list_indexes().to_list(length=None)
+        existing_index_names = {idx['name'] for idx in existing_indexes}
+        
+        # Unique index on email (use existing email_1 index name)
+        if "email_1" not in existing_index_names:
+            await users_collection.create_index(
+                [("email", 1)],
+                unique=True,
+                name="email_1"
+            )
+            logger.info("Created unique index on users.email")
+        
+        # Index on created_at for sorting
+        if "created_at_desc" not in existing_index_names:
+            await users_collection.create_index(
+                [("created_at", -1)],
+                name="created_at_desc"
+            )
+            logger.info("Created index on users.created_at")
+            
+        # Index on is_active for filtering
+        if "is_active_index" not in existing_index_names:
+            await users_collection.create_index(
+                [("is_active", 1)],
+                name="is_active_index"
+            )
+            logger.info("Created index on users.is_active")
+            
+    except Exception as e:
+        logger.error(f"Error creating users indexes: {e}")
+
+async def create_profiles_indexes():
+    """Create indexes for profiles collection"""
+    try:
+        profiles_collection = await get_collection("profiles")
         existing_indexes = await profiles_collection.list_indexes().to_list(length=None)
         existing_index_names = {idx['name'] for idx in existing_indexes}
         
-        # Create unique index on user_id
+        # Unique index on user_id
         if "user_id_unique" not in existing_index_names:
-            try:
-                await profiles_collection.create_index(
-                    [("user_id", 1)],
-                    unique=True,
-                    name="user_id_unique"
-                )
-                logger.info("Created unique index on profiles.user_id")
-            except Exception as e:
-                logger.error(f"Error creating unique index on profiles.user_id: {e}")
-        else:
-            logger.info("Unique index on profiles.user_id already exists")
+            await profiles_collection.create_index(
+                [("user_id", 1)],
+                unique=True,
+                name="user_id_unique"
+            )
+            logger.info("Created unique index on profiles.user_id")
         
-        # Create compound index for family member operations
+        # Compound index for family member operations
         if "user_id_family_member_id" not in existing_index_names:
-            try:
-                await profiles_collection.create_index(
-                    [("user_id", 1), ("family_members.id", 1)],
-                    name="user_id_family_member_id"
-                )
-                logger.info("Created compound index on profiles.user_id and family_members.id")
-            except Exception as e:
-                logger.error(f"Error creating compound index on profiles.user_id and family_members.id: {e}")
-        else:
-            logger.info("Compound index on profiles.user_id and family_members.id already exists")
+            await profiles_collection.create_index(
+                [("user_id", 1), ("family_members.id", 1)],
+                name="user_id_family_member_id"
+            )
+            logger.info("Created compound index on profiles.user_id and family_members.id")
             
     except Exception as e:
-        logger.error(f"Error creating database indexes: {e}")
+        logger.error(f"Error creating profiles indexes: {e}")
+
+async def create_pantry_indexes():
+    """Create indexes for pantry_items collection"""
+    try:
+        pantry_collection = await get_collection("pantry_items")
+        existing_indexes = await pantry_collection.list_indexes().to_list(length=None)
+        existing_index_names = {idx['name'] for idx in existing_indexes}
+        
+        # Compound index on user_id and name for queries
+        if "user_id_name" not in existing_index_names:
+            await pantry_collection.create_index(
+                [("user_id", 1), ("name", 1)],
+                name="user_id_name"
+            )
+            logger.info("Created compound index on pantry_items.user_id and name")
+        
+        # Index on expiry_date for expiration queries
+        if "expiry_date_index" not in existing_index_names:
+            await pantry_collection.create_index(
+                [("expiry_date", 1)],
+                name="expiry_date_index"
+            )
+            logger.info("Created index on pantry_items.expiry_date")
+        
+        # Compound index for category filtering (use existing user_id_category_index name)
+        if "user_id_category_index" not in existing_index_names:
+            await pantry_collection.create_index(
+                [("user_id", 1), ("category", 1)],
+                name="user_id_category_index"
+            )
+            logger.info("Created compound index on pantry_items.user_id and category")
+            
+    except Exception as e:
+        logger.error(f"Error creating pantry indexes: {e}")
+
+async def create_recipes_indexes():
+    """Create indexes for recipes collection"""
+    try:
+        recipes_collection = await get_collection("recipes")
+        existing_indexes = await recipes_collection.list_indexes().to_list(length=None)
+        existing_index_names = {idx['name'] for idx in existing_indexes}
+        
+        # Index on user_id for user recipes
+        if "user_id_index" not in existing_index_names:
+            await recipes_collection.create_index(
+                [("user_id", 1)],
+                name="user_id_index"
+            )
+            logger.info("Created index on recipes.user_id")
+        
+        # Text index for recipe search (use existing text_search_index name and weights)
+        if "text_search_index" not in existing_index_names:
+            await recipes_collection.create_index(
+                [("title", "text"), ("description", "text"), ("tags", "text")],
+                name="text_search_index"
+            )
+            logger.info("Created text search index on recipes")
+        
+        # Index on created_at for sorting
+        if "created_at_desc" not in existing_index_names:
+            await recipes_collection.create_index(
+                [("created_at", -1)],
+                name="created_at_desc"
+            )
+            logger.info("Created index on recipes.created_at")
+            
+    except Exception as e:
+        logger.error(f"Error creating recipes indexes: {e}")
+
+async def create_meal_plans_indexes():
+    """Create indexes for meal_plans collection"""
+    try:
+        meal_plans_collection = await get_collection("meal_plans")
+        existing_indexes = await meal_plans_collection.list_indexes().to_list(length=None)
+        existing_index_names = {idx['name'] for idx in existing_indexes}
+        
+        # Compound index on user_id and date
+        if "user_id_date" not in existing_index_names:
+            await meal_plans_collection.create_index(
+                [("user_id", 1), ("date", 1)],
+                name="user_id_date"
+            )
+            logger.info("Created compound index on meal_plans.user_id and date")
+        
+        # Index on date range queries
+        if "date_range" not in existing_index_names:
+            await meal_plans_collection.create_index(
+                [("date", 1)],
+                name="date_range"
+            )
+            logger.info("Created index on meal_plans.date")
+            
+    except Exception as e:
+        logger.error(f"Error creating meal plans indexes: {e}")
+
+async def create_shopping_lists_indexes():
+    """Create indexes for shopping_lists collection"""
+    try:
+        shopping_lists_collection = await get_collection("shopping_lists")
+        existing_indexes = await shopping_lists_collection.list_indexes().to_list(length=None)
+        existing_index_names = {idx['name'] for idx in existing_indexes}
+        
+        # Index on user_id (use existing user_id_1 name)
+        if "user_id_1" not in existing_index_names:
+            await shopping_lists_collection.create_index(
+                [("user_id", 1)],
+                name="user_id_1"
+            )
+            logger.info("Created index on shopping_lists.user_id")
+        
+        # Compound index on user_id and status (use existing user_id_1_status_1 name)
+        if "user_id_1_status_1" not in existing_index_names:
+            await shopping_lists_collection.create_index(
+                [("user_id", 1), ("status", 1)],
+                name="user_id_1_status_1"
+            )
+            logger.info("Created compound index on shopping_lists.user_id and status")
+            
+    except Exception as e:
+        logger.error(f"Error creating shopping lists indexes: {e}")
+
+async def create_community_indexes():
+    """Create indexes for community collections"""
+    try:
+        # Community posts indexes
+        posts_collection = await get_collection("community_posts")
+        existing_indexes = await posts_collection.list_indexes().to_list(length=None)
+        existing_index_names = {idx['name'] for idx in existing_indexes}
+        
+        if "created_at_-1" not in existing_index_names:
+            await posts_collection.create_index(
+                [("created_at", -1)],
+                name="created_at_-1"
+            )
+            logger.info("Created index on community_posts.created_at")
+        
+        if "user_id_1" not in existing_index_names:
+            await posts_collection.create_index(
+                [("user_id", 1)],
+                name="user_id_1"
+            )
+            logger.info("Created index on community_posts.user_id")
+        
+        # Community comments indexes
+        comments_collection = await get_collection("community_comments")
+        existing_indexes = await comments_collection.list_indexes().to_list(length=None)
+        existing_index_names = {idx['name'] for idx in existing_indexes}
+        
+        if "post_id_1" not in existing_index_names:
+            await comments_collection.create_index(
+                [("post_id", 1)],
+                name="post_id_1"
+            )
+            logger.info("Created index on community_comments.post_id")
+        
+        # Community likes indexes
+        likes_collection = await get_collection("community_likes")
+        existing_indexes = await likes_collection.list_indexes().to_list(length=None)
+        existing_index_names = {idx['name'] for idx in existing_indexes}
+        
+        if "post_id_user_id" not in existing_index_names:
+            await likes_collection.create_index(
+                [("post_id", 1), ("user_id", 1)],
+                unique=True,
+                name="post_id_user_id"
+            )
+            logger.info("Created unique compound index on community_likes.post_id and user_id")
+            
+    except Exception as e:
+        logger.error(f"Error creating community indexes: {e}")
+
+async def create_receipts_indexes():
+    """Create indexes for receipts collection"""
+    try:
+        receipts_collection = await get_collection("receipts")
+        existing_indexes = await receipts_collection.list_indexes().to_list(length=None)
+        existing_index_names = {idx['name'] for idx in existing_indexes}
+        
+        # Index on user_id
+        if "user_id_index" not in existing_index_names:
+            await receipts_collection.create_index(
+                [("user_id", 1)],
+                name="user_id_index"
+            )
+            logger.info("Created index on receipts.user_id")
+        
+        # Index on created_at for sorting
+        if "created_at_desc" not in existing_index_names:
+            await receipts_collection.create_index(
+                [("created_at", -1)],
+                name="created_at_desc"
+            )
+            logger.info("Created index on receipts.created_at")
+            
+    except Exception as e:
+        logger.error(f"Error creating receipts indexes: {e}")
 
 
 async def connect_to_mongo():
-    """Create database connection"""
+    """Create database connection with production-grade connection pooling"""
     try:
         # Get MongoDB URI from environment
         mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
         database_name = os.getenv("DATABASE_NAME", "ez_eatin")
         
-        # Create MongoDB client
-        db.client = AsyncIOMotorClient(mongodb_uri)
+        # Get optimized connection options for production
+        connection_options = DatabasePoolConfig.get_connection_options()
+        
+        # Create MongoDB client with connection pooling
+        db.client = AsyncIOMotorClient(mongodb_uri, **connection_options)
         db.database = db.client[database_name]
         
         # Test the connection
         await db.client.admin.command('ping')
         logger.info(f"Successfully connected to MongoDB database: {database_name}")
+        logger.info(f"Connection pool configured with max size: {connection_options['maxPoolSize']}")
         
-        # Create database indexes
-        await create_indexes()
+        # Create comprehensive database indexes
+        await create_comprehensive_indexes()
         
     except ConnectionFailure as e:
         logger.error(f"Failed to connect to MongoDB: {e}")
@@ -99,12 +354,14 @@ database = db.database
 # Collection names
 COLLECTIONS = {
     "users": "users",
-    "profiles": "profiles", 
+    "profiles": "profiles",
     "pantry_items": "pantry_items",
     "recipes": "recipes",
     "meal_plans": "meal_plans",
     "receipts": "receipts",
     "community_posts": "community_posts",
+    "community_comments": "community_comments",
+    "community_likes": "community_likes",
     "shopping_lists": "shopping_lists"
 }
 

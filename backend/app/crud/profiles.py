@@ -51,7 +51,9 @@ async def create_profile(user_id: str, profile_data: UserProfileCreate) -> Optio
                 name=member_data.name,
                 age=member_data.age,
                 allergies=member_data.allergies,
-                dietary_restrictions=member_data.dietary_restrictions
+                dietary_restrictions=member_data.dietary_restrictions,
+                loved_foods=member_data.loved_foods,
+                disliked_foods=member_data.disliked_foods
             )
             family_members.append(member.dict())
         
@@ -108,11 +110,23 @@ async def get_profile_by_user_id(user_id: str) -> Optional[UserProfile]:
         profiles_collection = await get_collection("profiles")
         
         profile = await profiles_collection.find_one({"user_id": user_id})
+        logger.info(f"Raw profile from database: {profile}")
+        
         if profile:
             # Convert ObjectId to string for the response
             profile["_id"] = str(profile["_id"])
-            return UserProfile(**profile)
+            logger.info(f"Profile after ObjectId conversion: {profile}")
+            
+            try:
+                user_profile = UserProfile(**profile)
+                logger.info(f"Successfully created UserProfile object")
+                return user_profile
+            except Exception as validation_error:
+                logger.error(f"UserProfile validation error: {validation_error}")
+                logger.error(f"Profile data that failed validation: {profile}")
+                return None
         
+        logger.info(f"No profile found for user_id: {user_id}")
         return None
         
     except PyMongoError as e:
@@ -120,6 +134,8 @@ async def get_profile_by_user_id(user_id: str) -> Optional[UserProfile]:
         return None
     except Exception as e:
         logger.error(f"Error getting profile for user {user_id}: {e}")
+        logger.error(f"Exception type: {type(e)}")
+        logger.error(f"Exception args: {e.args}")
         return None
 
 
@@ -189,7 +205,9 @@ async def add_family_member(user_id: str, member_data: FamilyMemberCreate) -> Op
             name=member_data.name,
             age=member_data.age,
             allergies=member_data.allergies,
-            dietary_restrictions=member_data.dietary_restrictions
+            dietary_restrictions=member_data.dietary_restrictions,
+            loved_foods=member_data.loved_foods,
+            disliked_foods=member_data.disliked_foods
         )
         
         # Add family member to profile

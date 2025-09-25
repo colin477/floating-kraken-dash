@@ -157,14 +157,19 @@ backend/
 - `PUT /{id}/items/{item_id}` - Mark item as purchased
 
 ### Community (`/api/v1/community`)
-- `GET /posts` - Get community posts
-- `POST /posts` - Create community post
-- `GET /posts/{id}` - Get specific post
-- `PUT /posts/{id}/like` - Like/unlike post
-- `POST /posts/{id}/comments` - Add comment
+- `POST /posts/` - Create a new post
+- `GET /posts/` - Get all posts
+- `GET /posts/{post_id}` - Get a single post
+- `PUT /posts/{post_id}` - Update a post
+- `DELETE /posts/{post_id}` - Delete a post
+- `POST /posts/{post_id}/like` - Like a post
+- `POST /posts/{post_id}/comments/` - Add a comment to a post
+- `PUT /comments/{comment_id}` - Update a comment
+- `DELETE /comments/{comment_id}` - Delete a comment
+- `POST /comments/{comment_id}/like` - Like a comment
 
 ### Leftovers (`/api/v1/leftovers`)
-- `POST /suggestions` - Get leftover recipe suggestions
+- `POST /suggestions` - Get recipe suggestions for leftovers
 
 ## Development
 
