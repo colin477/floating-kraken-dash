@@ -115,19 +115,53 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // The app will handle profile creation flow
       }
     } catch (error) {
-      console.warn('[AuthContext] API login failed, using mock data:', error);
-      // Fallback to mock login for demo purposes
-      const mockUserData = {
-        id: Date.now().toString(),
-        email: email,
-        name: email.split('@')[0],
-        createdAt: new Date().toISOString(),
-        subscription: 'basic' as const,
-        token: 'mock-jwt-token-' + Date.now(), // Mock JWT token
-      };
+      console.error('[AuthContext] 🚨 LOGIN ERROR CAUGHT:');
+      console.error('[AuthContext] Error type:', error?.constructor?.name);
+      console.error('[AuthContext] Error message:', error?.message);
+      console.error('[AuthContext] Full error object:', error);
       
-      setUser(mockUserData);
-      storage.setUser(mockUserData);
+      // Always re-throw authentication-related errors to display to the user
+      // Only fall back to mock data for genuine network/server connectivity issues
+      const errorMessage = error?.message || '';
+      
+      // Check if this is a network/connectivity error (not an authentication error)
+      const isNetworkError = errorMessage.includes('fetch') ||
+                            errorMessage.includes('NetworkError') ||
+                            errorMessage.includes('Failed to fetch') ||
+                            errorMessage.includes('Connection refused') ||
+                            errorMessage.includes('ECONNREFUSED') ||
+                            errorMessage.includes('timeout') ||
+                            errorMessage.includes('ETIMEDOUT');
+      
+      console.log('[AuthContext] Is network error?', isNetworkError);
+      console.log('[AuthContext] Error message analysis:', {
+        message: errorMessage,
+        isNetworkError,
+        shouldShowToUser: !isNetworkError
+      });
+      
+      if (isNetworkError) {
+        console.warn('[AuthContext] ❌ Network/server connectivity error - falling back to mock data for demo purposes');
+        console.warn('[AuthContext] This means the error will NOT be shown to the user');
+        // Only use mock data for genuine network/connectivity errors
+        const mockUserData = {
+          id: Date.now().toString(),
+          email: email,
+          name: email.split('@')[0],
+          createdAt: new Date().toISOString(),
+          subscription: 'basic' as const,
+          token: 'mock-jwt-token-' + Date.now(), // Mock JWT token
+        };
+        
+        setUser(mockUserData);
+        storage.setUser(mockUserData);
+      } else {
+        console.error('[AuthContext] ✅ Authentication or other error - RE-THROWING error to display to user');
+        console.error('[AuthContext] Error being re-thrown:', errorMessage);
+        // Re-throw ALL non-network errors so they get displayed to the user
+        // This includes authentication errors, validation errors, etc.
+        throw error;
+      }
     }
   };
 
@@ -151,19 +185,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // For new registrations, don't try to load profile - they need to create one
       console.log('[AuthContext] New user registered, profile creation will be handled by onboarding flow');
     } catch (error) {
-      console.warn('[AuthContext] API registration failed, using mock data:', error);
-      // Fallback to mock registration for demo purposes
-      const mockUserData = {
-        id: Date.now().toString(),
-        email: email,
-        name: name,
-        createdAt: new Date().toISOString(),
-        subscription: 'free' as const,
-        token: 'mock-jwt-token-' + Date.now(), // Mock JWT token
-      };
+      console.error('[AuthContext] Registration failed:', error);
       
-      setUser(mockUserData);
-      storage.setUser(mockUserData);
+      // Check if this is a legitimate registration error (400 for duplicate email) vs network/server error
+      const isRegistrationError = error?.message?.includes('Email already registered') ||
+                                 error?.message?.includes('400') ||
+                                 error?.message?.includes('Bad Request') ||
+                                 error?.message?.includes('already exists');
+      
+      if (isRegistrationError) {
+        console.error('[AuthContext] Registration failed - throwing error to display to user');
+        // Re-throw the error so it gets displayed to the user
+        throw error;
+      } else {
+        console.warn('[AuthContext] Network/server error during registration, falling back to mock data for demo purposes');
+        // Only use mock data for non-registration errors (network issues, server down, etc.)
+        const mockUserData = {
+          id: Date.now().toString(),
+          email: email,
+          name: name,
+          createdAt: new Date().toISOString(),
+          subscription: 'free' as const,
+          token: 'mock-jwt-token-' + Date.now(), // Mock JWT token
+        };
+        
+        setUser(mockUserData);
+        storage.setUser(mockUserData);
+      }
     }
   };
 

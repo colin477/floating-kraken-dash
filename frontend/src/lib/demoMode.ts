@@ -10,10 +10,10 @@ export interface DemoModeConfig {
 
 // Demo mode configuration - easily toggle for testing
 export const DEMO_MODE: DemoModeConfig = {
-  enabled: true,           // Set to false to disable demo mode entirely
-  bypassAuth: true,        // Bypass authentication checks
-  useMockData: true,       // Use mock data instead of API calls
-  showDemoIndicator: true, // Show demo mode indicator in UI
+  enabled: false,          // Set to false to disable demo mode entirely
+  bypassAuth: false,       // Bypass authentication checks
+  useMockData: false,      // Use mock data instead of API calls
+  showDemoIndicator: false, // Show demo mode indicator in UI
 };
 
 // Easy toggle functions for development

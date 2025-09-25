@@ -51,8 +51,10 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
     setIsLoading(true);
 
     try {
+      console.log('[AuthForm] Starting login process...');
       await login(formData.email, formData.password);
       
+      console.log('[AuthForm] Login successful, setting up profile...');
       // Create default profile if needed
       let existingProfile = storage.getProfile();
       if (!existingProfile) {
@@ -69,8 +71,15 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
         onAuthSuccess(user, false); // false = existing user
       }
     } catch (error) {
-      console.error('Login failed:', error);
-      showError(error instanceof Error ? error.message : 'Login failed');
+      console.error('[AuthForm] 🚨 LOGIN ERROR CAUGHT:');
+      console.error('[AuthForm] Error type:', error?.constructor?.name);
+      console.error('[AuthForm] Error message:', error?.message);
+      console.error('[AuthForm] Full error object:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      console.error('[AuthForm] Displaying error message to user:', errorMessage);
+      
+      showError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -87,16 +96,25 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
     setIsLoading(true);
 
     try {
+      console.log('[AuthForm] Starting registration process...');
       await register(formData.email, formData.password, formData.name);
       
+      console.log('[AuthForm] Registration successful, showing success message');
       showSuccess('Welcome to EZ Eatin\'! Choose your plan to get started.');
       const user = storage.getUser();
       if (user) {
         onAuthSuccess(user, true); // true = new user (show plan selection)
       }
     } catch (error) {
-      console.error('Registration failed:', error);
-      showError(error instanceof Error ? error.message : 'Registration failed');
+      console.error('[AuthForm] 🚨 REGISTRATION ERROR CAUGHT:');
+      console.error('[AuthForm] Error type:', error?.constructor?.name);
+      console.error('[AuthForm] Error message:', error?.message);
+      console.error('[AuthForm] Full error object:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+      console.error('[AuthForm] Displaying error message to user:', errorMessage);
+      
+      showError(errorMessage);
     } finally {
       setIsLoading(false);
     }
