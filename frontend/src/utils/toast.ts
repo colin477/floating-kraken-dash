@@ -16,12 +16,18 @@ export const showSuccess = (message: string) => {
 };
 
 export const showError = (message: string) => {
-  console.error('ERROR:', message);
+  console.error('🔔 [TOAST] showError called with message:', message);
+  console.error('🔔 [TOAST] Notification support:', 'Notification' in window);
+  console.error('🔔 [TOAST] Notification permission:', 'Notification' in window ? Notification.permission : 'N/A');
   
   if ('Notification' in window && Notification.permission === 'granted') {
+    console.error('🔔 [TOAST] Using browser notification');
     new Notification('Error', { body: message, icon: '/favicon.ico' });
   } else {
+    console.error('🔔 [TOAST] Falling back to alert() - this might be blocked by browser');
+    console.error('🔔 [TOAST] About to show alert with message:', `❌ ${message}`);
     alert(`❌ ${message}`);
+    console.error('🔔 [TOAST] Alert should have been displayed');
   }
 };
 

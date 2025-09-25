@@ -74,14 +74,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('[AuthContext] Starting login process...');
       const response = await authApi.login(email, password);
+      // DEBUG: Log the actual API response to diagnose the name field issue
+      console.log('🔍 [AuthContext] Raw API response.user:', response.user);
+      console.log('🔍 [AuthContext] Available user fields:', Object.keys(response.user));
+      console.log('🔍 [AuthContext] response.user.name:', response.user.name);
+      console.log('🔍 [AuthContext] response.user.full_name:', response.user.full_name);
+      
       const userData = {
         id: response.user.id,
         email: response.user.email,
-        name: response.user.name,
+        name: response.user.name || response.user.full_name, // Handle both name and full_name
         createdAt: response.user.created_at,
         subscription: response.user.subscription || 'free',
         token: response.access_token,
       };
+      
+      console.log('🔍 [AuthContext] Final userData.name:', userData.name);
       
       console.log('[AuthContext] Login successful, setting user data');
       setUser(userData);
@@ -133,11 +141,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                             errorMessage.includes('timeout') ||
                             errorMessage.includes('ETIMEDOUT');
       
-      console.log('[AuthContext] Is network error?', isNetworkError);
-      console.log('[AuthContext] Error message analysis:', {
+      console.log('🔍 [AuthContext] DETAILED ERROR ANALYSIS:');
+      console.log('🔍 [AuthContext] Raw error object:', error);
+      console.log('🔍 [AuthContext] Error message:', errorMessage);
+      console.log('🔍 [AuthContext] Is network error?', isNetworkError);
+      console.log('🔍 [AuthContext] Error message analysis:', {
         message: errorMessage,
         isNetworkError,
-        shouldShowToUser: !isNetworkError
+        shouldShowToUser: !isNetworkError,
+        willUseMockData: isNetworkError,
+        willThrowError: !isNetworkError
       });
       
       if (isNetworkError) {
@@ -169,14 +182,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('[AuthContext] Starting registration process...');
       const response = await authApi.register(email, password, name);
+      // DEBUG: Log the actual API response to diagnose the name field issue
+      console.log('🔍 [AuthContext] Registration - Raw API response.user:', response.user);
+      console.log('🔍 [AuthContext] Registration - Available user fields:', Object.keys(response.user));
+      console.log('🔍 [AuthContext] Registration - response.user.name:', response.user.name);
+      console.log('🔍 [AuthContext] Registration - response.user.full_name:', response.user.full_name);
+      
       const userData = {
         id: response.user.id,
         email: response.user.email,
-        name: response.user.name,
+        name: response.user.name || response.user.full_name, // Handle both name and full_name
         createdAt: response.user.created_at,
         subscription: response.user.subscription || 'free',
         token: response.access_token,
       };
+      
+      console.log('🔍 [AuthContext] Registration - Final userData.name:', userData.name);
       
       console.log('[AuthContext] Registration successful, setting user data');
       setUser(userData);
@@ -251,7 +272,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       if (user?.token) {
         const currentUser = await authApi.getCurrentUser();
-        setUser(prev => prev ? { ...currentUser, token: prev.token } : null);
+        
+        // DEBUG: Log the getCurrentUser API response
+        console.log('🔍 [AuthContext] getCurrentUser - Raw API response:', currentUser);
+        console.log('🔍 [AuthContext] getCurrentUser - Available fields:', Object.keys(currentUser));
+        console.log('🔍 [AuthContext] getCurrentUser - currentUser.name:', currentUser.name);
+        console.log('🔍 [AuthContext] getCurrentUser - currentUser.full_name:', currentUser.full_name);
+        
+        // Ensure name field is properly mapped
+        const mappedUser = {
+          ...currentUser,
+          name: currentUser.name || currentUser.full_name
+        };
+        
+        console.log('🔍 [AuthContext] getCurrentUser - Final mappedUser.name:', mappedUser.name);
+        setUser(prev => prev ? { ...mappedUser, token: prev.token } : null);
       }
     } catch (error) {
       console.error('Failed to refresh user:', error);

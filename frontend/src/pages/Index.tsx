@@ -264,6 +264,14 @@ const Index = () => {
             <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />
           );
         case 'family-members':
+          console.log('🔍 [Index] Rendering FamilyMembers with:', {
+            effectiveUser: effectiveUser,
+            effectiveUserExists: !!effectiveUser,
+            effectiveUserName: effectiveUser?.name,
+            profile: profile,
+            profileExists: !!profile,
+            timestamp: new Date().toISOString()
+          });
           return profile ? (
             <FamilyMembers user={effectiveUser} profile={profile} onBack={() => handleNavigate('dashboard')} />
           ) : (

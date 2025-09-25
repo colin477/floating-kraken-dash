@@ -356,7 +356,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
       setEditedProfile(updatedProfile);
       storage.setProfile(updatedProfile);
 
-      // Reset form
+      // Reset form and close it
       setNewMember({
         name: '',
         age: '',
@@ -520,16 +520,16 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Name</Label>
-                <div className="mt-1 text-sm text-gray-900">{user.name}</div>
+                <div className="mt-1 text-sm text-gray-900">{user?.name || 'Not available'}</div>
               </div>
               <div>
                 <Label>Email</Label>
-                <div className="mt-1 text-sm text-gray-900">{user.email}</div>
+                <div className="mt-1 text-sm text-gray-900">{user?.email || 'Not available'}</div>
               </div>
               <div>
                 <Label>Member Since</Label>
                 <div className="mt-1 text-sm text-gray-900">
-                  {new Date(user.createdAt).toLocaleDateString()}
+                  {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Not available'}
                 </div>
               </div>
               <div>
@@ -589,7 +589,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                                 <Badge variant={tier === 'premium' ? 'default' : tier === 'basic' ? 'secondary' : 'outline'}>
                                   {tierInfo.price}
                                 </Badge>
-                                {tier === user.subscription && (
+                                {tier === (user?.subscription || 'free') && (
                                   <Badge variant="outline" className="text-xs">
                                     Current Plan
                                   </Badge>
@@ -626,18 +626,18 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
               ) : (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <Badge variant={editedUser.subscription === 'premium' ? 'default' : editedUser.subscription === 'basic' ? 'secondary' : 'outline'} className="text-sm">
-                      {getSubscriptionDescription(editedUser.subscription).name}
+                    <Badge variant={(editedUser?.subscription || 'free') === 'premium' ? 'default' : (editedUser?.subscription || 'free') === 'basic' ? 'secondary' : 'outline'} className="text-sm">
+                      {getSubscriptionDescription(editedUser?.subscription || 'free').name}
                     </Badge>
                     <span className="text-sm text-gray-600">
-                      {getSubscriptionDescription(editedUser.subscription).price}
+                      {getSubscriptionDescription(editedUser?.subscription || 'free').price}
                     </span>
                   </div>
                   <p className="text-sm text-gray-600">
-                    {getSubscriptionDescription(editedUser.subscription).description}
+                    {getSubscriptionDescription(editedUser?.subscription || 'free').description}
                   </p>
                   
-                  {editedUser.trialEndsAt && (
+                  {editedUser?.trialEndsAt && (
                     <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <div className="flex items-center text-yellow-800">
                         <AlertTriangle className="h-4 w-4 mr-2" />

@@ -41,6 +41,44 @@ const COMMON_DISLIKED_FOODS = [
 ];
 
 export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => {
+  // DEBUG: Log props to diagnose the issue
+  console.log('🔍 [FamilyMembers] Component props:', {
+    user: user,
+    userExists: !!user,
+    userName: user?.name,
+    profile: profile,
+    profileExists: !!profile,
+    timestamp: new Date().toISOString()
+  });
+
+  // Early return with error boundary if user is not provided
+  if (!user) {
+    console.error('❌ [FamilyMembers] User prop is undefined or null');
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Unable to load Family Members</h2>
+          <p className="text-gray-600 mb-4">User information is not available.</p>
+          <Button onClick={onBack}>Go Back</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Early return with error boundary if user.name is not provided
+  if (!user.name) {
+    console.error('❌ [FamilyMembers] User name is undefined or null');
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Unable to load Family Members</h2>
+          <p className="text-gray-600 mb-4">User name is not available.</p>
+          <Button onClick={onBack}>Go Back</Button>
+        </div>
+      </div>
+    );
+  }
+
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);

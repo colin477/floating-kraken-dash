@@ -156,11 +156,32 @@ async def add_family_member_to_profile(
         
         # Check if profile exists
         existing_profile = await get_profile_by_user_id(user_id)
+        
         if not existing_profile:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Profile not found. Please create a profile first."
+            # Create a default profile first if none exists
+            
+            # Create a default profile first
+            from app.models.profiles import UserProfileCreate
+            default_profile_data = UserProfileCreate(
+                dietary_restrictions=[],
+                allergies=[],
+                taste_preferences=[],
+                meal_preferences=[],
+                kitchen_equipment=[],
+                weekly_budget=100,  # Set a default budget > 0
+                zip_code="00000",   # Set a default 5-digit zip code
+                family_members=[],  # Will be empty initially
+                preferred_grocers=[],
+                subscription="free",
+                trial_ends_at=None
             )
+            
+            created_profile = await create_profile(user_id, default_profile_data)
+            if not created_profile:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to create profile"
+                )
         
         # Add family member
         updated_profile = await add_family_member(user_id, member_data)
