@@ -97,7 +97,13 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
   ];
 
   useEffect(() => {
-    setFamilyMembers(profile.familyMembers);
+    console.log('🔍 [DIAGNOSIS] useEffect - familyMembers data:', {
+      profileFamilyMembers: profile.familyMembers,
+      profileFamilyMembersLength: profile.familyMembers?.length || 0,
+      profileFamilyMembersArray: Array.isArray(profile.familyMembers),
+      timestamp: new Date().toISOString()
+    });
+    setFamilyMembers(profile.familyMembers || []);
   }, [profile.familyMembers]);
 
   const handleAddMember = async () => {
@@ -461,24 +467,24 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
               Family Overview
             </CardTitle>
             <CardDescription>
-              Total family size: {familyMembers.length + 1} people (including you)
+              Total family size: {(familyMembers || []).length + 1} people (including you)
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{familyMembers.length + 1}</div>
+                <div className="text-2xl font-bold text-blue-600">{(familyMembers || []).length + 1}</div>
                 <div className="text-sm text-blue-600">Total Members</div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {familyMembers.filter(member => member.allergies.length > 0).length}
+                  {(familyMembers || []).filter(member => (member.allergies || []).length > 0).length}
                 </div>
                 <div className="text-sm text-green-600">With Allergies</div>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">
-                  {familyMembers.filter(member => member.dietaryRestrictions.length > 0).length}
+                  {(familyMembers || []).filter(member => (member.dietaryRestrictions || []).length > 0).length}
                 </div>
                 <div className="text-sm text-purple-600">With Dietary Restrictions</div>
               </div>
@@ -506,8 +512,8 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
               <div>
                 <div className="font-medium mb-2">Dietary Restrictions</div>
                 <div className="flex flex-wrap gap-1">
-                  {profile.dietaryRestrictions.length > 0 ? (
-                    profile.dietaryRestrictions.map(restriction => (
+                  {(profile.dietaryRestrictions || []).length > 0 ? (
+                    (profile.dietaryRestrictions || []).map(restriction => (
                       <Badge key={restriction} variant="outline" className="text-xs">
                         {restriction}
                       </Badge>
@@ -521,8 +527,8 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
               <div>
                 <div className="font-medium mb-2">Taste Preferences</div>
                 <div className="flex flex-wrap gap-1">
-                  {profile.tastePreferences.length > 0 ? (
-                    profile.tastePreferences.slice(0, 3).map(preference => (
+                  {(profile.tastePreferences || []).length > 0 ? (
+                    (profile.tastePreferences || []).slice(0, 3).map(preference => (
                       <Badge key={preference} variant="secondary" className="text-xs">
                         {preference}
                       </Badge>
@@ -530,9 +536,9 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
                   ) : (
                     <span className="text-gray-500">None</span>
                   )}
-                  {profile.tastePreferences.length > 3 && (
+                  {(profile.tastePreferences || []).length > 3 && (
                     <Badge variant="secondary" className="text-xs">
-                      +{profile.tastePreferences.length - 3} more
+                      +{(profile.tastePreferences || []).length - 3} more
                     </Badge>
                   )}
                 </div>
@@ -547,7 +553,7 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
         </Card>
 
         {/* Family Members */}
-        {familyMembers.length > 0 ? (
+        {(familyMembers || []).length > 0 ? (
           <div className="space-y-6">
             <h2 className="text-lg font-semibold text-gray-900">Family Members</h2>
             {familyMembers.map(member => (
@@ -587,7 +593,7 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
                 
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-                    {member.allergies.length > 0 && (
+                    {(member.allergies || []).length > 0 && (
                       <div>
                         <div className="flex items-center text-red-600 font-medium mb-2">
                           <AlertTriangle className="h-4 w-4 mr-1" />
@@ -603,7 +609,7 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
                       </div>
                     )}
                     
-                    {member.lovedFoods.length > 0 && (
+                    {(member.lovedFoods || []).length > 0 && (
                       <div>
                         <div className="flex items-center text-green-600 font-medium mb-2">
                           <Heart className="h-4 w-4 mr-1" />
@@ -619,7 +625,7 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
                       </div>
                     )}
                     
-                    {member.dislikedFoods.length > 0 && (
+                    {(member.dislikedFoods || []).length > 0 && (
                       <div>
                         <div className="flex items-center text-orange-600 font-medium mb-2">
                           <ThumbsDown className="h-4 w-4 mr-1" />
@@ -635,7 +641,7 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
                       </div>
                     )}
 
-                    {member.dietaryRestrictions.length > 0 && (
+                    {(member.dietaryRestrictions || []).length > 0 && (
                       <div>
                         <div className="font-medium mb-2">Dietary Restrictions</div>
                         <div className="flex flex-wrap gap-1">
@@ -649,8 +655,8 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
                     )}
                   </div>
 
-                  {member.allergies.length === 0 && member.lovedFoods.length === 0 && 
-                   member.dislikedFoods.length === 0 && member.dietaryRestrictions.length === 0 && (
+                  {(member.allergies || []).length === 0 && (member.lovedFoods || []).length === 0 &&
+                   (member.dislikedFoods || []).length === 0 && (member.dietaryRestrictions || []).length === 0 && (
                     <div className="text-center py-4 text-gray-500">
                       No preferences or restrictions specified
                     </div>
@@ -662,13 +668,23 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
         ) : (
           <div className="text-center py-12">
             <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No family members added yet</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No other family members added yet</h3>
             <p className="text-gray-600 mb-4">
               Add family members to personalize meal planning for everyone's preferences and dietary needs.
             </p>
-            <Button onClick={() => setShowAddForm(true)}>
+            <Button onClick={() => {
+              console.log('🔍 [DIAGNOSIS] "Add Family Member" button clicked:', {
+                familyMembersLength: familyMembers.length,
+                familyMembersArray: familyMembers,
+                userExists: !!user,
+                userName: user?.name,
+                profileExists: !!profile,
+                timestamp: new Date().toISOString()
+              });
+              setShowAddForm(true);
+            }}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Your First Family Member
+              Add Family Member
             </Button>
           </div>
         )}

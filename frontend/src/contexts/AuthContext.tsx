@@ -273,23 +273,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (user?.token) {
         const currentUser = await authApi.getCurrentUser();
         
-        // DEBUG: Log the getCurrentUser API response
+        // DEBUG: Enhanced logging to diagnose the name field issue
         console.log('🔍 [AuthContext] getCurrentUser - Raw API response:', currentUser);
-        console.log('🔍 [AuthContext] getCurrentUser - Available fields:', Object.keys(currentUser));
-        console.log('🔍 [AuthContext] getCurrentUser - currentUser.name:', currentUser.name);
-        console.log('🔍 [AuthContext] getCurrentUser - currentUser.full_name:', currentUser.full_name);
+        console.log('🔍 [AuthContext] getCurrentUser - Available fields:', Object.keys(currentUser || {}));
+        console.log('🔍 [AuthContext] getCurrentUser - currentUser.name:', currentUser?.name);
+        console.log('🔍 [AuthContext] getCurrentUser - currentUser.full_name:', currentUser?.full_name);
+        console.log('🔍 [AuthContext] getCurrentUser - typeof currentUser:', typeof currentUser);
+        console.log('🔍 [AuthContext] getCurrentUser - currentUser is null/undefined:', !currentUser);
         
-        // Ensure name field is properly mapped
+        if (!currentUser) {
+          console.error('❌ [AuthContext] getCurrentUser returned null/undefined');
+          logout();
+          return;
+        }
+        
+        // Ensure name field is properly mapped with fallback logic
+        const mappedName = currentUser.name || currentUser.full_name || 'Unknown User';
         const mappedUser = {
           ...currentUser,
-          name: currentUser.name || currentUser.full_name
+          name: mappedName
         };
         
         console.log('🔍 [AuthContext] getCurrentUser - Final mappedUser.name:', mappedUser.name);
+        console.log('🔍 [AuthContext] getCurrentUser - Final mappedUser object:', mappedUser);
+        
         setUser(prev => prev ? { ...mappedUser, token: prev.token } : null);
       }
     } catch (error) {
-      console.error('Failed to refresh user:', error);
+      console.error('❌ [AuthContext] Failed to refresh user:', error);
+      console.error('❌ [AuthContext] Error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name
+      });
       logout();
     }
   };

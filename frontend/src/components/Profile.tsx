@@ -305,7 +305,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
 
   const handleArrayToggle = (array: keyof UserProfile, item: string) => {
     setEditedProfile(prev => {
-      const currentArray = prev[array] as string[];
+      const currentArray = (prev[array] as string[]) || [];
       const newArray = currentArray.includes(item)
         ? currentArray.filter(i => i !== item)
         : [...currentArray, item];
@@ -375,7 +375,8 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
   };
 
   const handleRemoveMember = async (id: string) => {
-    const memberToRemove = editedProfile.familyMembers.find(member => member.id === id);
+    const familyMembers = editedProfile.familyMembers || [];
+    const memberToRemove = familyMembers.find(member => member.id === id);
     
     try {
       // Call API to remove family member
@@ -700,7 +701,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                     <input
                       type="checkbox"
                       id={`dietary-${restriction}`}
-                      checked={editedProfile.dietaryRestrictions.includes(restriction)}
+                      checked={(editedProfile.dietaryRestrictions || []).includes(restriction)}
                       onChange={() => handleArrayToggle('dietaryRestrictions', restriction)}
                       disabled={!isFieldEditable('dietary')}
                       className="rounded border-gray-300"
@@ -721,7 +722,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                     <input
                       type="checkbox"
                       id={`taste-${preference}`}
-                      checked={editedProfile.tastePreferences.includes(preference)}
+                      checked={(editedProfile.tastePreferences || []).includes(preference)}
                       onChange={() => handleArrayToggle('tastePreferences', preference)}
                       disabled={!isFieldEditable('dietary')}
                       className="rounded border-gray-300"
@@ -742,7 +743,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                     <input
                       type="checkbox"
                       id={`meal-${preference}`}
-                      checked={editedProfile.mealPreferences.includes(preference)}
+                      checked={(editedProfile.mealPreferences || []).includes(preference)}
                       onChange={() => handleArrayToggle('mealPreferences', preference)}
                       disabled={!isFieldEditable('dietary')}
                       className="rounded border-gray-300"
@@ -870,7 +871,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                   <input
                     type="checkbox"
                     id={`equipment-${equipment}`}
-                    checked={editedProfile.kitchenEquipment.includes(equipment)}
+                    checked={(editedProfile.kitchenEquipment || []).includes(equipment)}
                     onChange={() => handleArrayToggle('kitchenEquipment', equipment)}
                     disabled={!isFieldEditable('kitchen')}
                     className="rounded border-gray-300"
@@ -890,7 +891,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center">
                 <Users className="h-5 w-5 mr-2" />
-                Family Members ({editedProfile.familyMembers.length})
+                Family Members ({(editedProfile.familyMembers || []).length})
               </div>
               <div className="flex gap-2">
                 {(isEditing || sectionEditing.family) && (
@@ -1043,9 +1044,9 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
             )}
 
             {/* Existing Family Members */}
-            {editedProfile.familyMembers.length > 0 ? (
+            {(editedProfile.familyMembers || []).length > 0 ? (
               <div className="space-y-3">
-                {editedProfile.familyMembers.map(member => (
+                {(editedProfile.familyMembers || []).map(member => (
                   <Card key={member.id} className="border-l-4 border-l-blue-500">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
@@ -1072,7 +1073,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        {member.allergies.length > 0 && (
+                        {(member.allergies || []).length > 0 && (
                           <div>
                             <div className="flex items-center text-red-600 font-medium mb-2">
                               <AlertTriangle className="h-4 w-4 mr-1" />
@@ -1088,7 +1089,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                           </div>
                         )}
                         
-                        {member.lovedFoods.length > 0 && (
+                        {(member.lovedFoods || []).length > 0 && (
                           <div>
                             <div className="flex items-center text-green-600 font-medium mb-2">
                               <Heart className="h-4 w-4 mr-1" />
@@ -1104,7 +1105,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                           </div>
                         )}
                         
-                        {member.dislikedFoods.length > 0 && (
+                        {(member.dislikedFoods || []).length > 0 && (
                           <div>
                             <div className="flex items-center text-orange-600 font-medium mb-2">
                               <ThumbsDown className="h-4 w-4 mr-1" />
@@ -1120,7 +1121,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                           </div>
                         )}
 
-                        {member.dietaryRestrictions.length > 0 && (
+                        {(member.dietaryRestrictions || []).length > 0 && (
                           <div>
                             <div className="font-medium mb-2">Dietary Restrictions</div>
                             <div className="flex flex-wrap gap-1">
@@ -1134,8 +1135,8 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                         )}
                       </div>
 
-                      {member.allergies.length === 0 && member.lovedFoods.length === 0 && 
-                       member.dislikedFoods.length === 0 && member.dietaryRestrictions.length === 0 && (
+                      {(member.allergies || []).length === 0 && (member.lovedFoods || []).length === 0 &&
+                       (member.dislikedFoods || []).length === 0 && (member.dietaryRestrictions || []).length === 0 && (
                         <div className="text-center py-2 text-gray-500 text-sm">
                           No preferences or restrictions specified
                         </div>
@@ -1156,7 +1157,7 @@ export const Profile = ({ user, profile, onBack, onLogout }: ProfileProps) => {
                     className="mt-2"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Your First Family Member
+                    Add Family Member
                   </Button>
                 )}
               </div>
