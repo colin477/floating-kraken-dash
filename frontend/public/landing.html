@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EZ Eatin' - Stop Stressing About Dinner. Start Saving Money.</title>
+    <meta name="description" content="Turn your grocery receipts into personalized meal plans in 5 minutes. Save 20-30% on groceries with AI-powered local deal optimization.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: 250 50% 98%;
+            --foreground: 248 10% 15%;
+            --card: 0 0% 100%;
+            --card-foreground: 248 10% 15%;
+            --primary: 144 65% 55%;
+            --primary-foreground: 0 0% 100%;
+            --muted: 250 50% 95%;
+            --muted-foreground: 248 10% 45%;
+            --radius: 0.75rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: hsl(var(--foreground));
+            background-color: hsl(var(--background));
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .hero-section {
+            background: hsl(var(--card));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .headline {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: hsl(var(--foreground));
+            margin-bottom: 1rem;
+            line-height: 1.25;
+        }
+
+        .subheadline {
+            font-size: 1.25rem;
+            color: hsl(var(--muted-foreground));
+            margin-bottom: 2.5rem;
+            line-height: 1.625;
+            max-width: 672px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .benefits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .benefit-card {
+            background: hsl(var(--card));
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border-left: 4px solid hsl(var(--primary));
+            text-align: left;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        .benefit-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .benefit-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .benefit-emoji {
+            font-size: 1.5rem;
+        }
+
+        .benefit-description {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+        }
+
+        .cta-section {
+            text-align: center;
+        }
+
+        .cta-button {
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+            font-size: 1.125rem;
+            font-weight: 600;
+            padding: 0.75rem 2.5rem;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .cta-button:hover {
+            background: hsl(var(--primary) / 0.9);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .cta-button:active {
+            transform: translateY(0);
+        }
+
+        .app-name {
+            color: hsl(var(--primary));
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        /* Mobile Responsiveness */
+        @media (min-width: 768px) {
+            .container {
+                padding: 2rem 1.5rem;
+            }
+
+            .benefits {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                padding: 2rem 2rem;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .container {
+                padding: 2rem 1rem;
+            }
+
+            .hero-section {
+                padding: 2rem 1.5rem;
+            }
+
+            .headline {
+                font-size: 2rem;
+            }
+
+            .subheadline {
+                font-size: 1.1rem;
+            }
+
+            .benefits {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .benefit-card {
+                padding: 1.25rem;
+            }
+
+            .cta-button {
+                font-size: 1.1rem;
+                padding: 0.875rem 2rem;
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .headline {
+                font-size: 1.75rem;
+            }
+
+            .subheadline {
+                font-size: 1rem;
+            }
+
+            .hero-section {
+                padding: 1.5rem 1rem;
+            }
+        }
+
+        /* Accessibility */
+        .cta-button:focus {
+            outline: 3px solid hsl(var(--primary) / 0.5);
+            outline-offset: 2px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .benefit-card,
+            .cta-button {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <main class="hero-section">
+            <header>
+                <h1 class="headline">Stop Stressing About Dinner. Start Saving Money.</h1>
+                <p class="subheadline">Turn your grocery receipts into personalized meal plans in 5 minutes. Save 20-30% on groceries with AI-powered local deal optimization.</p>
+            </header>
+
+            <section class="benefits" aria-label="Key Benefits">
+                <div class="benefit-card">
+                    <h3 class="benefit-title">
+                        <span class="benefit-emoji" aria-hidden="true">📸</span>
+                        <strong>Snap & Plan</strong>
+                    </h3>
+                    <p class="benefit-description">Photo your receipt, get instant meal recommendations</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3 class="benefit-title">
+                        <span class="benefit-emoji" aria-hidden="true">💰</span>
+                        <strong>Smart Savings</strong>
+                    </h3>
+                    <p class="benefit-description">Find the best local deals automatically</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3 class="benefit-title">
+                        <span class="benefit-emoji" aria-hidden="true">⏰</span>
+                        <strong>5-Minute Planning</strong>
+                    </h3>
+                    <p class="benefit-description">Weekly meal plans in minutes, not hours</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3 class="benefit-title">
+                        <span class="benefit-emoji" aria-hidden="true">🍽️</span>
+                        <strong>Zero Waste</strong>
+                    </h3>
+                    <p class="benefit-description">Creative leftover suggestions and batch cooking guides</p>
+                </div>
+            </section>
+
+            <section class="cta-section">
+                <a href="#" class="cta-button" role="button" aria-label="Start your free 7-day trial of EZ Eatin'">
+                    Start Your Free 7-Day Trial
+                </a>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

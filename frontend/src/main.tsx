@@ -1,17 +1,23 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import Index from './pages/Index.tsx'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Landing from './pages/Landing.tsx'
+import Auth from './pages/Auth.tsx'
 import PantryTest from './pages/PantryTest.tsx'
 import { AuthProvider } from './contexts/AuthContext'
 import './globals.css'
 
-// Check if we're on the test route
-const isTestRoute = window.location.pathname === '/pantry-test' || window.location.search.includes('test=pantry');
-
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <AuthProvider>
-      {isTestRoute ? <PantryTest /> : <Index />}
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/login" element={<Auth />} />
+          <Route path="/pantry-test" element={<PantryTest />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   </React.StrictMode>,
 )
