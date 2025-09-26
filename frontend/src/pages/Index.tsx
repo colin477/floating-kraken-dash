@@ -20,6 +20,9 @@ import { ShoppingListBuilder } from '@/components/ShoppingListBuilder';
 import { ShoppingListManager } from '@/components/ShoppingListManager';
 import { LeftoverManager } from '@/components/LeftoverManager';
 import { FamilyMembers } from '@/components/FamilyMembers';
+import { Sidebar } from '@/components/Sidebar';
+import { Button } from '@/components/ui/button';
+import { Menu } from 'lucide-react';
 import { shouldBypassAuth, isDemoModeEnabled } from '@/lib/demoMode';
 
 const Index = () => {
@@ -57,6 +60,13 @@ const Index = () => {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isNewUser, setIsNewUser] = useState(false);
   const [editingListId, setEditingListId] = useState<string | null>(null);
+  
+  // Sidebar state management
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   useEffect(() => {
     // Check for reset parameter in URL for testing purposes
@@ -192,6 +202,11 @@ const Index = () => {
       setSelectedRecipe(null);
       setEditingListId(null);
     }
+    
+    // Close sidebar on mobile after navigation
+    if (window.innerWidth <= 1023) {
+      setIsSidebarOpen(false);
+    }
   };
 
   const handleRecipeSelect = (recipe: Recipe) => {
@@ -293,12 +308,48 @@ const Index = () => {
     };
 
     return (
-      <div>
-        {renderCurrentPage()}
+      <div className="flex h-screen bg-background">
+        {/* Sidebar */}
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onToggle={toggleSidebar}
+          currentPage={currentPage}
+          onNavigate={handleNavigate}
+          user={effectiveUser ? {
+            name: effectiveUser.name,
+            email: effectiveUser.email,
+            subscription: effectiveUser.subscription
+          } : undefined}
+        />
+        
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col lg:ml-0">
+          {/* Header with hamburger menu for mobile/tablet */}
+          <header className="lg:hidden bg-background border-b border-border p-4 flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSidebar}
+              className="p-2"
+              aria-label="Toggle sidebar"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+            <h1 className="text-lg font-semibold">EZ Eatin'</h1>
+            <div className="w-10" /> {/* Spacer for centering */}
+          </header>
+          
+          {/* Page Content */}
+          <main className="flex-1 overflow-auto">
+            <div className="lg:pl-0">
+              {renderCurrentPage()}
+            </div>
+          </main>
+        </div>
         
         {/* Development Reset Button - only show in development */}
         {process.env.NODE_ENV === 'development' && (
-          <div className="fixed bottom-4 right-4">
+          <div className="fixed bottom-4 right-4 z-50">
             <button
               onClick={() => {
                 storage.clearAllUserData();
