@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, Plus, Edit, Trash2, Users, Heart, ThumbsDown, AlertTriangle, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Users, Heart, ThumbsDown, AlertTriangle, Save, X, Loader2 } from 'lucide-react';
 import { User, UserProfile, FamilyMember } from '@/types';
 import { storage } from '@/lib/storage';
 import { showSuccess, showError } from '@/utils/toast';
@@ -82,6 +82,7 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [newMember, setNewMember] = useState({
     name: '',
     age: '',
@@ -98,13 +99,13 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
 
   useEffect(() => {
     console.log('🔍 [DIAGNOSIS] useEffect - familyMembers data:', {
-      profileFamilyMembers: profile.familyMembers,
-      profileFamilyMembersLength: profile.familyMembers?.length || 0,
-      profileFamilyMembersArray: Array.isArray(profile.familyMembers),
+      profileFamilyMembers: profile?.familyMembers,
+      profileFamilyMembersLength: profile?.familyMembers?.length || 0,
+      profileFamilyMembersArray: Array.isArray(profile?.familyMembers),
       timestamp: new Date().toISOString()
     });
-    setFamilyMembers(profile.familyMembers || []);
-  }, [profile.familyMembers]);
+    setFamilyMembers(profile?.familyMembers || []);
+  }, [profile?.familyMembers]);
 
   const handleAddMember = async () => {
     console.log('🔍 [DEBUG] handleAddMember called');
@@ -118,6 +119,7 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
       return;
     }
 
+    setIsLoading(true);
     try {
       // Convert camelCase to snake_case for API
       const memberData = {
@@ -141,7 +143,7 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
       
       // Update local state with API response
       console.log('🔍 [DEBUG] Updating local state...');
-      setFamilyMembers(updatedProfile.familyMembers);
+      setFamilyMembers(updatedProfile?.familyMembers || []);
       storage.setProfile(updatedProfile);
 
       // Reset form
@@ -155,21 +157,26 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
         dislikedFoods: []
       });
 
-      console.log('🔍 [DEBUG] Setting showAddForm to false...');
-      setShowAddForm(false);
       console.log('🔍 [DEBUG] Setting editingMember to null...');
       setEditingMember(null);
       
       console.log('✅ [DEBUG] handleAddMember completed successfully');
       showSuccess(`Added ${memberData.name} to your family!`);
+      
+      // Close dialog after successful save with a small delay to show success message
+      setTimeout(() => {
+        setShowAddForm(false);
+      }, 1000);
     } catch (error) {
       console.error('❌ [DEBUG] Error in handleAddMember:', error);
       console.error('❌ [DEBUG] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name
       });
-      showError(`Failed to add family member: ${error.message}`);
+      showError(`Failed to add family member: ${error?.message || 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -210,6 +217,7 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
       return;
     }
 
+    setIsLoading(true);
     try {
       // Convert camelCase to snake_case for API
       const memberData = {
@@ -234,7 +242,7 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
       
       // Update local state with API response
       console.log('🔍 [DEBUG] Updating local state...');
-      setFamilyMembers(updatedProfile.familyMembers);
+      setFamilyMembers(updatedProfile?.familyMembers || []);
       storage.setProfile(updatedProfile);
 
       // Reset form
@@ -250,37 +258,45 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
 
       console.log('🔍 [DEBUG] Setting editingMember to null...');
       setEditingMember(null);
-      console.log('🔍 [DEBUG] Setting showAddForm to false...');
-      setShowAddForm(false);
       
       console.log('✅ [DEBUG] handleSaveEdit completed successfully');
       showSuccess(`Updated ${memberData.name}'s information!`);
+      
+      // Close dialog after successful save with a small delay to show success message
+      setTimeout(() => {
+        setShowAddForm(false);
+      }, 1000);
     } catch (error) {
       console.error('❌ [DEBUG] Error in handleSaveEdit:', error);
       console.error('❌ [DEBUG] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name
       });
-      showError(`Failed to update family member: ${error.message}`);
+      showError(`Failed to update family member: ${error?.message || 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleRemoveMember = async (id: string) => {
-    const memberToRemove = familyMembers.find(member => member.id === id);
+    const memberToRemove = familyMembers?.find(member => member.id === id);
     
+    setIsLoading(true);
     try {
       // Call API to remove family member
       const { profileApi } = await import('@/services/api');
       const updatedProfile = await profileApi.removeFamilyMember(id);
       
       // Update local state with API response
-      setFamilyMembers(updatedProfile.familyMembers);
+      setFamilyMembers(updatedProfile?.familyMembers || []);
       storage.setProfile(updatedProfile);
-      showSuccess(`Removed ${memberToRemove?.name} from your family`);
+      showSuccess(`Removed ${memberToRemove?.name || 'family member'} from your family`);
     } catch (error) {
       console.error('Error removing family member:', error);
-      showError(`Failed to remove family member: ${error.message}`);
+      showError(`Failed to remove family member: ${error?.message || 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -440,14 +456,29 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
                 </div>
                 
                 <div className="flex gap-3">
-                  <Button 
-                    onClick={editingMember ? handleSaveEdit : handleAddMember} 
+                  <Button
+                    onClick={editingMember ? handleSaveEdit : handleAddMember}
                     className="flex-1"
+                    disabled={isLoading}
                   >
-                    <Save className="h-4 w-4 mr-2" />
-                    {editingMember ? 'Save Changes' : 'Add Family Member'}
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    {isLoading
+                      ? 'Saving...'
+                      : editingMember
+                        ? 'Save Changes'
+                        : 'Add Family Member'
+                    }
                   </Button>
-                  <Button variant="outline" onClick={handleCancelForm} className="flex-1">
+                  <Button
+                    variant="outline"
+                    onClick={handleCancelForm}
+                    className="flex-1"
+                    disabled={isLoading}
+                  >
                     <X className="h-4 w-4 mr-2" />
                     Cancel
                   </Button>
@@ -467,7 +498,7 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
               Family Overview
             </CardTitle>
             <CardDescription>
-              Total family size: {(familyMembers || []).length + 1} people (including you)
+              Total family size: {((familyMembers || []).length) + 1} people (including you)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -574,6 +605,7 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
                         variant="outline"
                         size="sm"
                         onClick={() => handleEditMember(member)}
+                        disabled={isLoading}
                       >
                         <Edit className="h-4 w-4 mr-1" />
                         Edit
@@ -583,8 +615,13 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
                         size="sm"
                         onClick={() => handleRemoveMember(member.id)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        disabled={isLoading}
                       >
-                        <Trash2 className="h-4 w-4 mr-1" />
+                        {isLoading ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4 mr-1" />
+                        )}
                         Remove
                       </Button>
                     </div>
@@ -672,17 +709,20 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
             <p className="text-gray-600 mb-4">
               Add family members to personalize meal planning for everyone's preferences and dietary needs.
             </p>
-            <Button onClick={() => {
-              console.log('🔍 [DIAGNOSIS] "Add Family Member" button clicked:', {
-                familyMembersLength: familyMembers.length,
-                familyMembersArray: familyMembers,
-                userExists: !!user,
-                userName: user?.name,
-                profileExists: !!profile,
-                timestamp: new Date().toISOString()
-              });
-              setShowAddForm(true);
-            }}>
+            <Button
+              onClick={() => {
+                console.log('🔍 [DIAGNOSIS] "Add Family Member" button clicked:', {
+                  familyMembersLength: familyMembers?.length || 0,
+                  familyMembersArray: familyMembers,
+                  userExists: !!user,
+                  userName: user?.name,
+                  profileExists: !!profile,
+                  timestamp: new Date().toISOString()
+                });
+                setShowAddForm(true);
+              }}
+              disabled={isLoading}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Family Member
             </Button>
