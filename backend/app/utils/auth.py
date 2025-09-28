@@ -14,6 +14,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.models.auth import TokenData, User
 from app.database import get_collection
 from app.middleware.security import is_token_blacklisted, blacklist_token
+from app.utils.exceptions import PasswordValidationError
 import structlog
 
 # Configure structured logging
@@ -100,11 +101,17 @@ def hash_password(password: str) -> str:
         
     Returns:
         Hashed password string
+        
+    Raises:
+        PasswordValidationError: If password doesn't meet requirements
     """
     # Validate password strength before hashing
     validation = validate_password_strength(password)
     if not validation["is_valid"]:
-        raise ValueError(f"Password validation failed: {', '.join(validation['errors'])}")
+        raise PasswordValidationError(
+            "Password does not meet requirements",
+            validation['errors']
+        )
     
     return pwd_context.hash(password)
 

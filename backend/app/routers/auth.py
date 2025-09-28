@@ -9,6 +9,7 @@ from app.models.responses import SuccessResponse
 from app.models.auth import UserCreate, UserLogin, LoginResponse, UserResponse
 from app.crud.users import create_user, authenticate_user, update_user_last_login, create_user_indexes
 from app.utils.auth import create_access_token, get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.utils.exceptions import PasswordValidationError, EmailAlreadyExistsError, UserCreationError
 
 router = APIRouter()
 
@@ -28,12 +29,6 @@ async def signup(user_data: UserCreate):
         
         # Create the user
         created_user = await create_user(user_data)
-        
-        if not created_user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
         
         # Create access token for the new user
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -63,6 +58,24 @@ async def signup(user_data: UserCreate):
             user=user_response
         )
         
+    except PasswordValidationError as e:
+        # Password validation failed
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Password validation failed: {', '.join(e.errors)}"
+        )
+    except EmailAlreadyExistsError as e:
+        # Email already registered
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=e.message
+        )
+    except UserCreationError as e:
+        # Other user creation errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=e.message
+        )
     except HTTPException:
         raise
     except Exception as e:

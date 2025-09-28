@@ -1,0 +1,95 @@
+{
+  "weak_passwords": [
+    {
+      "test_name": "Too Short Password",
+      "expected_status": 400,
+      "actual_status": 422,
+      "response_body": "{\"detail\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"password\"],\"msg\":\"String should have at least 8 characters\",\"input\":\"Abc1!\",\"ctx\":{\"min_length\":8}}]}",
+      "passed": false
+    },
+    {
+      "test_name": "No Uppercase",
+      "expected_status": 400,
+      "actual_status": 400,
+      "response_body": "{\"detail\":\"Email already registered\"}",
+      "passed": false
+    },
+    {
+      "test_name": "No Lowercase",
+      "expected_status": 400,
+      "actual_status": 400,
+      "response_body": "{\"detail\":\"Email already registered\"}",
+      "passed": false
+    },
+    {
+      "test_name": "No Digit",
+      "expected_status": 400,
+      "actual_status": 400,
+      "response_body": "{\"detail\":\"Email already registered\"}",
+      "passed": false
+    },
+    {
+      "test_name": "No Special Character",
+      "expected_status": 400,
+      "actual_status": 400,
+      "response_body": "{\"detail\":\"Email already registered\"}",
+      "passed": false
+    },
+    {
+      "test_name": "Common Password",
+      "expected_status": 400,
+      "actual_status": 201,
+      "response_body": "{\"access_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGQ4ODI3YzViYzkzMjkyYTFhOTg3YWUiLCJlbWFpbCI6InRlc3Q2QGV4YW1wbGUuY29tIiwiZXhwIjoxNzU5MDIwNTQ0LCJpYXQiOjE3NTkwMTk2NDQsInR5cGUiOiJhY2Nlc3MifQ.b90KEZ2LFNWUkBVPXzDN43gBeUw_F7J9iA558fkaBTM\",\"token_type\":\"bearer\",\"expires_in\":900,\"user\":{\"id\":\"68d8827c5bc93292a1a987ae\",\"email\":\"test6@example.com\",\"full_name\":\"Test User 6\",\"created_at\":\"2025-09-28T00:34:04.630000\",\"updated_at\":\"2025-09-28T00:34:04.630000\",\"is_active\":true}}",
+      "passed": false
+    }
+  ],
+  "strong_new_email": {
+    "passed": false,
+    "status": 400,
+    "response": "{\"detail\":\"Email already registered\"}"
+  },
+  "strong_existing_email": {
+    "passed": false,
+    "status": 400,
+    "response": "{\"detail\":\"Email already registered\"}"
+  },
+  "original_failing_scenario": {
+    "passed": false,
+    "status": 422,
+    "response": "{\"detail\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"password\"],\"msg\":\"String should have at least 8 characters\",\"input\":\"weak\",\"ctx\":{\"min_length\":8}}]}"
+  },
+  "edge_cases": [
+    {
+      "test_name": "Exactly 8 Characters (Minimum)",
+      "expected_status": 201,
+      "actual_status": 201,
+      "should_pass": true,
+      "response_body": "{\"access_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGQ4ODI4YTViYzkzMjkyYTFhOTg3YjAiLCJlbWFpbCI6ImVkZ2UxQGV4YW1wbGUuY29tIiwiZXhwIjoxNzU5MDIwNTU4LCJpYXQiOjE3NTkwMTk2NTgsInR5cGUiOiJhY2Nlc3MifQ.0DZYx1wMAtP4QGipbiSpmgGtVFkO7HR-9timrbKT9ls\",\"token_type\":\"bearer\",\"expires_in\":900,\"user\":{\"id\":\"68d8828a5bc93292a1a987b0\",\"email\":\"edge1@example.com\",\"full_name\":\"Edge Case 1\",\"created_at\":\"2025-09-28T00:34:18.268000\",\"updated_at\":\"2025-09-28T00:34:18.268000\",\"is_active\":true}}",
+      "passed": true
+    },
+    {
+      "test_name": "Multiple Special Characters",
+      "expected_status": 201,
+      "actual_status": 201,
+      "should_pass": true,
+      "response_body": "{\"access_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGQ4ODI4YzViYzkzMjkyYTFhOTg3YjEiLCJlbWFpbCI6ImVkZ2UyQGV4YW1wbGUuY29tIiwiZXhwIjoxNzU5MDIwNTYwLCJpYXQiOjE3NTkwMTk2NjAsInR5cGUiOiJhY2Nlc3MifQ.eW5rpFR7uPIB2vT8HC-17obJoVU5CgaHAkvkWweAFbo\",\"token_type\":\"bearer\",\"expires_in\":900,\"user\":{\"id\":\"68d8828c5bc93292a1a987b1\",\"email\":\"edge2@example.com\",\"full_name\":\"Edge Case 2\",\"created_at\":\"2025-09-28T00:34:20.808000\",\"updated_at\":\"2025-09-28T00:34:20.808000\",\"is_active\":true}}",
+      "passed": true
+    },
+    {
+      "test_name": "Very Long Password",
+      "expected_status": 201,
+      "actual_status": 201,
+      "should_pass": true,
+      "response_body": "{\"access_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGQ4ODI4ZjViYzkzMjkyYTFhOTg3YjIiLCJlbWFpbCI6ImVkZ2UzQGV4YW1wbGUuY29tIiwiZXhwIjoxNzU5MDIwNTYzLCJpYXQiOjE3NTkwMTk2NjMsInR5cGUiOiJhY2Nlc3MifQ.NgT48eMv-Y1VO5NWaJwXcP3_8Ok8rt5E2OunTnnCEYM\",\"token_type\":\"bearer\",\"expires_in\":900,\"user\":{\"id\":\"68d8828f5bc93292a1a987b2\",\"email\":\"edge3@example.com\",\"full_name\":\"Edge Case 3\",\"created_at\":\"2025-09-28T00:34:23.298000\",\"updated_at\":\"2025-09-28T00:34:23.298000\",\"is_active\":true}}",
+      "passed": true
+    },
+    {
+      "test_name": "Empty Password",
+      "expected_status": 400,
+      "actual_status": 422,
+      "should_pass": false,
+      "response_body": "{\"detail\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"password\"],\"msg\":\"String should have at least 8 characters\",\"input\":\"\",\"ctx\":{\"min_length\":8}}]}",
+      "passed": false
+    }
+  ]
+}

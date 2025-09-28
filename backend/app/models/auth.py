@@ -28,7 +28,7 @@ class User(BaseModel):
 class UserCreate(BaseModel):
     """Schema for user registration"""
     email: EmailStr
-    password: str = Field(..., min_length=8, max_length=100)
+    password: str = Field(..., max_length=100)
     full_name: str = Field(..., min_length=1, max_length=100)
 
 

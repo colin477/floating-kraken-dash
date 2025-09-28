@@ -9,6 +9,7 @@ from pymongo.errors import DuplicateKeyError
 from app.database import get_collection
 from app.models.auth import User, UserCreate
 from app.utils.auth import hash_password
+from app.utils.exceptions import PasswordValidationError, EmailAlreadyExistsError, UserCreationError
 
 
 async def create_user_indexes():
@@ -73,18 +74,24 @@ async def create_user(user_data: UserCreate) -> Optional[dict]:
         user_data: User creation data
         
     Returns:
-        Created user document if successful, None otherwise
+        Created user document if successful
+        
+    Raises:
+        PasswordValidationError: If password doesn't meet requirements
+        EmailAlreadyExistsError: If email is already registered
+        UserCreationError: If user creation fails for other reasons
     """
     try:
         users_collection = await get_collection("users")
         
-        # Check if user already exists
+        # CRITICAL FIX: Validate password FIRST before checking email
+        # This ensures users get proper password validation errors instead of "Email already registered"
+        password_hash = hash_password(user_data.password)
+        
+        # Check if user already exists AFTER password validation
         existing_user = await get_user_by_email(user_data.email)
         if existing_user:
-            return None
-        
-        # Hash the password
-        password_hash = hash_password(user_data.password)
+            raise EmailAlreadyExistsError("Email already registered")
         
         # Create user document
         user_doc = {
@@ -103,12 +110,18 @@ async def create_user(user_data: UserCreate) -> Optional[dict]:
         created_user = await users_collection.find_one({"_id": result.inserted_id})
         return created_user
         
+    except PasswordValidationError:
+        # Re-raise password validation errors
+        raise
+    except EmailAlreadyExistsError:
+        # Re-raise email already exists errors
+        raise
     except DuplicateKeyError:
-        # Email already exists
-        return None
+        # Email already exists (database constraint)
+        raise EmailAlreadyExistsError("Email already registered")
     except Exception as e:
         print(f"Error creating user: {e}")
-        return None
+        raise UserCreationError(f"Failed to create user: {str(e)}")
 
 
 async def update_user(user_id: str, update_data: dict) -> Optional[dict]:
