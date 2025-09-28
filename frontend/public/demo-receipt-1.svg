@@ -1,0 +1,47 @@
+<svg width="300" height="400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="400" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
+  
+  <!-- Header -->
+  <text x="150" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#212529">GROCERY MART</text>
+  <text x="150" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">123 Main St, City, ST 12345</text>
+  <text x="150" y="65" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">Tel: (555) 123-4567</text>
+  
+  <!-- Date -->
+  <text x="20" y="90" font-family="Arial, sans-serif" font-size="12" fill="#495057">Date: 12/15/2024 2:30 PM</text>
+  
+  <!-- Items -->
+  <line x1="20" y1="105" x2="280" y2="105" stroke="#dee2e6" stroke-width="1"/>
+  
+  <text x="20" y="125" font-family="Arial, sans-serif" font-size="12" fill="#212529">Chicken Breast (2 lbs)</text>
+  <text x="280" y="125" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#212529">$8.99</text>
+  
+  <text x="20" y="145" font-family="Arial, sans-serif" font-size="12" fill="#212529">Bell Peppers (3 ct)</text>
+  <text x="280" y="145" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#212529">$2.49</text>
+  
+  <text x="20" y="165" font-family="Arial, sans-serif" font-size="12" fill="#212529">Yellow Onions (1 bag)</text>
+  <text x="280" y="165" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#212529">$1.29</text>
+  
+  <text x="20" y="185" font-family="Arial, sans-serif" font-size="12" fill="#212529">Jasmine Rice (1 bag)</text>
+  <text x="280" y="185" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#212529">$3.99</text>
+  
+  <text x="20" y="205" font-family="Arial, sans-serif" font-size="12" fill="#212529">Soy Sauce</text>
+  <text x="280" y="205" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#212529">$2.79</text>
+  
+  <text x="20" y="225" font-family="Arial, sans-serif" font-size="12" fill="#212529">Large Eggs (12 ct)</text>
+  <text x="280" y="225" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#212529">$3.49</text>
+  
+  <text x="20" y="245" font-family="Arial, sans-serif" font-size="12" fill="#212529">Whole Milk (1 gal)</text>
+  <text x="280" y="245" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#212529">$3.29</text>
+  
+  <!-- Total -->
+  <line x1="20" y1="260" x2="280" y2="260" stroke="#dee2e6" stroke-width="1"/>
+  <text x="20" y="280" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#212529">TOTAL:</text>
+  <text x="280" y="280" text-anchor="end" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#212529">$26.33</text>
+  
+  <!-- Footer -->
+  <text x="150" y="320" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#6c757d">Thank you for shopping with us!</text>
+  <text x="150" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#6c757d">Receipt #: 001234567</text>
+  
+  <!-- Demo watermark -->
+  <text x="150" y="370" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#dc3545" opacity="0.7">DEMO RECEIPT</text>
+</svg>

@@ -39,3 +39,12 @@ factory-boy==3.3.0
 pytest-xdist==3.5.0
 pytest-benchmark==4.0.0
 pytest-security==0.1.0
+
+# OCR and AI services
+google-cloud-vision==3.4.5
+pillow==10.1.0
+requests==2.31.0
+
+# Cloud Storage
+boto3==1.34.0
+botocore==1.34.0

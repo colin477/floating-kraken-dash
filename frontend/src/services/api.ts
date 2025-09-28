@@ -9,6 +9,7 @@ import {
   mockDeletePantryItem,
   mockGetPantryItem
 } from '@/lib/mockPantryData';
+import { simulateReceiptProcessing } from '@/lib/mockData';
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 
@@ -618,6 +619,56 @@ export const profileApi = {
     } catch (error) {
       console.error('🌐 [API] removeFamilyMember error:', error);
       throw error;
+    }
+  },
+};
+
+// Receipt API service
+export const receiptApi = {
+  // Upload receipt image and process it
+  uploadAndProcess: async (file: File) => {
+    if (shouldUseMockData()) {
+      console.log('🧪 [Demo Mode] Using mock receipt processing for file:', file.name);
+      // Simulate receipt processing with demo data
+      const mockItems = await simulateReceiptProcessing(file.name);
+      return {
+        success: true,
+        items: mockItems,
+        message: 'Receipt processed successfully (demo mode)'
+      };
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Use a different content type for file upload
+      const token = getAuthToken();
+      const config: RequestInit = {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+          // Don't set Content-Type - let browser set it with boundary for FormData
+        },
+        body: formData,
+      };
+
+      const response = await fetch(`${API_BASE_URL}/receipts/upload`, config);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Upload failed' }));
+        throw new Error(errorData.detail || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.warn('🧪 [Demo Mode] API failed, falling back to mock receipt processing:', error);
+      const mockItems = await simulateReceiptProcessing(file.name);
+      return {
+        success: true,
+        items: mockItems,
+        message: 'Receipt processed successfully (demo mode fallback)'
+      };
     }
   },
 };

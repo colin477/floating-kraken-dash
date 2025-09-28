@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile
 from typing import Optional, List
 from datetime import date
 from app.models.responses import SuccessResponse
+from app.utils.cloud_storage import cloud_storage_service
 from app.models.receipts import (
     ReceiptCreate,
     ReceiptUpdate,
@@ -40,31 +41,89 @@ async def startup_event():
     await create_receipt_indexes()
 
 
-@router.post("/upload", response_model=ReceiptResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/upload", response_model=ReceiptProcessingResponse, status_code=status.HTTP_201_CREATED)
 async def upload_receipt(
-    receipt_data: ReceiptUploadRequest,
+    file: UploadFile = File(...),
     current_user: dict = Depends(get_current_active_user)
 ):
-    """Upload a new receipt for processing"""
+    """Upload a receipt image file and process it"""
     user_id = str(current_user["_id"])
     
-    # Convert ReceiptUploadRequest to ReceiptCreate
-    create_data = ReceiptCreate(
-        store_name=receipt_data.store_name,
-        receipt_date=receipt_data.receipt_date,
-        total_amount=receipt_data.total_amount,
-        photo_url=None  # For now, we'll handle file uploads separately
-    )
-    
-    result = await create_receipt(user_id=user_id, receipt_data=create_data)
-    
-    if result is None:
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith('image/'):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to create receipt"
+            detail="File must be an image (JPG, PNG, HEIC, etc.)"
         )
     
-    return result
+    # Validate file size (10MB limit)
+    file_content = await file.read()
+    if len(file_content) > 10 * 1024 * 1024:  # 10MB
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File size must be less than 10MB"
+        )
+    
+    # Reset file pointer
+    await file.seek(0)
+    
+    try:
+        # Upload file to cloud storage or local fallback
+        file_url = await cloud_storage_service.upload_file(
+            file_content=file_content,
+            filename=file.filename or "receipt.jpg",
+            content_type=file.content_type or "image/jpeg",
+            user_id=user_id
+        )
+        
+        if not file_url:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to upload file to storage"
+            )
+        
+        # Create receipt record with file URL
+        from datetime import date
+        create_data = ReceiptCreate(
+            store_name="Unknown Store",  # Will be extracted from OCR
+            receipt_date=date.today(),  # Use today's date as default, will be updated from OCR
+            total_amount=0.0,  # Will be extracted from OCR
+            photo_url=file_url
+        )
+        
+        receipt = await create_receipt(user_id=user_id, receipt_data=create_data)
+        
+        if receipt is None:
+            # Clean up uploaded file if receipt creation failed
+            await cloud_storage_service.delete_file(file_url)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create receipt"
+            )
+        
+        # Process the receipt immediately
+        result = await process_receipt_image(user_id=user_id, receipt_id=receipt.id)
+        
+        if result is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to process receipt image"
+            )
+        
+        return result
+        
+    except Exception as e:
+        # Clean up uploaded file on error
+        if 'file_url' in locals():
+            await cloud_storage_service.delete_file(file_url)
+        
+        if isinstance(e, HTTPException):
+            raise e
+        
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process upload: {str(e)}"
+        )
 
 
 @router.get("/", response_model=ReceiptsListResponse)
@@ -317,3 +376,45 @@ async def upload_receipt_image(
     return SuccessResponse(
         message=f"Receipt image upload placeholder - file {file.filename} would be processed"
     )
+
+
+@router.get("/{receipt_id}/image-url")
+async def get_receipt_image_url(
+    receipt_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Get secure URL for receipt image access"""
+    user_id = str(current_user["_id"])
+    
+    # Check if receipt exists and belongs to user
+    receipt = await get_receipt_by_id(user_id=user_id, receipt_id=receipt_id)
+    if receipt is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Receipt not found"
+        )
+    
+    if not receipt.photo_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Receipt has no image"
+        )
+    
+    # Generate secure URL (presigned for S3, or return local path)
+    secure_url = await cloud_storage_service.generate_presigned_url(
+        receipt.photo_url,
+        expiration=3600  # 1 hour
+    )
+    
+    if not secure_url:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate secure image URL"
+        )
+    
+    return {
+        "receipt_id": receipt_id,
+        "image_url": secure_url,
+        "expires_in": 3600,
+        "storage_type": cloud_storage_service.get_storage_type(receipt.photo_url)
+    }

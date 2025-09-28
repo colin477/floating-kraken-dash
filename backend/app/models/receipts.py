@@ -99,9 +99,10 @@ class Receipt(BaseModel):
     
     @validator('photo_url')
     def validate_photo_url(cls, v):
-        """Basic URL validation"""
-        if v and not (v.startswith('http://') or v.startswith('https://')):
-            raise ValueError('Photo URL must start with http:// or https://')
+        """Basic URL validation - allow both URLs and local file paths"""
+        if v and not (v.startswith('http://') or v.startswith('https://') or
+                     v.startswith('uploads/') or v.startswith('uploads\\')):
+            raise ValueError('Photo URL must be a valid URL or local file path')
         return v
 
 
@@ -128,9 +129,10 @@ class ReceiptCreate(BaseModel):
     
     @validator('photo_url')
     def validate_photo_url(cls, v):
-        """Basic URL validation"""
-        if v and not (v.startswith('http://') or v.startswith('https://')):
-            raise ValueError('Photo URL must start with http:// or https://')
+        """Basic URL validation - allow both URLs and local file paths"""
+        if v and not (v.startswith('http://') or v.startswith('https://') or
+                     v.startswith('uploads/') or v.startswith('uploads\\')):
+            raise ValueError('Photo URL must be a valid URL or local file path')
         return v
 
 
@@ -160,9 +162,10 @@ class ReceiptUpdate(BaseModel):
     
     @validator('photo_url')
     def validate_photo_url(cls, v):
-        """Basic URL validation"""
-        if v and not (v.startswith('http://') or v.startswith('https://')):
-            raise ValueError('Photo URL must start with http:// or https://')
+        """Basic URL validation - allow both URLs and local file paths"""
+        if v and not (v.startswith('http://') or v.startswith('https://') or
+                     v.startswith('uploads/') or v.startswith('uploads\\')):
+            raise ValueError('Photo URL must be a valid URL or local file path')
         return v
 
 

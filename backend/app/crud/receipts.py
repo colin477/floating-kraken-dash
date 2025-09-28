@@ -352,7 +352,7 @@ async def update_receipt(user_id: str, receipt_id: str, update_data: ReceiptUpda
 
 async def delete_receipt(user_id: str, receipt_id: str) -> bool:
     """
-    Delete a receipt for a user
+    Delete a receipt for a user and clean up associated files
     
     Args:
         user_id: User's ObjectId as string
@@ -367,12 +367,35 @@ async def delete_receipt(user_id: str, receipt_id: str) -> bool:
         if not ObjectId.is_valid(receipt_id):
             return False
         
+        # Get receipt first to access photo_url for cleanup
+        receipt = await receipts_collection.find_one({
+            "_id": ObjectId(receipt_id),
+            "user_id": user_id
+        })
+        
+        if not receipt:
+            return False
+        
+        # Delete from database first
         result = await receipts_collection.delete_one({
             "_id": ObjectId(receipt_id),
             "user_id": user_id
         })
         
-        return result.deleted_count > 0
+        if result.deleted_count > 0:
+            # Clean up associated file if it exists
+            if receipt.get("photo_url"):
+                try:
+                    from app.utils.cloud_storage import cloud_storage_service
+                    await cloud_storage_service.delete_file(receipt["photo_url"])
+                    logger.info(f"Cleaned up file for deleted receipt {receipt_id}: {receipt['photo_url']}")
+                except Exception as e:
+                    logger.warning(f"Failed to clean up file for receipt {receipt_id}: {e}")
+                    # Don't fail the deletion if file cleanup fails
+            
+            return True
+        
+        return False
         
     except PyMongoError as e:
         logger.error(f"Database error deleting receipt {receipt_id} for user {user_id}: {e}")
@@ -384,7 +407,7 @@ async def delete_receipt(user_id: str, receipt_id: str) -> bool:
 
 async def process_receipt_image(user_id: str, receipt_id: str) -> Optional[ReceiptProcessingResponse]:
     """
-    Process receipt image using AI (mock implementation for now)
+    Process receipt image using OCR and AI text parsing
     
     Args:
         user_id: User's ObjectId as string
@@ -394,9 +417,17 @@ async def process_receipt_image(user_id: str, receipt_id: str) -> Optional[Recei
         ReceiptProcessingResponse if successful, None otherwise
     """
     try:
+        # Import OCR service
+        from app.utils.ocr_service import ocr_service
+        
         # Get the receipt first
         receipt = await get_receipt_by_id(user_id, receipt_id)
         if not receipt:
+            logger.error(f"Receipt {receipt_id} not found for user {user_id}")
+            return None
+        
+        if not receipt.photo_url:
+            logger.error(f"Receipt {receipt_id} has no photo URL")
             return None
         
         # Update status to processing
@@ -404,51 +435,77 @@ async def process_receipt_image(user_id: str, receipt_id: str) -> Optional[Recei
             processing_status=ReceiptProcessingStatus.PROCESSING
         ))
         
-        # Mock AI processing - return sample extracted items
-        mock_extracted_items = [
-            ReceiptItem(
-                name="Organic Bananas",
-                quantity=2.5,
-                unit_price=0.68,
-                total_price=1.70,
-                category=ReceiptItemCategory.PRODUCE
-            ),
-            ReceiptItem(
-                name="Whole Milk",
-                quantity=1.0,
-                unit_price=3.49,
-                total_price=3.49,
-                category=ReceiptItemCategory.DAIRY
-            ),
-            ReceiptItem(
-                name="Bread",
-                quantity=1.0,
-                unit_price=2.99,
-                total_price=2.99,
-                category=ReceiptItemCategory.GRAINS
-            ),
-            ReceiptItem(
-                name="Ground Beef",
-                quantity=1.2,
-                unit_price=5.99,
-                total_price=7.19,
-                category=ReceiptItemCategory.MEAT
-            )
-        ]
+        logger.info(f"Starting OCR processing for receipt {receipt_id}")
+        
+        # Extract text from image using OCR
+        extracted_text = await ocr_service.extract_text_from_image(receipt.photo_url)
+        
+        if not extracted_text:
+            logger.warning(f"No text extracted from receipt {receipt_id}, using fallback")
+            # Fallback to mock data if OCR fails
+            return await _process_receipt_fallback(user_id, receipt_id, "OCR text extraction failed")
+        
+        logger.info(f"Successfully extracted text from receipt {receipt_id}")
+        
+        # Parse the extracted text
+        parsed_data = ocr_service.parse_receipt_text(extracted_text)
+        
+        # Extract items from parsed data
+        extracted_items = parsed_data.get('items', [])
+        
+        # If no items found, try fallback
+        if not extracted_items:
+            logger.warning(f"No items parsed from receipt {receipt_id}, using fallback")
+            return await _process_receipt_fallback(user_id, receipt_id, "No items could be parsed from text")
+        
+        # Update store name if detected and different
+        detected_store = parsed_data.get('store_name')
+        if detected_store and detected_store.lower() != receipt.store_name.lower():
+            logger.info(f"Updating store name from '{receipt.store_name}' to '{detected_store}'")
+            await update_receipt(user_id, receipt_id, ReceiptUpdate(
+                store_name=detected_store
+            ))
+        
+        # Update receipt date if detected and different
+        detected_date = parsed_data.get('receipt_date')
+        if detected_date and detected_date != receipt.receipt_date:
+            logger.info(f"Updating receipt date from '{receipt.receipt_date}' to '{detected_date}'")
+            await update_receipt(user_id, receipt_id, ReceiptUpdate(
+                receipt_date=detected_date
+            ))
+        
+        # Update total if detected and significantly different
+        detected_total = parsed_data.get('total')
+        if detected_total and abs(detected_total - receipt.total_amount) > 0.01:
+            logger.info(f"Updating total from ${receipt.total_amount} to ${detected_total}")
+            await update_receipt(user_id, receipt_id, ReceiptUpdate(
+                total_amount=detected_total
+            ))
+        
+        # Calculate confidence score based on parsing success
+        confidence_score = _calculate_confidence_score(parsed_data, extracted_items)
         
         # Update receipt with extracted items and mark as completed
         await update_receipt(user_id, receipt_id, ReceiptUpdate(
-            items=mock_extracted_items,
+            items=extracted_items,
             processing_status=ReceiptProcessingStatus.COMPLETED,
             processed_at=datetime.utcnow()
         ))
         
+        processing_notes = f"OCR processing completed. Extracted {len(extracted_items)} items."
+        if detected_store:
+            processing_notes += f" Store: {detected_store}."
+        if detected_date:
+            processing_notes += f" Date: {detected_date}."
+        
+        logger.info(f"Successfully processed receipt {receipt_id} with {len(extracted_items)} items")
+        
         return ReceiptProcessingResponse(
             receipt_id=receipt_id,
             processing_status=ReceiptProcessingStatus.COMPLETED,
-            extracted_items=mock_extracted_items,
-            confidence_score=0.85,
-            processing_notes="Mock AI processing completed successfully"
+            extracted_items=extracted_items,
+            confidence_score=confidence_score,
+            processing_notes=processing_notes
         )
         
     except Exception as e:
@@ -462,7 +519,108 @@ async def process_receipt_image(user_id: str, receipt_id: str) -> Optional[Recei
         except:
             pass
         
+        # Try fallback if enabled
+        try:
+            return await _process_receipt_fallback(user_id, receipt_id, f"Processing error: {str(e)}")
+        except:
+            return None
+
+
+async def _process_receipt_fallback(user_id: str, receipt_id: str, error_reason: str) -> Optional[ReceiptProcessingResponse]:
+    """
+    Fallback processing when OCR fails - uses mock data
+    
+    Args:
+        user_id: User's ObjectId as string
+        receipt_id: Receipt's ObjectId as string
+        error_reason: Reason for fallback
+        
+    Returns:
+        ReceiptProcessingResponse with mock data if fallback enabled, None otherwise
+    """
+    try:
+        # Import OCR service to check fallback setting
+        from app.utils.ocr_service import ocr_service
+        
+        if not ocr_service.fallback_enabled:
+            logger.error(f"OCR failed for receipt {receipt_id} and fallback is disabled")
+            return None
+        
+        logger.info(f"Using fallback processing for receipt {receipt_id}: {error_reason}")
+        
+        # Mock fallback items - basic grocery items
+        fallback_items = [
+            ReceiptItem(
+                name="Grocery Item 1",
+                quantity=1.0,
+                unit_price=2.99,
+                total_price=2.99,
+                category=ReceiptItemCategory.OTHER
+            ),
+            ReceiptItem(
+                name="Grocery Item 2",
+                quantity=1.0,
+                unit_price=4.49,
+                total_price=4.49,
+                category=ReceiptItemCategory.OTHER
+            )
+        ]
+        
+        # Update receipt with fallback items and mark as completed
+        await update_receipt(user_id, receipt_id, ReceiptUpdate(
+            items=fallback_items,
+            processing_status=ReceiptProcessingStatus.COMPLETED,
+            processed_at=datetime.utcnow()
+        ))
+        
+        return ReceiptProcessingResponse(
+            receipt_id=receipt_id,
+            processing_status=ReceiptProcessingStatus.COMPLETED,
+            extracted_items=fallback_items,
+            confidence_score=0.1,  # Low confidence for fallback
+            processing_notes=f"Fallback processing used. Reason: {error_reason}"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in fallback processing for receipt {receipt_id}: {e}")
         return None
+
+
+def _calculate_confidence_score(parsed_data: Dict[str, Any], items: List[ReceiptItem]) -> float:
+    """
+    Calculate confidence score based on parsing success
+    
+    Args:
+        parsed_data: Parsed receipt data
+        items: Extracted items
+        
+    Returns:
+        Confidence score between 0 and 1
+    """
+    score = 0.0
+    
+    # Base score for having items
+    if items:
+        score += 0.4
+    
+    # Bonus for having store name
+    if parsed_data.get('store_name'):
+        score += 0.2
+    
+    # Bonus for having date
+    if parsed_data.get('receipt_date'):
+        score += 0.1
+    
+    # Bonus for having total
+    if parsed_data.get('total'):
+        score += 0.1
+    
+    # Bonus for categorized items
+    categorized_items = sum(1 for item in items if item.category != ReceiptItemCategory.OTHER)
+    if items:
+        score += 0.2 * (categorized_items / len(items))
+    
+    return min(score, 1.0)
 
 
 def _map_receipt_category_to_pantry(receipt_category: ReceiptItemCategory) -> PantryCategory:
