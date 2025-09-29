@@ -11,7 +11,7 @@ import {
 } from '@/lib/mockPantryData';
 import { simulateReceiptProcessing } from '@/lib/mockData';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_APP_BASE_URL || 'http://localhost:8000/api/v1';
 
 // Get auth token from localStorage
 const getAuthToken = (): string | null => {
