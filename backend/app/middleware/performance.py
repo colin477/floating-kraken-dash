@@ -256,19 +256,28 @@ class DatabasePoolConfig:
     
     @staticmethod
     def get_connection_options():
-        """Get optimized MongoDB connection options for production"""
-        return {
+        """Get optimized MongoDB connection options for production with SSL/TLS support"""
+        options = {
             "maxPoolSize": int(os.getenv("MONGODB_MAX_POOL_SIZE", "100")),
             "minPoolSize": int(os.getenv("MONGODB_MIN_POOL_SIZE", "10")),
             "maxIdleTimeMS": int(os.getenv("MONGODB_MAX_IDLE_TIME_MS", "30000")),
             "waitQueueTimeoutMS": int(os.getenv("MONGODB_WAIT_QUEUE_TIMEOUT_MS", "5000")),
-            "serverSelectionTimeoutMS": int(os.getenv("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "5000")),
-            "connectTimeoutMS": int(os.getenv("MONGODB_CONNECT_TIMEOUT_MS", "10000")),
-            "socketTimeoutMS": int(os.getenv("MONGODB_SOCKET_TIMEOUT_MS", "20000")),
+            "serverSelectionTimeoutMS": int(os.getenv("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "30000")),
+            "connectTimeoutMS": int(os.getenv("MONGODB_CONNECT_TIMEOUT_MS", "30000")),
+            "socketTimeoutMS": int(os.getenv("MONGODB_SOCKET_TIMEOUT_MS", "30000")),
             "retryWrites": True,
             "retryReads": True,
             "readPreference": "secondaryPreferred"
         }
+        
+        # Add SSL/TLS options if enabled
+        if os.getenv("MONGODB_TLS_ENABLED", "false").lower() == "true":
+            options.update({
+                "tls": True,
+                "tlsAllowInvalidCertificates": os.getenv("MONGODB_TLS_ALLOW_INVALID_CERTIFICATES", "false").lower() == "true"
+            })
+        
+        return options
 
 # Cache utilities
 async def cache_get(key: str) -> Optional[Any]:

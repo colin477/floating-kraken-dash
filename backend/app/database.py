@@ -314,7 +314,7 @@ async def create_receipts_indexes():
 
 
 async def connect_to_mongo():
-    """Create database connection with production-grade connection pooling"""
+    """Create database connection with production-grade connection pooling and SSL/TLS support"""
     try:
         # Get MongoDB URI from environment
         mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
@@ -323,20 +323,37 @@ async def connect_to_mongo():
         # Get optimized connection options for production
         connection_options = DatabasePoolConfig.get_connection_options()
         
+        # Add additional TLS-specific options for SSL handshake issues
+        if os.getenv("MONGODB_TLS_ENABLED", "false").lower() == "true":
+            tls_options = {
+                "tls": True,
+                "tlsAllowInvalidCertificates": os.getenv("MONGODB_TLS_ALLOW_INVALID_CERTIFICATES", "false").lower() == "true",
+                "serverSelectionTimeoutMS": int(os.getenv("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "30000")),
+                "connectTimeoutMS": int(os.getenv("MONGODB_CONNECT_TIMEOUT_MS", "30000")),
+                "socketTimeoutMS": int(os.getenv("MONGODB_SOCKET_TIMEOUT_MS", "30000"))
+            }
+            connection_options.update(tls_options)
+            logger.info("SSL/TLS connection options enabled for MongoDB")
+        
         # Create MongoDB client with connection pooling
         db.client = AsyncIOMotorClient(mongodb_uri, **connection_options)
         db.database = db.client[database_name]
         
-        # Test the connection
+        # Test the connection with extended timeout for SSL handshake
         await db.client.admin.command('ping')
         logger.info(f"Successfully connected to MongoDB database: {database_name}")
         logger.info(f"Connection pool configured with max size: {connection_options['maxPoolSize']}")
+        
+        if os.getenv("MONGODB_TLS_ENABLED", "false").lower() == "true":
+            logger.info("SSL/TLS connection established successfully")
         
         # Create comprehensive database indexes
         await create_comprehensive_indexes()
         
     except ConnectionFailure as e:
         logger.error(f"Failed to connect to MongoDB: {e}")
+        if os.getenv("MONGODB_TLS_ENABLED", "false").lower() == "true":
+            logger.error("SSL/TLS connection failure - check certificate configuration and network connectivity")
         raise e
     except Exception as e:
         logger.error(f"Unexpected error connecting to MongoDB: {e}")
