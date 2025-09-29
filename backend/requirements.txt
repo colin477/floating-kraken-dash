@@ -41,7 +41,7 @@ pytest-benchmark==4.0.0
 
 # OCR and AI services
 google-cloud-vision==3.4.5
-pillow==10.1.0
+pillow==10.4.0
 requests==2.31.0
 
 # Cloud Storage
