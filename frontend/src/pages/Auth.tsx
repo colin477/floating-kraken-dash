@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { User, UserProfile, Recipe } from '@/types';
 import { storage } from '@/lib/storage';
 import { AuthForm } from '@/components/AuthForm';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { TableSettingChoice } from '@/components/TableSettingChoice';
 import { ProfileSetup } from '@/components/ProfileSetup';
 import { Dashboard } from '@/components/Dashboard';

@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ArrowLeft, Search, Plus, Trash2, Package, Calendar, X, ChevronDown, Edit, AlertTriangle, TestTube } from 'lucide-react';
 import { PantryItem, PantryItemCreate, PantryItemUpdate, PantryCategory, PantryUnit, PantryItemsListResponse, ExpiringItemsResponse } from '@/types';
 import { pantryApi } from '@/services/api';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { showSuccess, showError } from '@/utils/toast';
 import { shouldBypassAuth, shouldShowDemoIndicator, isDemoModeEnabled } from '@/lib/demoMode';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pantry } from '@/components/Pantry';
-import { AuthProvider } from '@/contexts/AuthContext';
+import AuthProvider from '@/contexts/AuthContext';
 
 const PantryTest = () => {
   return (

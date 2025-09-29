@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { User, UserProfile } from '@/types';
 import { storage } from '@/lib/storage';
 import { showSuccess, showError } from '@/utils/toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AuthFormProps {
   onAuthSuccess: (user: User, isNewUser: boolean) => void;
@@ -17,6 +17,7 @@ interface AuthFormProps {
 export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
   const { login, register } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  // Test comment for Fast Refresh verification - HMR Test Update
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);

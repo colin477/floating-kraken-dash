@@ -5,7 +5,7 @@ import Landing from './pages/Landing.tsx'
 import Auth from './pages/Auth.tsx'
 import Index from './pages/Index.tsx'
 import PantryTest from './pages/PantryTest.tsx'
-import { AuthProvider } from './contexts/AuthContext'
+import AuthProvider from './contexts/AuthContext'
 import './globals.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
