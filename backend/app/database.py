@@ -1,6 +1,7 @@
 """
 Database configuration and connection management for MongoDB Atlas
 """
+# SSL/TLS verification trigger
 
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -320,43 +321,86 @@ async def connect_to_mongo():
         mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
         database_name = os.getenv("DATABASE_NAME", "ez_eatin")
         
+        # Enhanced SSL Environment Variable Logging
+        tls_enabled = os.getenv("MONGODB_TLS_ENABLED", "false")
+        tls_allow_invalid = os.getenv("MONGODB_TLS_ALLOW_INVALID_CERTIFICATES", "false")
+        server_timeout = os.getenv("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "30000")
+        connect_timeout = os.getenv("MONGODB_CONNECT_TIMEOUT_MS", "30000")
+        socket_timeout = os.getenv("MONGODB_SOCKET_TIMEOUT_MS", "30000")
+        
+        logger.info("=== MongoDB SSL/TLS Environment Variables ===")
+        logger.info(f"MONGODB_TLS_ENABLED: {tls_enabled}")
+        logger.info(f"MONGODB_TLS_ALLOW_INVALID_CERTIFICATES: {tls_allow_invalid}")
+        logger.info(f"MONGODB_SERVER_SELECTION_TIMEOUT_MS: {server_timeout}")
+        logger.info(f"MONGODB_CONNECT_TIMEOUT_MS: {connect_timeout}")
+        logger.info(f"MONGODB_SOCKET_TIMEOUT_MS: {socket_timeout}")
+        logger.info("===============================================")
+        
         # Get optimized connection options for production
         connection_options = DatabasePoolConfig.get_connection_options()
+        logger.info(f"Base connection options: {connection_options}")
         
-        # Add additional TLS-specific options for SSL handshake issues
-        if os.getenv("MONGODB_TLS_ENABLED", "false").lower() == "true":
+        # Strengthen SSL/TLS configuration for OpenSSL 3.0.16 compatibility
+        if tls_enabled.lower() == "true":
+            # Ensure tlsAllowInvalidCertificates is definitively set to true
+            tls_allow_invalid_bool = tls_allow_invalid.lower() == "true"
+            
             tls_options = {
                 "tls": True,
-                "tlsAllowInvalidCertificates": os.getenv("MONGODB_TLS_ALLOW_INVALID_CERTIFICATES", "false").lower() == "true",
-                "serverSelectionTimeoutMS": int(os.getenv("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "30000")),
-                "connectTimeoutMS": int(os.getenv("MONGODB_CONNECT_TIMEOUT_MS", "30000")),
-                "socketTimeoutMS": int(os.getenv("MONGODB_SOCKET_TIMEOUT_MS", "30000"))
+                "tlsAllowInvalidCertificates": tls_allow_invalid_bool,
+                "serverSelectionTimeoutMS": int(server_timeout),
+                "connectTimeoutMS": int(connect_timeout),
+                "socketTimeoutMS": int(socket_timeout),
+                "retryWrites": True,
+                "retryReads": True,
+                "maxIdleTimeMS": 45000,  # Close connections after 45 seconds of inactivity
+                "heartbeatFrequencyMS": 10000,  # Send heartbeat every 10 seconds
             }
+            
             connection_options.update(tls_options)
-            logger.info("SSL/TLS connection options enabled for MongoDB")
+            
+            logger.info("=== TLS Configuration Applied ===")
+            logger.info(f"tls: {tls_options['tls']}")
+            logger.info(f"tlsAllowInvalidCertificates: {tls_options['tlsAllowInvalidCertificates']}")
+            logger.info(f"serverSelectionTimeoutMS: {tls_options['serverSelectionTimeoutMS']}")
+            logger.info(f"connectTimeoutMS: {tls_options['connectTimeoutMS']}")
+            logger.info(f"socketTimeoutMS: {tls_options['socketTimeoutMS']}")
+            logger.info(f"maxIdleTimeMS: {tls_options['maxIdleTimeMS']}")
+            logger.info(f"heartbeatFrequencyMS: {tls_options['heartbeatFrequencyMS']}")
+            logger.info("=================================")
+        
+        # Log final connection options for debugging
+        logger.info(f"Final connection options: {connection_options}")
         
         # Create MongoDB client with connection pooling
+        logger.info("Creating AsyncIOMotorClient with enhanced SSL configuration...")
         db.client = AsyncIOMotorClient(mongodb_uri, **connection_options)
         db.database = db.client[database_name]
         
         # Test the connection with extended timeout for SSL handshake
+        logger.info("Testing MongoDB connection with ping command...")
         await db.client.admin.command('ping')
         logger.info(f"Successfully connected to MongoDB database: {database_name}")
         logger.info(f"Connection pool configured with max size: {connection_options['maxPoolSize']}")
         
-        if os.getenv("MONGODB_TLS_ENABLED", "false").lower() == "true":
-            logger.info("SSL/TLS connection established successfully")
+        if tls_enabled.lower() == "true":
+            logger.info("SSL/TLS connection established successfully with enhanced configuration")
         
         # Create comprehensive database indexes
         await create_comprehensive_indexes()
         
     except ConnectionFailure as e:
         logger.error(f"Failed to connect to MongoDB: {e}")
-        if os.getenv("MONGODB_TLS_ENABLED", "false").lower() == "true":
-            logger.error("SSL/TLS connection failure - check certificate configuration and network connectivity")
+        if tls_enabled.lower() == "true":
+            logger.error("SSL/TLS connection failure detected")
+            logger.error("This may be due to OpenSSL 3.0.16 certificate validation strictness")
+            logger.error("Check certificate configuration and network connectivity")
+            logger.error(f"TLS settings - Enabled: {tls_enabled}, Allow Invalid: {tls_allow_invalid}")
         raise e
     except Exception as e:
         logger.error(f"Unexpected error connecting to MongoDB: {e}")
+        if tls_enabled.lower() == "true":
+            logger.error("SSL/TLS related error - check OpenSSL compatibility and certificate configuration")
         raise e
 
 async def close_mongo_connection():
