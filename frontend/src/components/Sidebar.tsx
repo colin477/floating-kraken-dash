@@ -310,7 +310,10 @@ export const Sidebar = ({ isOpen, onToggle, currentPage, onNavigate, user }: Sid
                             ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
                             : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
                         )}>
-                          {user.subscription.charAt(0).toUpperCase() + user.subscription.slice(1)}
+                          {user.subscription ?
+                            user.subscription.charAt(0).toUpperCase() + user.subscription.slice(1) :
+                            'Free'
+                          }
                         </span>
                       </div>
                     </div>

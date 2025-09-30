@@ -7,8 +7,8 @@ const Landing = () => {
   const navigate = useNavigate();
   
   const handleStartTrial = () => {
-    // Navigate to auth page
-    navigate('/auth');
+    // Navigate to auth page with signup tab active
+    navigate('/auth?tab=signup');
   };
 
   return (

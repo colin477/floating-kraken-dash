@@ -72,6 +72,7 @@ async def create_profile(user_id: str, profile_data: UserProfileCreate) -> Optio
             "preferred_grocers": profile_data.preferred_grocers,
             "subscription": profile_data.subscription,
             "trial_ends_at": profile_data.trial_ends_at,
+            "onboarding_completed": profile_data.onboarding_completed,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
         }
@@ -314,4 +315,238 @@ async def delete_family_member(user_id: str, member_id: str) -> Optional[UserPro
         return None
     except Exception as e:
         logger.error(f"Error deleting family member {member_id} for user {user_id}: {e}")
+        return None
+
+
+async def create_profile_stub(user_id: str) -> Optional[UserProfile]:
+    """
+    Create a minimal profile stub for a new user with onboarding_completed: false
+    
+    Args:
+        user_id: User's ObjectId as string
+        
+    Returns:
+        Created UserProfile object if successful, None otherwise
+    """
+    try:
+        profiles_collection = await get_collection("profiles")
+        
+        # Check if user already has a profile
+        existing_profile = await profiles_collection.find_one({"user_id": user_id})
+        if existing_profile:
+            logger.warning(f"Profile already exists for user_id: {user_id}")
+            return None
+        
+        # Create minimal profile stub
+        profile_doc = {
+            "_id": ObjectId(),
+            "user_id": user_id,
+            "dietary_restrictions": [],
+            "allergies": [],
+            "taste_preferences": [],
+            "meal_preferences": [],
+            "kitchen_equipment": [],
+            "weekly_budget": None,
+            "zip_code": None,
+            "family_members": [],
+            "preferred_grocers": [],
+            "subscription": "free",
+            "setup_level": None,
+            "trial_ends_at": None,
+            "onboarding_completed": False,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Insert profile into database
+        result = await profiles_collection.insert_one(profile_doc)
+        
+        # Return the created profile
+        created_profile = await profiles_collection.find_one({"_id": result.inserted_id})
+        if created_profile:
+            # Convert ObjectId to string for the response
+            created_profile["_id"] = str(created_profile["_id"])
+            return UserProfile(**created_profile)
+        
+        return None
+        
+    except PyMongoError as e:
+        logger.error(f"Database error creating profile stub for user {user_id}: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Error creating profile stub for user {user_id}: {e}")
+        return None
+
+
+async def get_onboarding_status(user_id: str) -> dict:
+    """
+    Check if user has completed onboarding with detailed status information
+    
+    Args:
+        user_id: User's ObjectId as string
+        
+    Returns:
+        Dict with detailed onboarding status information
+    """
+    try:
+        profiles_collection = await get_collection("profiles")
+        
+        profile = await profiles_collection.find_one({"user_id": user_id})
+        
+        if not profile:
+            return {
+                "onboarding_completed": False,
+                "has_profile": False,
+                "user_id": user_id,
+                "current_step": "plan-selection",
+                "plan_selected": False,
+                "profile_completed": False,
+                "setup_level": None,
+                "plan_type": None
+            }
+        
+        # Determine current step and completion status
+        onboarding_completed = profile.get("onboarding_completed", False)
+        plan_selected = profile.get("subscription") is not None and profile.get("subscription") != "free"
+        setup_level = profile.get("setup_level")
+        plan_type = profile.get("subscription", "free")
+        
+        # Check if profile has meaningful data (not just defaults)
+        profile_completed = (
+            profile.get("weekly_budget") is not None and
+            profile.get("zip_code") is not None and
+            len(profile.get("dietary_restrictions", [])) > 0 or
+            len(profile.get("allergies", [])) > 0 or
+            len(profile.get("taste_preferences", [])) > 0 or
+            len(profile.get("meal_preferences", [])) > 0 or
+            len(profile.get("kitchen_equipment", [])) > 0
+        )
+        
+        # Determine current step
+        current_step = None
+        if not plan_selected:
+            current_step = "plan-selection"
+        elif not profile_completed:
+            current_step = "profile-setup"
+        elif not onboarding_completed:
+            current_step = "completion"
+        
+        return {
+            "onboarding_completed": onboarding_completed,
+            "has_profile": True,
+            "user_id": user_id,
+            "current_step": current_step,
+            "plan_selected": plan_selected,
+            "profile_completed": profile_completed,
+            "setup_level": setup_level,
+            "plan_type": plan_type
+        }
+        
+    except PyMongoError as e:
+        logger.error(f"Database error getting onboarding status for user {user_id}: {e}")
+        return {
+            "onboarding_completed": False,
+            "has_profile": False,
+            "user_id": user_id,
+            "current_step": "plan-selection",
+            "plan_selected": False,
+            "profile_completed": False,
+            "setup_level": None,
+            "plan_type": None
+        }
+    except Exception as e:
+        logger.error(f"Error getting onboarding status for user {user_id}: {e}")
+        return {
+            "onboarding_completed": False,
+            "has_profile": False,
+            "user_id": user_id,
+            "current_step": "plan-selection",
+            "plan_selected": False,
+            "profile_completed": False,
+            "setup_level": None,
+            "plan_type": None
+        }
+
+
+async def complete_onboarding(user_id: str) -> Optional[UserProfile]:
+    """
+    Mark user's onboarding as complete
+    
+    Args:
+        user_id: User's ObjectId as string
+        
+    Returns:
+        Updated UserProfile object if successful, None otherwise
+    """
+    try:
+        profiles_collection = await get_collection("profiles")
+        
+        # Update onboarding status
+        result = await profiles_collection.update_one(
+            {"user_id": user_id},
+            {
+                "$set": {
+                    "onboarding_completed": True,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        if result.modified_count == 0:
+            return None
+        
+        # Return updated profile
+        return await get_profile_by_user_id(user_id)
+        
+    except PyMongoError as e:
+        logger.error(f"Database error completing onboarding for user {user_id}: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Error completing onboarding for user {user_id}: {e}")
+        return None
+
+
+async def update_plan_selection(user_id: str, plan_type: str, setup_level: str, trial_ends_at: Optional[datetime] = None) -> Optional[UserProfile]:
+    """
+    Update user's plan selection during onboarding
+    
+    Args:
+        user_id: User's ObjectId as string
+        plan_type: Selected plan type (free, basic, premium)
+        setup_level: Selected setup level (basic, medium, full)
+        trial_ends_at: Trial end date if applicable
+        
+    Returns:
+        Updated UserProfile object if successful, None otherwise
+    """
+    try:
+        profiles_collection = await get_collection("profiles")
+        
+        # Build update document
+        update_doc = {
+            "subscription": plan_type,
+            "setup_level": setup_level,
+            "updated_at": datetime.utcnow()
+        }
+        
+        if trial_ends_at:
+            update_doc["trial_ends_at"] = trial_ends_at
+        
+        # Update plan selection
+        result = await profiles_collection.update_one(
+            {"user_id": user_id},
+            {"$set": update_doc}
+        )
+        
+        if result.modified_count == 0:
+            return None
+        
+        # Return updated profile
+        return await get_profile_by_user_id(user_id)
+        
+    except PyMongoError as e:
+        logger.error(f"Database error updating plan selection for user {user_id}: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Error updating plan selection for user {user_id}: {e}")
         return None

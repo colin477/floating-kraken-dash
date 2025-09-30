@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { UserProfile } from '@/types';
 import { storage } from '@/lib/storage';
 import { showSuccess } from '@/utils/toast';
+import { profileApi } from '@/services/api';
 import { Clock, Utensils, Crown, MapPin, Truck } from 'lucide-react';
 
 interface ProfileSetupProps {
@@ -325,6 +326,8 @@ export const ProfileSetup = ({ userId, level, onComplete }: ProfileSetupProps) =
   const [answers, setAnswers] = useState<Partial<QuickAnswers>>({});
   const [selectedMultiple, setSelectedMultiple] = useState<string[]>([]);
   const [userZipCode, setUserZipCode] = useState('');
+  const [isReadyToComplete, setIsReadyToComplete] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   const getQuestionsForLevel = () => {
     switch (level) {
@@ -413,11 +416,13 @@ export const ProfileSetup = ({ userId, level, onComplete }: ProfileSetupProps) =
       setAnswers(newAnswers);
       setSelectedMultiple([]);
 
-      // Move to next question or complete setup
+      // Move to next question or show completion button on final question
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(currentQuestion + 1);
+        setIsReadyToComplete(false);
       } else {
-        completeSetup(newAnswers as QuickAnswers);
+        // On final question, show completion button instead of auto-completing
+        setIsReadyToComplete(true);
       }
     }
   };
@@ -440,29 +445,78 @@ export const ProfileSetup = ({ userId, level, onComplete }: ProfileSetupProps) =
 
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
+      setIsReadyToComplete(false);
     } else {
-      completeSetup(newAnswers as QuickAnswers);
+      // On final question, show completion button instead of auto-completing
+      setIsReadyToComplete(true);
     }
   };
 
-  const completeSetup = (finalAnswers: QuickAnswers) => {
-    // Convert answers to profile data
-    const profile: UserProfile = {
-      userId,
-      dietaryRestrictions: getDietaryRestrictions(finalAnswers),
-      allergies: getAllergies(finalAnswers),
-      tastePreferences: getTastePreferences(finalAnswers),
-      mealPreferences: getMealPreferences(finalAnswers),
-      kitchenEquipment: getKitchenEquipment(finalAnswers),
-      weeklyBudget: getWeeklyBudget(finalAnswers),
-      zipCode: userZipCode,
-      familyMembers: getFamilyMembers(finalAnswers),
-      preferredGrocers: finalAnswers.preferredGrocers || []
-    };
+  const handleCompleteSignup = async () => {
+    setIsCompleting(true);
+    const finalAnswers = { ...answers } as QuickAnswers;
+    await completeSetup(finalAnswers);
+  };
 
-    storage.setProfile(profile);
-    showSuccess('Profile setup complete! Let\'s start meal planning.');
-    onComplete();
+  const completeSetup = async (finalAnswers: QuickAnswers) => {
+    try {
+      // Convert answers to profile data
+      const profile: UserProfile = {
+        userId,
+        dietaryRestrictions: getDietaryRestrictions(finalAnswers),
+        allergies: getAllergies(finalAnswers),
+        tastePreferences: getTastePreferences(finalAnswers),
+        mealPreferences: getMealPreferences(finalAnswers),
+        kitchenEquipment: getKitchenEquipment(finalAnswers),
+        weeklyBudget: getWeeklyBudget(finalAnswers),
+        zipCode: userZipCode,
+        familyMembers: getFamilyMembers(finalAnswers),
+        preferredGrocers: finalAnswers.preferredGrocers || []
+      };
+
+      // Save profile to backend
+      const profileData = {
+        dietary_restrictions: profile.dietaryRestrictions,
+        allergies: profile.allergies,
+        taste_preferences: profile.tastePreferences,
+        meal_preferences: profile.mealPreferences,
+        kitchen_equipment: profile.kitchenEquipment,
+        weekly_budget: profile.weeklyBudget,
+        zip_code: profile.zipCode,
+        preferred_grocers: profile.preferredGrocers
+      };
+
+      console.log('[ProfileSetup] Saving profile to backend:', profileData);
+      await profileApi.updateProfile(profileData);
+      console.log('[ProfileSetup] Profile saved successfully');
+
+      // Save to local storage as well
+      storage.setProfile(profile);
+      
+      showSuccess('Profile setup complete! Let\'s start meal planning.');
+      onComplete();
+    } catch (error) {
+      console.error('[ProfileSetup] Failed to save profile:', error);
+      // Still save locally and continue - the backend call can be retried later
+      const profile: UserProfile = {
+        userId,
+        dietaryRestrictions: getDietaryRestrictions(finalAnswers),
+        allergies: getAllergies(finalAnswers),
+        tastePreferences: getTastePreferences(finalAnswers),
+        mealPreferences: getMealPreferences(finalAnswers),
+        kitchenEquipment: getKitchenEquipment(finalAnswers),
+        weeklyBudget: getWeeklyBudget(finalAnswers),
+        zipCode: userZipCode,
+        familyMembers: getFamilyMembers(finalAnswers),
+        preferredGrocers: finalAnswers.preferredGrocers || []
+      };
+      
+      storage.setProfile(profile);
+      showSuccess('Profile setup complete! Let\'s start meal planning.');
+      onComplete();
+    } finally {
+      setIsCompleting(false);
+    }
   };
 
   // Helper functions to convert answers to profile data
@@ -886,6 +940,39 @@ export const ProfileSetup = ({ userId, level, onComplete }: ProfileSetupProps) =
                 </div>
               )}
             </>
+          )}
+
+          {/* Complete Sign-up Button - Show on final question when ready */}
+          {isReadyToComplete && currentQuestion === questions.length - 1 && (
+            <div className="text-center space-y-4">
+              <div className="p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  🎉 You're all set!
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Ready to complete your profile setup and start getting personalized meal suggestions?
+                </p>
+                <Button
+                  onClick={handleCompleteSignup}
+                  disabled={isCompleting}
+                  size="lg"
+                  className={`px-8 py-3 text-lg font-semibold ${
+                    level === 'basic' ? 'bg-green-600 hover:bg-green-700' :
+                    level === 'medium' ? 'bg-blue-600 hover:bg-blue-700' :
+                    'bg-purple-600 hover:bg-purple-700'
+                  } text-white`}
+                >
+                  {isCompleting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Completing Setup...
+                    </>
+                  ) : (
+                    'Complete Sign-up'
+                  )}
+                </Button>
+              </div>
+            </div>
           )}
 
           {/* Navigation */}

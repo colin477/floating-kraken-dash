@@ -29,6 +29,7 @@ from app.crud.meal_plans import (
     create_meal_plan_indexes
 )
 from app.utils.auth import get_current_active_user
+from app.middleware.onboarding import require_onboarding_complete
 
 router = APIRouter()
 
@@ -48,7 +49,7 @@ async def get_user_meal_plans(
     page_size: int = Query(20, ge=1, le=100, description="Meal plans per page"),
     sort_by: str = Query("created_at", description="Sort field (created_at, week_starting, title, etc.)"),
     sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get user's meal plans with filtering by status and date range"""
     user_id = str(current_user["_id"])
@@ -76,7 +77,7 @@ async def get_user_meal_plans(
 @router.post("/", response_model=MealPlanResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_meal_plan(
     meal_plan_data: MealPlanCreate,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Create new meal plan"""
     user_id = str(current_user["_id"])
@@ -95,7 +96,7 @@ async def create_new_meal_plan(
 @router.get("/{meal_plan_id}", response_model=MealPlanResponse)
 async def get_meal_plan(
     meal_plan_id: str,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get specific meal plan"""
     user_id = str(current_user["_id"])
@@ -115,7 +116,7 @@ async def get_meal_plan(
 async def update_meal_plan_endpoint(
     meal_plan_id: str,
     update_data: MealPlanUpdate,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Update meal plan"""
     user_id = str(current_user["_id"])
@@ -134,7 +135,7 @@ async def update_meal_plan_endpoint(
 @router.delete("/{meal_plan_id}")
 async def delete_meal_plan_endpoint(
     meal_plan_id: str,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Delete meal plan"""
     user_id = str(current_user["_id"])
@@ -153,7 +154,7 @@ async def delete_meal_plan_endpoint(
 @router.post("/generate", response_model=MealPlanGenerationResponse, status_code=status.HTTP_201_CREATED)
 async def generate_ai_meal_plan(
     generation_request: MealPlanGenerationRequest,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """
     Generate AI-powered meal plan based on user preferences and pantry items
@@ -185,7 +186,7 @@ async def generate_ai_meal_plan(
 
 @router.get("/stats/overview", response_model=MealPlanStatsResponse)
 async def get_meal_plan_statistics(
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get meal plan statistics overview"""
     user_id = str(current_user["_id"])
@@ -203,7 +204,7 @@ async def get_meal_plan_statistics(
 
 @router.get("/current/active", response_model=List[MealPlanResponse])
 async def get_current_active_meal_plans(
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get currently active meal plans for the user"""
     user_id = str(current_user["_id"])
@@ -230,7 +231,7 @@ async def get_current_active_meal_plans(
 async def update_meal_plan_status(
     meal_plan_id: str,
     new_status: MealPlanStatus,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Update meal plan status (draft, active, completed, archived)"""
     user_id = str(current_user["_id"])
@@ -250,7 +251,7 @@ async def update_meal_plan_status(
 @router.get("/{meal_plan_id}/shopping-list", response_model=List[dict])
 async def get_meal_plan_shopping_list(
     meal_plan_id: str,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get shopping list for a specific meal plan"""
     user_id = str(current_user["_id"])
@@ -270,7 +271,7 @@ async def get_meal_plan_shopping_list(
 async def duplicate_meal_plan(
     meal_plan_id: str,
     new_week_starting: date = Query(..., description="Week starting date for the duplicated plan"),
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Duplicate an existing meal plan for a new week"""
     user_id = str(current_user["_id"])
@@ -324,7 +325,7 @@ async def duplicate_meal_plan(
 async def get_meal_plan_template_suggestions(
     meal_types: List[MealType] = Query(default=[MealType.DINNER], description="Meal types to get suggestions for"),
     dietary_restrictions: List[str] = Query(default=[], description="Dietary restrictions to consider"),
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get meal plan template suggestions based on user preferences"""
     # Mock template suggestions - in production, this would be more sophisticated

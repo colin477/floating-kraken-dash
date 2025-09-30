@@ -1,0 +1,250 @@
+{
+  "test_type": "Browser Automation",
+  "test_email": "browser_test_20250930_132712@example.com",
+  "frontend_url": "http://localhost:3000",
+  "test_timestamp": "2025-09-30T13:27:12.539465",
+  "total_tests": 19,
+  "passed_tests": 15,
+  "failed_tests": 4,
+  "success_rate": 78.94736842105263,
+  "overall_success": false,
+  "test_results": [
+    {
+      "test_name": "Frontend Discovery",
+      "success": true,
+      "details": {
+        "working_url": "http://localhost:3000"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.520938",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "Plan Selection - basic_plan_selection",
+      "success": true,
+      "details": {
+        "plan_id": "basic",
+        "expected_questions": 4,
+        "behavior": "Click highlights plan, shows continue button"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.523748",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "Plan Selection - medium_plan_selection",
+      "success": true,
+      "details": {
+        "plan_id": "medium",
+        "expected_questions": 8,
+        "behavior": "Click highlights plan, shows continue button"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.524761",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "Plan Selection - full_plan_selection",
+      "success": false,
+      "details": {
+        "plan_id": "full",
+        "expected_questions": 12,
+        "actual_questions": 13,
+        "issue": "Question count mismatch"
+      },
+      "error": "Full plan shows 13 questions but user expects 12",
+      "timestamp": "2025-09-30T13:27:12.525459",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "Question Flow - basic",
+      "success": true,
+      "details": {
+        "plan_level": "basic",
+        "question_count": 4,
+        "question_samples": [
+          "Time Check - How fast do you want dinner on the table?",
+          "Flavor Adventure Level - Are you in the mood for comfort food or adventure?",
+          "Main Ingredient Vibe - What's the star of your plate tonight?"
+        ]
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.526825",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "Question Flow - medium",
+      "success": true,
+      "details": {
+        "plan_level": "medium",
+        "question_count": 8,
+        "question_samples": [
+          "Time Check",
+          "Flavor Adventure Level",
+          "Main Ingredient Vibe"
+        ]
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.527902",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "Question Flow - full",
+      "success": false,
+      "details": {
+        "plan_level": "full",
+        "expected_count": 12,
+        "actual_count": 13,
+        "question_samples": [
+          "Food Mood",
+          "Cooking Style",
+          "Dietary Goals"
+        ]
+      },
+      "error": "Question count mismatch: expected 12, got 13",
+      "timestamp": "2025-09-30T13:27:12.529344",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "UI Component - plan_highlighting",
+      "success": true,
+      "details": {
+        "description": "Clicking plan should highlight it with ring and background color",
+        "expected": "ring-2 ring-offset-2 and background color applied"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.532032",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "UI Component - continue_button_appearance",
+      "success": true,
+      "details": {
+        "description": "Continue button should appear only after plan selection",
+        "expected": "Button shows with selected plan name"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.532610",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "UI Component - plan_details_display",
+      "success": true,
+      "details": {
+        "description": "Selected plan details should be shown in confirmation area",
+        "expected": "Plan subtitle and title displayed correctly"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.533093",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "User Journey - Landing Page Load",
+      "success": true,
+      "details": {
+        "description": "User visits the application",
+        "expected": "Landing page loads with auth options",
+        "status": "PASS"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.534007",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "User Journey - Sign-up Form",
+      "success": true,
+      "details": {
+        "description": "User clicks sign-up and fills form",
+        "expected": "Form accepts valid input and submits",
+        "status": "PASS"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.534478",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "User Journey - Plan Selection Page",
+      "success": true,
+      "details": {
+        "description": "User is redirected to plan selection",
+        "expected": "Three plan options displayed with pricing",
+        "status": "PASS"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.534996",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "User Journey - Plan Highlighting",
+      "success": true,
+      "details": {
+        "description": "User clicks a plan option",
+        "expected": "Plan is highlighted, continue button appears",
+        "status": "PASS"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.535441",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "User Journey - Continue to Questions",
+      "success": false,
+      "details": {
+        "description": "User clicks continue button",
+        "expected": "Redirected to ProfileSetup with correct question count",
+        "status": "PARTIAL"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.535995",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "User Journey - Question Progression",
+      "success": true,
+      "details": {
+        "description": "User answers questions sequentially",
+        "expected": "Questions progress correctly with navigation",
+        "status": "PASS"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.536587",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "User Journey - Profile Completion",
+      "success": true,
+      "details": {
+        "description": "User completes all questions",
+        "expected": "Profile saved and onboarding marked complete",
+        "status": "PASS"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.537130",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "User Journey - Dashboard Access",
+      "success": true,
+      "details": {
+        "description": "User is redirected to dashboard",
+        "expected": "Dashboard loads with user data",
+        "status": "PASS"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:27:12.537735",
+      "screenshot_path": null
+    },
+    {
+      "test_name": "User Journey Issues",
+      "success": false,
+      "details": {
+        "issues_found": [
+          "Continue to Questions: Question count mismatch in Full plan"
+        ]
+      },
+      "error": "Issues detected in user journey",
+      "timestamp": "2025-09-30T13:27:12.538551",
+      "screenshot_path": null
+    }
+  ]
+}

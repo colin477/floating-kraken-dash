@@ -30,6 +30,7 @@ from app.crud.shopping_lists import (
     create_shopping_list_indexes
 )
 from app.utils.auth import get_current_active_user
+from app.middleware.onboarding import require_onboarding_complete
 
 router = APIRouter()
 
@@ -51,7 +52,7 @@ async def get_user_shopping_lists(
     page_size: int = Query(20, ge=1, le=100, description="Shopping lists per page"),
     sort_by: str = Query("created_at", description="Sort field (created_at, shopping_date, title, etc.)"),
     sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get user's shopping lists with filtering and pagination"""
     user_id = str(current_user["_id"])
@@ -81,7 +82,7 @@ async def get_user_shopping_lists(
 @router.post("/", response_model=ShoppingListResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_shopping_list(
     shopping_list_data: ShoppingListCreate,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Create new shopping list"""
     user_id = str(current_user["_id"])
@@ -100,7 +101,7 @@ async def create_new_shopping_list(
 @router.get("/{shopping_list_id}", response_model=ShoppingListResponse)
 async def get_shopping_list(
     shopping_list_id: str,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get specific shopping list"""
     user_id = str(current_user["_id"])
@@ -120,7 +121,7 @@ async def get_shopping_list(
 async def update_shopping_list_endpoint(
     shopping_list_id: str,
     update_data: ShoppingListUpdate,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Update shopping list"""
     user_id = str(current_user["_id"])
@@ -139,7 +140,7 @@ async def update_shopping_list_endpoint(
 @router.delete("/{shopping_list_id}")
 async def delete_shopping_list_endpoint(
     shopping_list_id: str,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Delete shopping list"""
     user_id = str(current_user["_id"])
@@ -160,7 +161,7 @@ async def update_shopping_list_item(
     shopping_list_id: str,
     item_id: str,
     update_data: ShoppingItemUpdate,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Update specific item in shopping list"""
     user_id = str(current_user["_id"])
@@ -185,7 +186,7 @@ async def update_shopping_list_item(
 async def bulk_update_shopping_list_items(
     shopping_list_id: str,
     bulk_request: BulkItemUpdateRequest,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Bulk update multiple items in shopping list"""
     user_id = str(current_user["_id"])
@@ -207,7 +208,7 @@ async def bulk_update_shopping_list_items(
 
 @router.get("/stats/overview", response_model=ShoppingListStatsResponse)
 async def get_shopping_list_statistics(
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get shopping list statistics overview"""
     user_id = str(current_user["_id"])
@@ -225,7 +226,7 @@ async def get_shopping_list_statistics(
 
 @router.get("/active/current", response_model=List[ShoppingListResponse])
 async def get_active_shopping_lists(
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get currently active shopping lists for the user"""
     user_id = str(current_user["_id"])
@@ -252,7 +253,7 @@ async def get_active_shopping_lists(
 async def update_shopping_list_status(
     shopping_list_id: str,
     new_status: ShoppingListStatus,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Update shopping list status (active, completed, archived)"""
     user_id = str(current_user["_id"])
@@ -273,7 +274,7 @@ async def update_shopping_list_status(
 async def duplicate_shopping_list(
     shopping_list_id: str,
     new_title: Optional[str] = Query(None, description="Title for the duplicated list"),
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Duplicate an existing shopping list"""
     user_id = str(current_user["_id"])
@@ -313,7 +314,7 @@ async def duplicate_shopping_list(
 @router.get("/{shopping_list_id}/summary", response_model=dict)
 async def get_shopping_list_summary(
     shopping_list_id: str,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get shopping list summary with organized items by category and store"""
     user_id = str(current_user["_id"])
@@ -363,7 +364,7 @@ async def get_shopping_list_summary(
 
 @router.get("/templates/common", response_model=List[dict])
 async def get_common_shopping_list_templates(
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get common shopping list templates"""
     # Mock templates - in production, these could be user-customizable or AI-generated
@@ -412,7 +413,7 @@ async def get_common_shopping_list_templates(
 async def create_shopping_list_from_meal_plan(
     meal_plan_id: str,
     list_title: Optional[str] = Query(None, description="Custom title for the shopping list"),
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Create a shopping list from a meal plan's shopping list"""
     user_id = str(current_user["_id"])

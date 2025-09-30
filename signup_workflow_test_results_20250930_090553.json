@@ -1,0 +1,142 @@
+{
+  "total_tests": 8,
+  "passed_tests": 6,
+  "failed_tests": 2,
+  "success_rate": 75.0,
+  "test_results": [
+    {
+      "test_name": "User Registration",
+      "success": true,
+      "timestamp": "2025-09-30T09:05:01.548223",
+      "details": {
+        "user_id": "68dbf19db6b7c5d566057386",
+        "token_type": "bearer",
+        "expires_in": 900
+      },
+      "error": null
+    },
+    {
+      "test_name": "Onboarding Status Check",
+      "success": true,
+      "timestamp": "2025-09-30T09:05:05.761775",
+      "details": {
+        "onboarding_status": {
+          "onboarding_completed": false,
+          "has_profile": true,
+          "user_id": "68dbf19db6b7c5d566057386"
+        }
+      },
+      "error": null
+    },
+    {
+      "test_name": "Plan Selection",
+      "success": false,
+      "timestamp": "2025-09-30T09:05:09.941024",
+      "details": {
+        "status_code": 422,
+        "response": "{\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"subscription\"],\"msg\":\"Field required\",\"input\":{\"plan_type\":\"basic\",\"setup_level\":\"medium\"},\"url\":\"https://errors.pydantic.dev/2.8/v/missing\"}]}"
+      },
+      "error": "Plan selection failed with status 422"
+    },
+    {
+      "test_name": "Profile Update",
+      "success": true,
+      "timestamp": "2025-09-30T09:05:14.237923",
+      "details": {
+        "updated_fields": [
+          "dietary_restrictions",
+          "allergies",
+          "taste_preferences",
+          "meal_preferences",
+          "kitchen_equipment",
+          "weekly_budget",
+          "zip_code",
+          "preferred_grocers"
+        ]
+      },
+      "error": null
+    },
+    {
+      "test_name": "Onboarding Completion",
+      "success": true,
+      "timestamp": "2025-09-30T09:05:18.497798",
+      "details": {
+        "onboarding_completed": true
+      },
+      "error": null
+    },
+    {
+      "test_name": "Final Onboarding Status",
+      "success": true,
+      "timestamp": "2025-09-30T09:05:22.665753",
+      "details": {
+        "final_status": {
+          "onboarding_completed": true,
+          "has_profile": true,
+          "user_id": "68dbf19db6b7c5d566057386"
+        }
+      },
+      "error": null
+    },
+    {
+      "test_name": "Bypass Prevention",
+      "success": false,
+      "timestamp": "2025-09-30T09:05:44.732869",
+      "details": {
+        "successful_bypasses": [
+          {
+            "endpoint": "/recipes/",
+            "status": 200,
+            "allowed": true
+          },
+          {
+            "endpoint": "/meal-plans/",
+            "status": 200,
+            "allowed": true
+          },
+          {
+            "endpoint": "/shopping-lists/",
+            "status": 200,
+            "allowed": true
+          }
+        ],
+        "all_attempts": [
+          {
+            "endpoint": "/pantry/items",
+            "status": 404,
+            "allowed": false
+          },
+          {
+            "endpoint": "/recipes/",
+            "status": 200,
+            "allowed": true
+          },
+          {
+            "endpoint": "/meal-plans/",
+            "status": 200,
+            "allowed": true
+          },
+          {
+            "endpoint": "/shopping-lists/",
+            "status": 200,
+            "allowed": true
+          }
+        ]
+      },
+      "error": "Found 3 successful bypass attempts"
+    },
+    {
+      "test_name": "Authentication Validation",
+      "success": true,
+      "timestamp": "2025-09-30T09:05:53.279941",
+      "details": {
+        "invalid_token_blocked": true,
+        "no_token_blocked": true,
+        "valid_token_accepted": true
+      },
+      "error": null
+    }
+  ],
+  "test_email": "test_signup_20250930_090500@example.com",
+  "test_timestamp": "2025-09-30T09:05:53.281772"
+}

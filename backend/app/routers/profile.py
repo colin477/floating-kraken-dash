@@ -16,8 +16,12 @@ from app.crud.profiles import (
     update_profile,
     add_family_member,
     update_family_member,
-    delete_family_member
+    delete_family_member,
+    get_onboarding_status,
+    complete_onboarding,
+    update_plan_selection
 )
+from app.models.responses import OnboardingStatusResponse, PlanSelectionRequest, ProfileOnboardingComplete
 from app.utils.auth import get_current_active_user
 
 router = APIRouter()
@@ -319,4 +323,127 @@ async def remove_family_member_from_profile(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error removing family member"
+        )
+
+
+@router.get("/onboarding-status", response_model=OnboardingStatusResponse, status_code=status.HTTP_200_OK)
+async def get_user_onboarding_status(current_user: dict = Depends(get_current_active_user)):
+    """
+    Check if user has completed onboarding
+    
+    Returns the onboarding status for the current user, including whether
+    they have a profile and if onboarding is complete.
+    
+    Args:
+        current_user: Current authenticated user from JWT token
+        
+    Returns:
+        OnboardingStatusResponse: Onboarding status information
+        
+    Raises:
+        HTTPException: 500 if status check fails
+    """
+    try:
+        user_id = str(current_user["_id"])
+        status_info = await get_onboarding_status(user_id)
+        
+        return OnboardingStatusResponse(**status_info)
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error checking onboarding status"
+        )
+
+
+@router.post("/plan-selection", response_model=UserProfile, status_code=status.HTTP_200_OK)
+async def handle_plan_selection(
+    plan_data: PlanSelectionRequest,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """
+    Handle plan selection during onboarding
+    
+    Updates the user's subscription plan and trial information during
+    the onboarding process.
+    
+    Args:
+        plan_data: Plan selection data with subscription tier and trial info
+        current_user: Current authenticated user from JWT token
+        
+    Returns:
+        UserProfile: Updated user profile with new plan information
+        
+    Raises:
+        HTTPException: 404 if profile not found, 500 if update fails
+    """
+    try:
+        user_id = str(current_user["_id"])
+        
+        # Update plan selection
+        updated_profile = await update_plan_selection(
+            user_id,
+            plan_data.plan_type,
+            plan_data.setup_level,
+            plan_data.trial_ends_at
+        )
+        
+        if not updated_profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profile not found or update failed"
+            )
+        
+        return updated_profile
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error updating plan selection"
+        )
+
+
+@router.post("/complete-onboarding", response_model=UserProfile, status_code=status.HTTP_200_OK)
+async def mark_onboarding_complete(
+    completion_data: ProfileOnboardingComplete,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """
+    Mark user's onboarding as complete
+    
+    Sets the onboarding_completed flag to true for the user's profile,
+    indicating they have finished the signup workflow.
+    
+    Args:
+        completion_data: Onboarding completion data
+        current_user: Current authenticated user from JWT token
+        
+    Returns:
+        UserProfile: Updated user profile with onboarding marked as complete
+        
+    Raises:
+        HTTPException: 404 if profile not found, 500 if update fails
+    """
+    try:
+        user_id = str(current_user["_id"])
+        
+        # Mark onboarding as complete
+        updated_profile = await complete_onboarding(user_id)
+        
+        if not updated_profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profile not found or update failed"
+            )
+        
+        return updated_profile
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error completing onboarding"
         )

@@ -377,3 +377,35 @@ export const SUBSCRIPTION_LIMITS = {
     familyProfiles: -1 // Unlimited family profiles
   }
 } as const;
+
+// Onboarding Types
+export interface OnboardingStatusResponse {
+  user_id: string;
+  onboarding_completed: boolean;
+  current_step?: string;
+  plan_selected?: boolean;
+  profile_completed?: boolean;
+  setup_level?: 'basic' | 'medium' | 'full';
+  plan_type?: 'free' | 'basic' | 'premium';
+}
+
+export interface PlanSelectionRequest {
+  plan_type: 'free' | 'basic' | 'premium';
+  setup_level: 'basic' | 'medium' | 'full';
+}
+
+export interface OnboardingStep {
+  id: string;
+  name: string;
+  completed: boolean;
+  required: boolean;
+}
+
+export interface OnboardingState {
+  isOnboardingComplete: boolean;
+  currentStep: string | null;
+  planSelected: boolean;
+  profileCompleted: boolean;
+  setupLevel: 'basic' | 'medium' | 'full' | null;
+  planType: 'free' | 'basic' | 'premium' | null;
+}

@@ -28,6 +28,7 @@ from app.crud.recipes import (
     create_recipe_indexes
 )
 from app.utils.auth import get_current_active_user
+from app.middleware.onboarding import require_onboarding_complete
 
 router = APIRouter()
 
@@ -50,7 +51,7 @@ async def get_user_recipes(
     page_size: int = Query(20, ge=1, le=100, description="Recipes per page"),
     sort_by: str = Query("created_at", description="Sort field (title, created_at, prep_time, cook_time, difficulty)"),
     sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get user's recipes with filtering by source/tags"""
     user_id = str(current_user["_id"])
@@ -81,7 +82,7 @@ async def get_user_recipes(
 @router.post("/", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_recipe(
     recipe_data: RecipeCreate,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Create new recipe"""
     user_id = str(current_user["_id"])
@@ -100,7 +101,7 @@ async def create_new_recipe(
 @router.get("/{recipe_id}", response_model=RecipeResponse)
 async def get_recipe(
     recipe_id: str,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get specific recipe"""
     user_id = str(current_user["_id"])
@@ -120,7 +121,7 @@ async def get_recipe(
 async def update_recipe_endpoint(
     recipe_id: str,
     update_data: RecipeUpdate,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Update recipe"""
     user_id = str(current_user["_id"])
@@ -139,7 +140,7 @@ async def update_recipe_endpoint(
 @router.delete("/{recipe_id}")
 async def delete_recipe_endpoint(
     recipe_id: str,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Delete recipe"""
     user_id = str(current_user["_id"])
@@ -164,7 +165,7 @@ async def search_user_recipes(
     tags: Optional[List[str]] = Query(None, description="Filter by tags"),
     max_prep_time: Optional[int] = Query(None, ge=0, description="Maximum prep time in minutes"),
     limit: int = Query(20, ge=1, le=50, description="Maximum results"),
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Search recipes by title, description, and tags"""
     user_id = str(current_user["_id"])
@@ -195,7 +196,7 @@ async def get_my_recipes(
     page_size: int = Query(20, ge=1, le=100, description="Recipes per page"),
     sort_by: str = Query("created_at", description="Sort field"),
     sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get all user's recipes (alias for main endpoint)"""
     user_id = str(current_user["_id"])
@@ -219,7 +220,7 @@ async def get_my_recipes(
 
 @router.get("/stats/overview", response_model=RecipeStatsResponse)
 async def get_recipe_statistics(
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get recipe statistics overview"""
     user_id = str(current_user["_id"])
@@ -239,7 +240,7 @@ async def get_recipe_statistics(
 async def get_recipes_by_ingredients_endpoint(
     ingredients: List[str] = Query(..., description="List of ingredient names to search for"),
     limit: int = Query(20, ge=1, le=50, description="Maximum results"),
-    current_user: dict = Depends(get_current_active_user)
+    current_user: dict = Depends(require_onboarding_complete)
 ):
     """Get recipes that contain specific ingredients"""
     user_id = str(current_user["_id"])

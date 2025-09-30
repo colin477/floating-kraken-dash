@@ -3,8 +3,7 @@ import { User, UserProfile, Recipe } from '@/types';
 import { storage } from '@/lib/storage';
 import { AuthForm } from '@/components/AuthForm';
 import { useAuth } from '@/hooks/useAuth';
-import { TableSettingChoice } from '@/components/TableSettingChoice';
-import { ProfileSetup } from '@/components/ProfileSetup';
+import { OnboardingGuard } from '@/components/OnboardingGuard';
 import { Dashboard } from '@/components/Dashboard';
 import { ReceiptScan } from '@/components/ReceiptScan';
 import { MealPhotoAnalysis } from '@/components/MealPhotoAnalysis';
@@ -55,10 +54,8 @@ const Auth = () => {
     token: 'demo-token'
   } : null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [setupLevel, setSetupLevel] = useState<'basic' | 'medium' | 'full' | null>(null);
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [isNewUser, setIsNewUser] = useState(false);
   const [editingListId, setEditingListId] = useState<string | null>(null);
   
   // Sidebar state management
@@ -104,49 +101,16 @@ const Auth = () => {
       }
       
       setProfile(savedProfile);
-      setIsNewUser(false); // Existing user
     }
   }, [isAuthenticated, authUser]);
 
   const handleAuthSuccess = (newUser: User, isNewUserFlag: boolean) => {
-    setIsNewUser(isNewUserFlag);
-    
+    // Server-side onboarding status will be checked by OnboardingGuard
     if (!isNewUserFlag) {
-      // Existing user - should already have profile, go straight to dashboard
+      // Existing user - load profile if available
       const existingProfile = storage.getProfile();
       setProfile(existingProfile);
     }
-    // New users will go through plan selection flow
-  };
-
-  const handleTableSettingChoice = (level: 'basic' | 'medium' | 'full') => {
-    setSetupLevel(level);
-  };
-
-  const handleProfileComplete = (selectedLevel: 'basic' | 'medium' | 'full') => {
-    const savedProfile = storage.getProfile();
-    setProfile(savedProfile);
-    
-    // Update user subscription based on selected level
-    if (authUser) {
-      const subscriptionMapping = {
-        'basic': 'free' as const,
-        'medium': 'basic' as const,
-        'full': 'premium' as const
-      };
-      
-      const updatedUser = {
-        ...authUser,
-        subscription: subscriptionMapping[selectedLevel],
-        // Remove trial end date for premium users
-        ...(selectedLevel === 'full' ? { trialEndsAt: undefined } : {})
-      };
-      
-      storage.setUser(updatedUser);
-    }
-    
-    setSetupLevel(null); // Clear setup level after completion
-    setIsNewUser(false); // No longer a new user
   };
 
   const handleLogout = () => {
@@ -160,9 +124,7 @@ const Auth = () => {
     
     logout();
     setProfile(null);
-    setSetupLevel(null);
     setCurrentPage('dashboard');
-    setIsNewUser(false);
     
     console.log('[Auth] LOGOUT: Logout completed, state cleared');
     console.log('[Auth] LOGOUT: Window override after logout:', (window as any).__DEMO_MODE_OVERRIDE__);
@@ -235,79 +197,78 @@ const Auth = () => {
     return <AuthForm onAuthSuccess={handleAuthSuccess} />;
   }
 
-  // For existing users (login), skip plan selection and go to dashboard
-  if (!isNewUser && effectiveUser) {
-    // Render current page for existing users
-    const renderCurrentPage = () => {
-      switch (currentPage) {
-        case 'dashboard':
-          return <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />;
-        case 'receipt-scan':
-          return <ReceiptScan onBack={() => handleNavigate('dashboard')} />;
-        case 'meal-photo':
-          return <MealPhotoAnalysis onBack={() => handleNavigate('dashboard')} />;
-        case 'add-from-link':
-          return <AddFromLink onBack={() => handleNavigate('dashboard')} />;
-        case 'create-recipe':
-          return <CreateRecipe onBack={() => handleNavigate('dashboard')} />;
-        case 'meal-planner':
-          return profile ? (
-            <MealPlanner user={effectiveUser} profile={profile} onBack={() => handleNavigate('dashboard')} />
-          ) : (
-            <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />
-          );
-        case 'shopping-lists':
-          return (
-            <ShoppingListManager 
-              onBack={() => handleNavigate('dashboard')} 
-              onCreateNew={() => handleNavigate('create-shopping-list')}
-              onEditList={handleEditShoppingList}
-            />
-          );
-        case 'create-shopping-list':
-          return <ShoppingListBuilder onBack={() => handleNavigate('shopping-lists')} />;
-        case 'edit-shopping-list':
-          return <ShoppingListBuilder onBack={() => handleNavigate('shopping-lists')} initialListId={editingListId} />;
-        case 'leftovers':
-          return <LeftoverManager onBack={() => handleNavigate('dashboard')} />;
-        case 'community':
-          return <Community user={effectiveUser} onBack={() => handleNavigate('dashboard')} />;
-        case 'profile':
-          return profile ? (
-            <Profile user={effectiveUser} profile={profile} onBack={() => handleNavigate('dashboard')} onLogout={handleLogout} />
-          ) : (
-            <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />
-          );
-        case 'family-members':
-          console.log('🔍 [Auth] Rendering FamilyMembers with:', {
-            effectiveUser: effectiveUser,
-            effectiveUserExists: !!effectiveUser,
-            effectiveUserName: effectiveUser?.name,
-            profile: profile,
-            profileExists: !!profile,
-            timestamp: new Date().toISOString()
-          });
-          return profile ? (
-            <FamilyMembers user={effectiveUser} profile={profile} onBack={() => handleNavigate('dashboard')} />
-          ) : (
-            <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />
-          );
-        case 'recipes':
-          return <Recipes user={effectiveUser} onBack={() => handleNavigate('dashboard')} onRecipeSelect={handleRecipeSelect} onNavigate={handleNavigate} />;
-        case 'recipe-detail':
-          return selectedRecipe ? (
-            <RecipeDetail recipe={selectedRecipe} onBack={() => handleNavigate('recipes')} />
-          ) : (
-            <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />
-          );
-        case 'pantry':
-          return <Pantry onBack={() => handleNavigate('dashboard')} />;
-        default:
-          return <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />;
-      }
-    };
+  // Use OnboardingGuard to handle server-authoritative onboarding flow
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />;
+      case 'receipt-scan':
+        return <ReceiptScan onBack={() => handleNavigate('dashboard')} />;
+      case 'meal-photo':
+        return <MealPhotoAnalysis onBack={() => handleNavigate('dashboard')} />;
+      case 'add-from-link':
+        return <AddFromLink onBack={() => handleNavigate('dashboard')} />;
+      case 'create-recipe':
+        return <CreateRecipe onBack={() => handleNavigate('dashboard')} />;
+      case 'meal-planner':
+        return profile ? (
+          <MealPlanner user={effectiveUser} profile={profile} onBack={() => handleNavigate('dashboard')} />
+        ) : (
+          <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />
+        );
+      case 'shopping-lists':
+        return (
+          <ShoppingListManager
+            onBack={() => handleNavigate('dashboard')}
+            onCreateNew={() => handleNavigate('create-shopping-list')}
+            onEditList={handleEditShoppingList}
+          />
+        );
+      case 'create-shopping-list':
+        return <ShoppingListBuilder onBack={() => handleNavigate('shopping-lists')} />;
+      case 'edit-shopping-list':
+        return <ShoppingListBuilder onBack={() => handleNavigate('shopping-lists')} initialListId={editingListId} />;
+      case 'leftovers':
+        return <LeftoverManager onBack={() => handleNavigate('dashboard')} />;
+      case 'community':
+        return <Community user={effectiveUser} onBack={() => handleNavigate('dashboard')} />;
+      case 'profile':
+        return profile ? (
+          <Profile user={effectiveUser} profile={profile} onBack={() => handleNavigate('dashboard')} onLogout={handleLogout} />
+        ) : (
+          <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />
+        );
+      case 'family-members':
+        console.log('🔍 [Auth] Rendering FamilyMembers with:', {
+          effectiveUser: effectiveUser,
+          effectiveUserExists: !!effectiveUser,
+          effectiveUserName: effectiveUser?.name,
+          profile: profile,
+          profileExists: !!profile,
+          timestamp: new Date().toISOString()
+        });
+        return profile ? (
+          <FamilyMembers user={effectiveUser} profile={profile} onBack={() => handleNavigate('dashboard')} />
+        ) : (
+          <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />
+        );
+      case 'recipes':
+        return <Recipes user={effectiveUser} onBack={() => handleNavigate('dashboard')} onRecipeSelect={handleRecipeSelect} onNavigate={handleNavigate} />;
+      case 'recipe-detail':
+        return selectedRecipe ? (
+          <RecipeDetail recipe={selectedRecipe} onBack={() => handleNavigate('recipes')} />
+        ) : (
+          <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />
+        );
+      case 'pantry':
+        return <Pantry onBack={() => handleNavigate('dashboard')} />;
+      default:
+        return <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />;
+    }
+  };
 
-    return (
+  return (
+    <OnboardingGuard>
       <div className="flex h-screen bg-background">
         {/* Sidebar */}
         <Sidebar
@@ -363,28 +324,8 @@ const Auth = () => {
           </div>
         )}
       </div>
-    );
-  }
-
-  // For new users, show plan selection flow
-  // Show table setting choice if new user exists but no setup level chosen
-  if (isNewUser && !profile && !setupLevel) {
-    return <TableSettingChoice onChoice={handleTableSettingChoice} />;
-  }
-
-  // Show profile setup if new user exists, setup level chosen, but no profile
-  if (isNewUser && !profile && setupLevel) {
-    return (
-      <ProfileSetup
-        userId={effectiveUser.id}
-        level={setupLevel}
-        onComplete={() => handleProfileComplete(setupLevel)}
-      />
-    );
-  }
-
-  // Fallback to dashboard
-  return <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />;
+    </OnboardingGuard>
+  );
 };
 
 export default Auth;

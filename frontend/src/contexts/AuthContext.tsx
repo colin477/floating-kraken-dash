@@ -1,16 +1,46 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from '@/types';
+import { User, OnboardingState, OnboardingStatusResponse } from '@/types';
 import { authApi, profileApi } from '@/services/api';
 import { storage } from '@/lib/storage';
+
+// Helper function to decode JWT token and check expiry
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const currentTime = Math.floor(Date.now() / 1000);
+    // Check if token expires within 5 minutes (300 seconds)
+    return payload.exp < (currentTime + 300);
+  } catch (error) {
+    console.error('[AuthContext] Error decoding token:', error);
+    return true; // Treat invalid tokens as expired
+  }
+};
+
+// Helper function to check if token needs refresh and handle it
+const ensureValidToken = async (user: User): Promise<User | null> => {
+  if (!user.token || !isTokenExpired(user.token)) {
+    return user; // Token is still valid
+  }
+
+  console.log('[AuthContext] Token is expiring soon, user needs to re-authenticate');
+  // For now, we'll return null to trigger re-authentication
+  // In a future enhancement, we could implement refresh token logic
+  return null;
+};
 
 export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  onboardingState: OnboardingState;
+  isOnboardingLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  checkOnboardingStatus: () => Promise<void>;
+  selectPlan: (planType: 'free' | 'basic' | 'premium', setupLevel: 'basic' | 'medium' | 'full') => Promise<void>;
+  completeOnboarding: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,6 +52,15 @@ interface AuthProviderProps {
 const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [onboardingState, setOnboardingState] = useState<OnboardingState>({
+    isOnboardingComplete: false,
+    currentStep: null,
+    planSelected: false,
+    profileCompleted: false,
+    setupLevel: null,
+    planType: null,
+  });
+  const [isOnboardingLoading, setIsOnboardingLoading] = useState(false);
 
   const isAuthenticated = !!user;
   
@@ -50,7 +89,11 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               timeoutPromise
             ]);
             console.log('[AuthContext] Token verified, current user:', currentUser);
-            setUser({ ...currentUser, token: storedUser.token });
+            console.log('🔍 [AuthContext] INIT - currentUser.subscription:', currentUser?.subscription);
+            
+            const finalUser = { ...currentUser, token: storedUser.token, subscription: currentUser?.subscription || 'free' };
+            console.log('🔍 [AuthContext] INIT - Final user.subscription:', finalUser.subscription);
+            setUser(finalUser);
           } catch (apiError) {
             console.error('[AuthContext] API call failed or timed out:', apiError);
             // Clear invalid stored user data
@@ -91,38 +134,68 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         token: response.access_token,
       };
       
+      console.log('🔍 [AuthContext] LOGIN - Final userData.subscription:', userData.subscription);
+      console.log('🔍 [AuthContext] LOGIN - response.user.subscription:', response.user.subscription);
+      
       console.log('🔍 [AuthContext] Final userData.name:', userData.name);
       
       console.log('[AuthContext] Login successful, setting user data');
       setUser(userData);
       storage.setUser(userData);
 
-      // After successful login, try to load user profile
-      console.log('[AuthContext] Attempting to load user profile...');
+      // After successful login, check onboarding status
+      console.log('[AuthContext] Checking onboarding status after login...');
       try {
-        const profileData = await profileApi.getProfile();
-        console.log('[AuthContext] Profile loaded successfully:', profileData);
+        const status: OnboardingStatusResponse = await profileApi.getOnboardingStatus();
+        console.log('[AuthContext] Onboarding status:', status);
         
-        // Convert backend profile format to frontend format
-        const frontendProfile = {
-          userId: userData.id,
-          dietaryRestrictions: profileData.dietary_restrictions || [],
-          allergies: profileData.allergies || [],
-          tastePreferences: profileData.taste_preferences || [],
-          mealPreferences: profileData.meal_preferences || [],
-          kitchenEquipment: profileData.kitchen_equipment || [],
-          weeklyBudget: profileData.weekly_budget || 0,
-          zipCode: profileData.zip_code || '',
-          familyMembers: profileData.family_members || [],
-          preferredGrocers: profileData.preferred_grocers || []
-        };
-        
-        storage.setProfile(frontendProfile);
-        console.log('[AuthContext] Profile saved to localStorage');
-      } catch (profileError) {
-        console.warn('[AuthContext] Failed to load profile, user may need to create one:', profileError);
-        // Profile doesn't exist yet - this is normal for new users
-        // The app will handle profile creation flow
+        setOnboardingState({
+          isOnboardingComplete: status.onboarding_completed,
+          currentStep: status.current_step || null,
+          planSelected: status.plan_selected || false,
+          profileCompleted: status.profile_completed || false,
+          setupLevel: status.setup_level || null,
+          planType: status.plan_type || null,
+        });
+
+        // If onboarding is complete, try to load user profile
+        if (status.onboarding_completed) {
+          console.log('[AuthContext] Attempting to load user profile...');
+          try {
+            const profileData = await profileApi.getProfile();
+            console.log('[AuthContext] Profile loaded successfully:', profileData);
+            
+            // Convert backend profile format to frontend format
+            const frontendProfile = {
+              userId: userData.id,
+              dietaryRestrictions: profileData.dietary_restrictions || [],
+              allergies: profileData.allergies || [],
+              tastePreferences: profileData.taste_preferences || [],
+              mealPreferences: profileData.meal_preferences || [],
+              kitchenEquipment: profileData.kitchen_equipment || [],
+              weeklyBudget: profileData.weekly_budget || 0,
+              zipCode: profileData.zip_code || '',
+              familyMembers: profileData.family_members || [],
+              preferredGrocers: profileData.preferred_grocers || []
+            };
+            
+            storage.setProfile(frontendProfile);
+            console.log('[AuthContext] Profile saved to localStorage');
+          } catch (profileError) {
+            console.warn('[AuthContext] Failed to load profile:', profileError);
+          }
+        }
+      } catch (onboardingError) {
+        console.warn('[AuthContext] Failed to check onboarding status, assuming incomplete:', onboardingError);
+        // Set default state for users where we can't check status
+        setOnboardingState({
+          isOnboardingComplete: false,
+          currentStep: 'plan-selection',
+          planSelected: false,
+          profileCompleted: false,
+          setupLevel: null,
+          planType: null,
+        });
       }
     } catch (error) {
       console.error('[AuthContext] 🚨 LOGIN ERROR CAUGHT:');
@@ -199,14 +272,25 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         token: response.access_token,
       };
       
+      console.log('🔍 [AuthContext] REGISTER - Final userData.subscription:', userData.subscription);
+      console.log('🔍 [AuthContext] REGISTER - response.user.subscription:', response.user.subscription);
+      
       console.log('🔍 [AuthContext] Registration - Final userData.name:', userData.name);
       
       console.log('[AuthContext] Registration successful, setting user data');
       setUser(userData);
       storage.setUser(userData);
 
-      // For new registrations, don't try to load profile - they need to create one
-      console.log('[AuthContext] New user registered, profile creation will be handled by onboarding flow');
+      // For new registrations, set initial onboarding state
+      console.log('[AuthContext] New user registered, setting initial onboarding state');
+      setOnboardingState({
+        isOnboardingComplete: false,
+        currentStep: 'plan-selection',
+        planSelected: false,
+        profileCompleted: false,
+        setupLevel: null,
+        planType: null,
+      });
     } catch (error) {
       console.error('[AuthContext] Registration failed:', error);
       
@@ -312,14 +396,109 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const checkOnboardingStatus = async () => {
+    if (!user) return;
+    
+    setIsOnboardingLoading(true);
+    try {
+      console.log('[AuthContext] Checking onboarding status...');
+      const status: OnboardingStatusResponse = await profileApi.getOnboardingStatus();
+      console.log('[AuthContext] Onboarding status:', status);
+      
+      setOnboardingState({
+        isOnboardingComplete: status.onboarding_completed,
+        currentStep: status.current_step || null,
+        planSelected: status.plan_selected || false,
+        profileCompleted: status.profile_completed || false,
+        setupLevel: status.setup_level || null,
+        planType: status.plan_type || null,
+      });
+    } catch (error) {
+      console.error('[AuthContext] Failed to check onboarding status:', error);
+      // Set default state for new users
+      setOnboardingState({
+        isOnboardingComplete: false,
+        currentStep: 'plan-selection',
+        planSelected: false,
+        profileCompleted: false,
+        setupLevel: null,
+        planType: null,
+      });
+    } finally {
+      setIsOnboardingLoading(false);
+    }
+  };
+
+  const selectPlan = async (planType: 'free' | 'basic' | 'premium', setupLevel: 'basic' | 'medium' | 'full') => {
+    try {
+      console.log('[AuthContext] Selecting plan:', { planType, setupLevel });
+      
+      // Ensure token is valid before making the API call
+      if (user) {
+        const validUser = await ensureValidToken(user);
+        if (!validUser) {
+          console.error('[AuthContext] Token expired, user needs to re-authenticate');
+          logout();
+          throw new Error('Session expired. Please log in again.');
+        }
+        
+        // Update user if token was refreshed
+        if (validUser !== user) {
+          setUser(validUser);
+        }
+      }
+      
+      await profileApi.selectPlan({ plan_type: planType, setup_level: setupLevel });
+      
+      // Update onboarding state
+      setOnboardingState(prev => ({
+        ...prev,
+        planSelected: true,
+        planType,
+        setupLevel,
+        currentStep: 'profile-setup',
+      }));
+      
+      console.log('[AuthContext] Plan selected successfully');
+    } catch (error) {
+      console.error('[AuthContext] Failed to select plan:', error);
+      throw error;
+    }
+  };
+
+  const completeOnboarding = async () => {
+    try {
+      console.log('[AuthContext] Completing onboarding...');
+      await profileApi.completeOnboarding();
+      
+      // Update onboarding state
+      setOnboardingState(prev => ({
+        ...prev,
+        isOnboardingComplete: true,
+        profileCompleted: true,
+        currentStep: null,
+      }));
+      
+      console.log('[AuthContext] Onboarding completed successfully');
+    } catch (error) {
+      console.error('[AuthContext] Failed to complete onboarding:', error);
+      throw error;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
     isAuthenticated,
+    onboardingState,
+    isOnboardingLoading,
     login,
     register,
     logout,
     refreshUser,
+    checkOnboardingStatus,
+    selectPlan,
+    completeOnboarding,
   };
 
   return (

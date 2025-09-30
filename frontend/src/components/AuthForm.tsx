@@ -28,6 +28,10 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
     confirmPassword: ''
   });
 
+  // Check URL parameters to determine default tab
+  const urlParams = new URLSearchParams(window.location.search);
+  const defaultTab = urlParams.get('tab') === 'signup' ? 'signup' : 'login';
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
@@ -236,7 +240,7 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
             </div>
           )}
 
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs defaultValue={defaultTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>

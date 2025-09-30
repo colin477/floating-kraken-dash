@@ -1,0 +1,216 @@
+{
+  "test_email": "e2e_test_20250930_131846@example.com",
+  "test_timestamp": "2025-09-30T13:19:55.819936",
+  "total_tests": 11,
+  "passed_tests": 8,
+  "failed_tests": 3,
+  "success_rate": 72.72727272727273,
+  "overall_success": false,
+  "test_results": [
+    {
+      "test_name": "Backend Connectivity",
+      "success": false,
+      "details": {
+        "status_code": 404
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:18:48.171099"
+    },
+    {
+      "test_name": "Frontend Connectivity",
+      "success": false,
+      "details": {},
+      "error": "HTTPConnectionPool(host='localhost', port=5173): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000002E0D55DBD90>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))",
+      "timestamp": "2025-09-30T13:18:52.239938"
+    },
+    {
+      "test_name": "User Registration",
+      "success": true,
+      "details": {
+        "user_id": "68dc2d1e7c7c8e0a854693ff",
+        "has_token": true,
+        "profile_completed": false
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:18:54.906445"
+    },
+    {
+      "test_name": "Plan Selection API (free)",
+      "success": true,
+      "details": {
+        "plan_type": "free",
+        "setup_level": "basic",
+        "response_keys": [
+          "_id",
+          "user_id",
+          "dietary_restrictions",
+          "allergies",
+          "taste_preferences",
+          "meal_preferences",
+          "kitchen_equipment",
+          "weekly_budget",
+          "zip_code",
+          "family_members",
+          "preferred_grocers",
+          "subscription",
+          "setup_level",
+          "trial_ends_at",
+          "onboarding_completed",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:19:01.175031"
+    },
+    {
+      "test_name": "Plan Selection API (basic)",
+      "success": true,
+      "details": {
+        "plan_type": "basic",
+        "setup_level": "medium",
+        "response_keys": [
+          "_id",
+          "user_id",
+          "dietary_restrictions",
+          "allergies",
+          "taste_preferences",
+          "meal_preferences",
+          "kitchen_equipment",
+          "weekly_budget",
+          "zip_code",
+          "family_members",
+          "preferred_grocers",
+          "subscription",
+          "setup_level",
+          "trial_ends_at",
+          "onboarding_completed",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:19:07.669743"
+    },
+    {
+      "test_name": "Plan Selection API (premium)",
+      "success": true,
+      "details": {
+        "plan_type": "premium",
+        "setup_level": "full",
+        "response_keys": [
+          "_id",
+          "user_id",
+          "dietary_restrictions",
+          "allergies",
+          "taste_preferences",
+          "meal_preferences",
+          "kitchen_equipment",
+          "weekly_budget",
+          "zip_code",
+          "family_members",
+          "preferred_grocers",
+          "subscription",
+          "setup_level",
+          "trial_ends_at",
+          "onboarding_completed",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:19:13.983392"
+    },
+    {
+      "test_name": "Onboarding Status Check",
+      "success": true,
+      "details": {
+        "onboarding_completed": false,
+        "has_profile": true,
+        "current_step": "profile-setup"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:19:20.246403"
+    },
+    {
+      "test_name": "Profile Update",
+      "success": true,
+      "details": {
+        "updated_fields": [
+          "dietary_restrictions",
+          "allergies",
+          "taste_preferences",
+          "meal_preferences",
+          "kitchen_equipment",
+          "weekly_budget",
+          "zip_code",
+          "preferred_grocers"
+        ],
+        "weekly_budget": 100.0,
+        "zip_code": "80202"
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:19:26.579553"
+    },
+    {
+      "test_name": "Onboarding Completion",
+      "success": true,
+      "details": {
+        "onboarding_completed": true,
+        "message": null
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:19:32.946107"
+    },
+    {
+      "test_name": "Dashboard Access",
+      "success": true,
+      "details": {
+        "endpoints_tested": 3,
+        "accessible_endpoints": 3,
+        "results": {
+          "/pantry/items": {
+            "status_code": 404,
+            "accessible": true
+          },
+          "/recipes/": {
+            "status_code": 200,
+            "accessible": true
+          },
+          "/meal-plans/": {
+            "status_code": 200,
+            "accessible": true
+          }
+        }
+      },
+      "error": null,
+      "timestamp": "2025-09-30T13:19:55.818173"
+    },
+    {
+      "test_name": "Question Count Validation",
+      "success": false,
+      "details": {
+        "issues_found": [
+          {
+            "level": "full",
+            "expected": 12,
+            "actual": 13,
+            "issue": "Question count mismatch for full plan"
+          }
+        ],
+        "expected_counts": {
+          "basic": 4,
+          "medium": 8,
+          "full": 12
+        },
+        "actual_counts": {
+          "basic": 4,
+          "medium": 8,
+          "full": 13
+        }
+      },
+      "error": "Question count mismatches detected",
+      "timestamp": "2025-09-30T13:19:55.819351"
+    }
+  ]
+}

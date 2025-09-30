@@ -74,7 +74,9 @@ class UserProfile(BaseModel):
     family_members: List[FamilyMember] = Field(default_factory=list, description="List of family members")
     preferred_grocers: List[str] = Field(default_factory=list, description="Preferred grocery stores")
     subscription: str = Field(default="free", description="Subscription tier")
+    setup_level: Optional[str] = Field(None, description="Setup level (basic, medium, full)")
     trial_ends_at: Optional[datetime] = Field(None, description="Trial subscription end date")
+    onboarding_completed: bool = Field(default=False, description="Whether user has completed onboarding")
     created_at: Optional[datetime] = Field(default_factory=datetime.utcnow, description="Profile creation timestamp")
     updated_at: Optional[datetime] = Field(default_factory=datetime.utcnow, description="Profile last update timestamp")
 
@@ -120,7 +122,9 @@ class UserProfileCreate(BaseModel):
     family_members: List[FamilyMemberCreate] = Field(default_factory=list, description="List of family members")
     preferred_grocers: List[str] = Field(default_factory=list, description="Preferred grocery stores")
     subscription: str = Field(default="free", description="Subscription tier")
+    setup_level: Optional[str] = Field(None, description="Setup level (basic, medium, full)")
     trial_ends_at: Optional[datetime] = Field(None, description="Trial subscription end date")
+    onboarding_completed: bool = Field(default=False, description="Whether user has completed onboarding")
 
     @validator('subscription')
     def validate_subscription(cls, v):
@@ -158,7 +162,9 @@ class UserProfileUpdate(BaseModel):
     family_members: Optional[List[FamilyMemberUpdate]] = Field(None, description="List of family members")
     preferred_grocers: Optional[List[str]] = Field(None, description="Preferred grocery stores")
     subscription: Optional[str] = Field(None, description="Subscription tier")
+    setup_level: Optional[str] = Field(None, description="Setup level (basic, medium, full)")
     trial_ends_at: Optional[datetime] = Field(None, description="Trial subscription end date")
+    onboarding_completed: Optional[bool] = Field(None, description="Whether user has completed onboarding")
 
     @validator('subscription')
     def validate_subscription(cls, v):

@@ -84,8 +84,7 @@ export const TableSettingChoice = ({ onChoice }: TableSettingChoiceProps) => {
 
   const handleOptionClick = (optionId: 'basic' | 'medium' | 'full') => {
     setSelectedLevel(optionId);
-    // Immediately proceed to next step when option is clicked
-    onChoice(optionId);
+    // Only set selection state - user must click continue button to proceed
   };
 
   const handleContinue = () => {
@@ -187,18 +186,21 @@ export const TableSettingChoice = ({ onChoice }: TableSettingChoiceProps) => {
             })}
           </div>
 
-          {/* Optional continue button for users who want to review their choice */}
+          {/* Continue button shows after plan selection */}
           {selectedLevel && (
-            <div className="text-center">
-              <p className="text-sm text-gray-600 mb-4">
-                You selected: <span className="font-medium">{options.find(o => o.id === selectedLevel)?.subtitle}</span>
+            <div className="text-center bg-gray-50 rounded-lg p-6 border-2 border-dashed border-gray-200">
+              <p className="text-lg text-gray-700 mb-2">
+                Great choice! You selected the <span className="font-bold text-gray-900">{options.find(o => o.id === selectedLevel)?.subtitle}</span>
               </p>
-              <Button 
+              <p className="text-sm text-gray-600 mb-6">
+                "{options.find(o => o.id === selectedLevel)?.title}"
+              </p>
+              <Button
                 onClick={handleContinue}
                 size="lg"
-                className="px-8"
+                className="px-8 py-3 text-lg font-semibold bg-blue-600 hover:bg-blue-700"
               >
-                Continue to Setup
+                Continue with {options.find(o => o.id === selectedLevel)?.subtitle} →
               </Button>
             </div>
           )}

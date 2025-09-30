@@ -1,0 +1,51 @@
+{
+  "timestamp": "2025-09-30T14:05:01.943605",
+  "tests": [
+    {
+      "plan_type": "basic",
+      "expected_questions": 4,
+      "start_time": "2025-09-30T14:05:04.214651",
+      "status": "error",
+      "steps": [],
+      "screenshots": [],
+      "errors": [
+        "Page.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n"
+      ],
+      "end_time": "2025-09-30T14:05:56.383372"
+    },
+    {
+      "plan_type": "medium",
+      "expected_questions": 8,
+      "start_time": "2025-09-30T14:05:59.400053",
+      "status": "error",
+      "steps": [],
+      "screenshots": [],
+      "errors": [
+        "Page.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n"
+      ],
+      "end_time": "2025-09-30T14:06:31.739672"
+    },
+    {
+      "plan_type": "full",
+      "expected_questions": 12,
+      "start_time": "2025-09-30T14:06:34.750126",
+      "status": "error",
+      "steps": [],
+      "screenshots": [],
+      "errors": [
+        "Page.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n"
+      ],
+      "end_time": "2025-09-30T14:07:06.119003"
+    }
+  ],
+  "summary": {
+    "total_tests": 3,
+    "passed": 0,
+    "failed": 3,
+    "errors": [
+      "basic: Page.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n",
+      "medium: Page.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n",
+      "full: Page.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n"
+    ]
+  }
+}

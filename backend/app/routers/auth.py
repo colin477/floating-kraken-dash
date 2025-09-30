@@ -8,6 +8,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.models.responses import SuccessResponse
 from app.models.auth import UserCreate, UserLogin, LoginResponse, UserResponse
 from app.crud.users import create_user, authenticate_user, update_user_last_login, create_user_indexes
+from app.crud.profiles import create_profile_stub
 from app.utils.auth import create_access_token, get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.utils.exceptions import PasswordValidationError, EmailAlreadyExistsError, UserCreationError
 
@@ -29,6 +30,14 @@ async def signup(user_data: UserCreate):
         
         # Create the user
         created_user = await create_user(user_data)
+        
+        # Create profile stub for the new user
+        profile_stub = await create_profile_stub(str(created_user["_id"]))
+        if not profile_stub:
+            # Log warning but don't fail registration
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to create profile stub for user {created_user['_id']}")
         
         # Create access token for the new user
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

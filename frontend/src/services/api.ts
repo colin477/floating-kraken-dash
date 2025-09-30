@@ -11,14 +11,37 @@ import {
 } from '@/lib/mockPantryData';
 import { simulateReceiptProcessing } from '@/lib/mockData';
 
-const API_BASE_URL = import.meta.env.VITE_APP_BASE_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = (import.meta as any).env?.VITE_APP_BASE_URL || 'http://localhost:8000/api/v1';
 
-// Get auth token from localStorage
+// Helper function to decode JWT token and check expiry
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const currentTime = Math.floor(Date.now() / 1000);
+    // Check if token expires within 2 minutes (120 seconds)
+    return payload.exp < (currentTime + 120);
+  } catch (error) {
+    console.error('[API] Error decoding token:', error);
+    return true; // Treat invalid tokens as expired
+  }
+};
+
+// Get auth token from localStorage with validation
 const getAuthToken = (): string | null => {
   const user = localStorage.getItem('ez-eatin-user');
   if (user) {
     const userData = JSON.parse(user);
-    return userData.token || null;
+    const token = userData.token || null;
+    
+    // Check if token is expired
+    if (token && isTokenExpired(token)) {
+      console.warn('[API] Token is expired or expiring soon');
+      // Clear expired token from storage
+      localStorage.removeItem('ez-eatin-user');
+      return null;
+    }
+    
+    return token;
   }
   return null;
 };
@@ -26,6 +49,11 @@ const getAuthToken = (): string | null => {
 // Base fetch wrapper with auth and demo mode support
 const apiRequest = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
   const token = getAuthToken();
+  
+  // If no valid token and this is an authenticated endpoint, throw error
+  if (!token && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
+    throw new Error('Authentication required. Please log in again.');
+  }
   
   const config: RequestInit = {
     ...options,
@@ -40,6 +68,14 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}): Promise<
   
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    
+    // Handle 401 errors specifically
+    if (response.status === 401) {
+      console.error('[API] 401 Unauthorized - clearing stored user data');
+      localStorage.removeItem('ez-eatin-user');
+      throw new Error('Session expired. Please log in again.');
+    }
+    
     throw new Error(errorData.detail || `HTTP ${response.status}`);
   }
   
@@ -542,6 +578,33 @@ export const profileApi = {
     const response = await apiRequest('/profile/', {
       method: 'PUT',
       body: JSON.stringify(profileData),
+    });
+    return response.json();
+  },
+
+  // Get onboarding status
+  getOnboardingStatus: async () => {
+    const response = await apiRequest('/profile/onboarding-status');
+    return response.json();
+  },
+
+  // Select plan during onboarding
+  selectPlan: async (planData: {
+    plan_type: 'free' | 'basic' | 'premium';
+    setup_level: 'basic' | 'medium' | 'full';
+  }) => {
+    const response = await apiRequest('/profile/plan-selection', {
+      method: 'POST',
+      body: JSON.stringify(planData),
+    });
+    return response.json();
+  },
+
+  // Complete onboarding
+  completeOnboarding: async () => {
+    const response = await apiRequest('/profile/complete-onboarding', {
+      method: 'POST',
+      body: JSON.stringify({}),
     });
     return response.json();
   },
