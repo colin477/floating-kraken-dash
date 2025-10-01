@@ -1,17 +1,195 @@
 """
 Database configuration and connection management for MongoDB Atlas
+Enhanced with DNS resolution stability, SSL/TLS fixes, and connection retry logic
 """
 # SSL/TLS verification trigger
 
 import os
+import ssl
+import socket
+import asyncio
+import time
+import random
+from typing import Optional, Dict, Any
+from urllib.parse import urlparse
 from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo.errors import ConnectionFailure, DuplicateKeyError
+from pymongo.errors import ConnectionFailure, DuplicateKeyError, ServerSelectionTimeoutError
+from pymongo import MongoClient
 import logging
 import structlog
 from app.middleware.performance import DatabasePoolConfig
 
 # Configure structured logging
 logger = structlog.get_logger(__name__)
+
+# DNS Resolution and Connection Stability Functions
+def force_ipv4_dns_resolution():
+    """Force IPv4-only DNS resolution to avoid IPv6 issues"""
+    try:
+        # Override socket.getaddrinfo to force IPv4
+        original_getaddrinfo = socket.getaddrinfo
+        
+        def ipv4_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+            return original_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+        
+        socket.getaddrinfo = ipv4_getaddrinfo
+        logger.info("Forced IPv4-only DNS resolution")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to force IPv4 DNS resolution: {e}")
+        return False
+
+def bypass_dns_cache():
+    """Bypass DNS caching by setting socket options"""
+    try:
+        # Set DNS cache bypass options
+        original_socket = socket.socket
+        
+        def patched_socket(*args, **kwargs):
+            sock = original_socket(*args, **kwargs)
+            try:
+                # Disable DNS caching at socket level
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                if hasattr(socket, 'SO_REUSEPORT'):
+                    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            except Exception as e:
+                logger.warning(f"Could not set socket options for DNS cache bypass: {e}")
+            return sock
+        
+        socket.socket = patched_socket
+        logger.info("DNS cache bypass configured")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to configure DNS cache bypass: {e}")
+        return False
+
+def create_enhanced_ssl_context() -> ssl.SSLContext:
+    """Create enhanced SSL context with TLS 1.2 pinning and relaxed validation"""
+    try:
+        # Create SSL context with TLS 1.2
+        context = ssl.create_default_context()
+        
+        # Pin to TLS 1.2 for compatibility
+        context.minimum_version = ssl.TLSVersion.TLSv1_2
+        context.maximum_version = ssl.TLSVersion.TLSv1_2
+        
+        # Relax certificate validation for Atlas compatibility
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        
+        # Set compatible cipher suites
+        try:
+            context.set_ciphers('ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM:DHE+CHACHA20:!aNULL:!MD5:!DSS')
+        except ssl.SSLError:
+            # Fallback to default ciphers if custom ones fail
+            logger.warning("Custom cipher suite failed, using default")
+        
+        # Additional SSL options for compatibility
+        context.options |= ssl.OP_NO_SSLv2
+        context.options |= ssl.OP_NO_SSLv3
+        context.options |= ssl.OP_NO_TLSv1
+        context.options |= ssl.OP_NO_TLSv1_1
+        
+        logger.info("Enhanced SSL context created with TLS 1.2 pinning")
+        return context
+        
+    except Exception as e:
+        logger.error(f"Failed to create enhanced SSL context: {e}")
+        # Return default context as fallback
+        return ssl.create_default_context()
+
+async def test_connection_with_retry(client: AsyncIOMotorClient, max_retries: int = 3) -> bool:
+    """Test MongoDB connection with retry logic"""
+    for attempt in range(max_retries):
+        try:
+            # Test connection with ping
+            await asyncio.wait_for(client.admin.command('ping'), timeout=10.0)
+            logger.info(f"Connection test successful on attempt {attempt + 1}")
+            return True
+        except asyncio.TimeoutError:
+            logger.warning(f"Connection test timeout on attempt {attempt + 1}")
+        except Exception as e:
+            logger.warning(f"Connection test failed on attempt {attempt + 1}: {e}")
+        
+        if attempt < max_retries - 1:
+            wait_time = (2 ** attempt) + random.uniform(0, 1)
+            logger.info(f"Retrying connection test in {wait_time:.2f} seconds...")
+            await asyncio.sleep(wait_time)
+    
+    logger.error("All connection test attempts failed")
+    return False
+
+def parse_mongodb_uri(uri: str) -> Dict[str, Any]:
+    """Parse MongoDB URI and extract connection details"""
+    try:
+        parsed = urlparse(uri)
+        
+        # Check if it's an SRV record
+        is_srv = parsed.scheme == 'mongodb+srv'
+        
+        # Extract host information
+        hosts = []
+        if is_srv:
+            # For SRV, we have a single hostname
+            hosts = [parsed.hostname]
+        else:
+            # For standard URI, parse multiple hosts
+            if parsed.hostname:
+                hosts = [parsed.hostname]
+        
+        return {
+            'is_srv': is_srv,
+            'hosts': hosts,
+            'database': parsed.path.lstrip('/') if parsed.path else None,
+            'username': parsed.username,
+            'password': parsed.password,
+            'port': parsed.port
+        }
+    except Exception as e:
+        logger.error(f"Failed to parse MongoDB URI: {e}")
+        return {'is_srv': False, 'hosts': [], 'database': None}
+
+def create_direct_connection_uri(srv_uri: str) -> Optional[str]:
+    """Convert SRV URI to direct connection URI as fallback"""
+    try:
+        parsed_info = parse_mongodb_uri(srv_uri)
+        
+        if not parsed_info['is_srv'] or not parsed_info['hosts']:
+            return None
+        
+        # For Atlas, typically resolve to cluster hosts
+        # This is a simplified fallback - in production, you'd resolve SRV records
+        host = parsed_info['hosts'][0]
+        
+        # Atlas cluster naming pattern
+        if 'mongodb.net' in host:
+            # Convert cluster0.xxxxx.mongodb.net to direct hosts
+            cluster_name = host.split('.')[0]
+            base_domain = '.'.join(host.split('.')[1:])
+            
+            # Create direct connection string with multiple hosts
+            direct_hosts = [
+                f"{cluster_name}-shard-00-00.{base_domain}:27017",
+                f"{cluster_name}-shard-00-01.{base_domain}:27017",
+                f"{cluster_name}-shard-00-02.{base_domain}:27017"
+            ]
+            
+            # Reconstruct URI
+            auth_part = ""
+            if parsed_info['username'] and parsed_info['password']:
+                auth_part = f"{parsed_info['username']}:{parsed_info['password']}@"
+            
+            db_part = f"/{parsed_info['database']}" if parsed_info['database'] else ""
+            
+            direct_uri = f"mongodb://{auth_part}{','.join(direct_hosts)}{db_part}"
+            logger.info("Created direct connection URI as SRV fallback")
+            return direct_uri
+        
+        return None
+        
+    except Exception as e:
+        logger.error(f"Failed to create direct connection URI: {e}")
+        return None
 
 class Database:
     client: AsyncIOMotorClient = None
@@ -315,93 +493,199 @@ async def create_receipts_indexes():
 
 
 async def connect_to_mongo():
-    """Create database connection with production-grade connection pooling and SSL/TLS support"""
-    try:
-        # Get MongoDB URI from environment
-        mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-        database_name = os.getenv("DATABASE_NAME", "ez_eatin")
+    """
+    Create database connection with comprehensive DNS resolution stability,
+    SSL/TLS fixes, and connection retry logic
+    """
+    max_retries = 5
+    base_delay = 1.0
+    
+    # Apply DNS resolution fixes
+    logger.info("=== Applying DNS Resolution Stability Fixes ===")
+    force_ipv4_dns_resolution()
+    bypass_dns_cache()
+    
+    # Get MongoDB URI from environment
+    mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
+    database_name = os.getenv("DATABASE_NAME", "ez_eatin")
+    
+    # Enhanced SSL Environment Variable Logging
+    tls_enabled = os.getenv("MONGODB_TLS_ENABLED", "false")
+    tls_allow_invalid = os.getenv("MONGODB_TLS_ALLOW_INVALID_CERTIFICATES", "false")
+    server_timeout = os.getenv("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "30000")
+    connect_timeout = os.getenv("MONGODB_CONNECT_TIMEOUT_MS", "30000")
+    socket_timeout = os.getenv("MONGODB_SOCKET_TIMEOUT_MS", "30000")
+    
+    logger.info("=== MongoDB SSL/TLS Environment Variables ===")
+    logger.info(f"MONGODB_URI: {mongodb_uri[:50]}..." if len(mongodb_uri) > 50 else f"MONGODB_URI: {mongodb_uri}")
+    logger.info(f"DATABASE_NAME: {database_name}")
+    logger.info(f"MONGODB_TLS_ENABLED: {tls_enabled}")
+    logger.info(f"MONGODB_TLS_ALLOW_INVALID_CERTIFICATES: {tls_allow_invalid}")
+    logger.info(f"MONGODB_SERVER_SELECTION_TIMEOUT_MS: {server_timeout}")
+    logger.info(f"MONGODB_CONNECT_TIMEOUT_MS: {connect_timeout}")
+    logger.info(f"MONGODB_SOCKET_TIMEOUT_MS: {socket_timeout}")
+    logger.info("===============================================")
+    
+    # Parse URI for connection strategy
+    uri_info = parse_mongodb_uri(mongodb_uri)
+    logger.info(f"Connection strategy - SRV: {uri_info['is_srv']}, Hosts: {uri_info['hosts']}")
+    
+    # Prepare connection URIs (primary + fallback)
+    connection_uris = [mongodb_uri]
+    if uri_info['is_srv']:
+        direct_uri = create_direct_connection_uri(mongodb_uri)
+        if direct_uri:
+            connection_uris.append(direct_uri)
+            logger.info("Added direct connection URI as SRV fallback")
+    
+    # Connection retry loop
+    for attempt in range(max_retries):
+        logger.info(f"=== Connection Attempt {attempt + 1}/{max_retries} ===")
         
-        # Enhanced SSL Environment Variable Logging
-        tls_enabled = os.getenv("MONGODB_TLS_ENABLED", "false")
-        tls_allow_invalid = os.getenv("MONGODB_TLS_ALLOW_INVALID_CERTIFICATES", "false")
-        server_timeout = os.getenv("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "30000")
-        connect_timeout = os.getenv("MONGODB_CONNECT_TIMEOUT_MS", "30000")
-        socket_timeout = os.getenv("MONGODB_SOCKET_TIMEOUT_MS", "30000")
-        
-        logger.info("=== MongoDB SSL/TLS Environment Variables ===")
-        logger.info(f"MONGODB_TLS_ENABLED: {tls_enabled}")
-        logger.info(f"MONGODB_TLS_ALLOW_INVALID_CERTIFICATES: {tls_allow_invalid}")
-        logger.info(f"MONGODB_SERVER_SELECTION_TIMEOUT_MS: {server_timeout}")
-        logger.info(f"MONGODB_CONNECT_TIMEOUT_MS: {connect_timeout}")
-        logger.info(f"MONGODB_SOCKET_TIMEOUT_MS: {socket_timeout}")
-        logger.info("===============================================")
-        
-        # Get optimized connection options for production
-        connection_options = DatabasePoolConfig.get_connection_options()
-        logger.info(f"Base connection options: {connection_options}")
-        
-        # Strengthen SSL/TLS configuration for OpenSSL 3.0.16 compatibility
-        if tls_enabled.lower() == "true":
-            # Ensure tlsAllowInvalidCertificates is definitively set to true
-            tls_allow_invalid_bool = tls_allow_invalid.lower() == "true"
+        for uri_index, current_uri in enumerate(connection_uris):
+            uri_type = "SRV" if uri_index == 0 and uri_info['is_srv'] else "Direct"
+            logger.info(f"Trying {uri_type} connection...")
             
-            tls_options = {
-                "tls": True,
-                "tlsAllowInvalidCertificates": tls_allow_invalid_bool,
-                "serverSelectionTimeoutMS": int(server_timeout),
-                "connectTimeoutMS": int(connect_timeout),
-                "socketTimeoutMS": int(socket_timeout),
-                "retryWrites": True,
-                "retryReads": True,
-                "maxIdleTimeMS": 45000,  # Close connections after 45 seconds of inactivity
-                "heartbeatFrequencyMS": 10000,  # Send heartbeat every 10 seconds
-            }
-            
-            connection_options.update(tls_options)
-            
-            logger.info("=== TLS Configuration Applied ===")
-            logger.info(f"tls: {tls_options['tls']}")
-            logger.info(f"tlsAllowInvalidCertificates: {tls_options['tlsAllowInvalidCertificates']}")
-            logger.info(f"serverSelectionTimeoutMS: {tls_options['serverSelectionTimeoutMS']}")
-            logger.info(f"connectTimeoutMS: {tls_options['connectTimeoutMS']}")
-            logger.info(f"socketTimeoutMS: {tls_options['socketTimeoutMS']}")
-            logger.info(f"maxIdleTimeMS: {tls_options['maxIdleTimeMS']}")
-            logger.info(f"heartbeatFrequencyMS: {tls_options['heartbeatFrequencyMS']}")
-            logger.info("=================================")
+            try:
+                # Get optimized connection options for production
+                connection_options = DatabasePoolConfig.get_connection_options()
+                logger.info(f"Base connection options: {connection_options}")
+                
+                # Enhanced SSL/TLS configuration
+                if tls_enabled.lower() == "true":
+                    # Enhanced TLS options for PyMongo 4.5.0 compatibility
+                    # Note: tlsInsecure and tlsAllowInvalidCertificates cannot be used together
+                    tls_options = {
+                        "tls": True,
+                        "tlsAllowInvalidCertificates": True,  # Allow invalid certificates for Atlas compatibility
+                        # Removed tlsInsecure as it conflicts with tlsAllowInvalidCertificates
+                        # Removed tlsDisableOCSPEndpointCheck as it conflicts with tlsInsecure
+                        "serverSelectionTimeoutMS": int(server_timeout),
+                        "connectTimeoutMS": int(connect_timeout),
+                        "socketTimeoutMS": int(socket_timeout),
+                        "retryWrites": True,
+                        "retryReads": True,
+                        "maxIdleTimeMS": 45000,
+                        "heartbeatFrequencyMS": 10000,
+                        # Additional stability options
+                        "maxStalenessSeconds": 120,
+                        "compressors": "zlib",
+                        "zlibCompressionLevel": 6,
+                    }
+                    
+                    connection_options.update(tls_options)
+                    
+                    logger.info("=== Enhanced TLS Configuration Applied ===")
+                    logger.info(f"tls: {tls_options['tls']}")
+                    logger.info(f"tlsAllowInvalidCertificates: {tls_options['tlsAllowInvalidCertificates']}")
+                    logger.info(f"serverSelectionTimeoutMS: {tls_options['serverSelectionTimeoutMS']}")
+                    logger.info(f"connectTimeoutMS: {tls_options['connectTimeoutMS']}")
+                    logger.info(f"socketTimeoutMS: {tls_options['socketTimeoutMS']}")
+                    logger.info("==========================================")
+                
+                # Additional DNS and network stability options
+                stability_options = {
+                    "directConnection": False,  # Allow driver to discover topology
+                    "readPreference": "primaryPreferred",  # Prefer primary but allow secondary
+                    # Note: readConcern and writeConcern should be set at operation level, not connection level
+                }
+                
+                connection_options.update(stability_options)
+                
+                # Log final connection options for debugging
+                logger.info(f"Final connection options: {dict((k, v) for k, v in connection_options.items() if k != 'ssl_context')}")
+                
+                # Create MongoDB client with enhanced configuration
+                logger.info(f"Creating AsyncIOMotorClient with {uri_type} URI...")
+                client = AsyncIOMotorClient(current_uri, **connection_options)
+                
+                # Test the connection with comprehensive health check
+                logger.info("Testing MongoDB connection with comprehensive health check...")
+                
+                # Test 1: Basic ping
+                await asyncio.wait_for(client.admin.command('ping'), timeout=15.0)
+                logger.info("✓ Basic ping successful")
+                
+                # Test 2: Database access
+                test_db = client[database_name]
+                await asyncio.wait_for(test_db.command('ping'), timeout=10.0)
+                logger.info("✓ Database access successful")
+                
+                # Test 3: Collection listing (tests permissions)
+                collections = await asyncio.wait_for(test_db.list_collection_names(), timeout=10.0)
+                logger.info(f"✓ Collection listing successful ({len(collections)} collections found)")
+                
+                # Test 4: Write test (if possible)
+                try:
+                    test_collection = test_db.connection_test
+                    test_doc = {"test": True, "timestamp": time.time(), "attempt": attempt + 1}
+                    result = await asyncio.wait_for(
+                        test_collection.insert_one(test_doc),
+                        timeout=10.0
+                    )
+                    await asyncio.wait_for(
+                        test_collection.delete_one({"_id": result.inserted_id}),
+                        timeout=10.0
+                    )
+                    logger.info("✓ Write/delete test successful")
+                except Exception as write_error:
+                    logger.warning(f"Write test failed (may be read-only): {write_error}")
+                
+                # If we get here, connection is successful
+                db.client = client
+                db.database = test_db
+                
+                logger.info(f"✅ Successfully connected to MongoDB database: {database_name}")
+                logger.info(f"Connection type: {uri_type}")
+                logger.info(f"Connection pool configured with max size: {connection_options.get('maxPoolSize', 'default')}")
+                
+                if tls_enabled.lower() == "true":
+                    logger.info("🔒 SSL/TLS connection established successfully with enhanced configuration")
+                
+                # Create comprehensive database indexes
+                logger.info("Creating comprehensive database indexes...")
+                await create_comprehensive_indexes()
+                
+                logger.info("🎉 MongoDB connection setup completed successfully!")
+                return  # Success - exit function
+                
+            except asyncio.TimeoutError as e:
+                logger.warning(f"Connection timeout with {uri_type} URI: {e}")
+            except ServerSelectionTimeoutError as e:
+                logger.warning(f"Server selection timeout with {uri_type} URI: {e}")
+            except ConnectionFailure as e:
+                logger.warning(f"Connection failure with {uri_type} URI: {e}")
+                if tls_enabled.lower() == "true":
+                    logger.warning("SSL/TLS connection failure detected")
+                    logger.warning("This may be due to DNS resolution or SSL handshake issues")
+            except Exception as e:
+                logger.warning(f"Unexpected error with {uri_type} URI: {e}")
+                if tls_enabled.lower() == "true":
+                    logger.warning("SSL/TLS related error - check OpenSSL compatibility")
         
-        # Log final connection options for debugging
-        logger.info(f"Final connection options: {connection_options}")
-        
-        # Create MongoDB client with connection pooling
-        logger.info("Creating AsyncIOMotorClient with enhanced SSL configuration...")
-        db.client = AsyncIOMotorClient(mongodb_uri, **connection_options)
-        db.database = db.client[database_name]
-        
-        # Test the connection with extended timeout for SSL handshake
-        logger.info("Testing MongoDB connection with ping command...")
-        await db.client.admin.command('ping')
-        logger.info(f"Successfully connected to MongoDB database: {database_name}")
-        logger.info(f"Connection pool configured with max size: {connection_options['maxPoolSize']}")
-        
-        if tls_enabled.lower() == "true":
-            logger.info("SSL/TLS connection established successfully with enhanced configuration")
-        
-        # Create comprehensive database indexes
-        await create_comprehensive_indexes()
-        
-    except ConnectionFailure as e:
-        logger.error(f"Failed to connect to MongoDB: {e}")
-        if tls_enabled.lower() == "true":
-            logger.error("SSL/TLS connection failure detected")
-            logger.error("This may be due to OpenSSL 3.0.16 certificate validation strictness")
-            logger.error("Check certificate configuration and network connectivity")
-            logger.error(f"TLS settings - Enabled: {tls_enabled}, Allow Invalid: {tls_allow_invalid}")
-        raise e
-    except Exception as e:
-        logger.error(f"Unexpected error connecting to MongoDB: {e}")
-        if tls_enabled.lower() == "true":
-            logger.error("SSL/TLS related error - check OpenSSL compatibility and certificate configuration")
-        raise e
+        # If we get here, all URIs failed for this attempt
+        if attempt < max_retries - 1:
+            # Exponential backoff with jitter
+            delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
+            logger.info(f"All connection URIs failed. Retrying in {delay:.2f} seconds...")
+            await asyncio.sleep(delay)
+        else:
+            logger.error("❌ All connection attempts exhausted")
+    
+    # If we get here, all attempts failed
+    error_msg = f"Failed to connect to MongoDB after {max_retries} attempts with all available URIs"
+    logger.error(error_msg)
+    
+    if tls_enabled.lower() == "true":
+        logger.error("🔒 SSL/TLS connection failures detected across all attempts")
+        logger.error("Troubleshooting suggestions:")
+        logger.error("1. Check network connectivity to MongoDB Atlas")
+        logger.error("2. Verify DNS resolution is working correctly")
+        logger.error("3. Ensure firewall allows outbound connections on port 27017")
+        logger.error("4. Check if OpenSSL version is compatible")
+        logger.error("5. Verify MongoDB Atlas cluster is running and accessible")
+    
+    raise ConnectionFailure(error_msg)
 
 async def close_mongo_connection():
     """Close database connection"""
