@@ -46,9 +46,11 @@ async def lifespan(app: FastAPI):
         await connect_to_mongo()
         # Initialize Redis connection for rate limiting and caching
         await get_redis_client()
-    except Exception as e:
+    except ConnectionError as e:
         print(f"Warning: Could not connect to MongoDB during startup: {e}")
         print("Server will start without database connection. Database features will be unavailable.")
+    except Exception as e:
+        print(f"An unexpected error occurred during startup: {e}")
     yield
     # Shutdown
     await close_mongo_connection()
@@ -102,8 +104,8 @@ app.add_middleware(CORSMiddleware, **cors_config)
 
 # Add security and performance middleware (order matters!)
 app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(ErrorHandlingMiddleware)
+app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(RequestSizeLimitMiddleware, max_size=10 * 1024 * 1024)  # 10MB
 app.add_middleware(PerformanceMonitoringMiddleware)
 app.add_middleware(FixedCacheMiddleware, default_ttl=300)  # 5 minutes

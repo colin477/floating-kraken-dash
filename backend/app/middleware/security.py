@@ -46,7 +46,12 @@ async def get_redis_client():
     if redis_client is None:
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
         try:
-            redis_client = redis.from_url(redis_url, decode_responses=True)
+            redis_client = redis.from_url(
+                redis_url,
+                decode_responses=True,
+                socket_connect_timeout=5,
+                socket_timeout=5,
+            )
             await redis_client.ping()
             logger.info("Connected to Redis for rate limiting and caching")
         except Exception as e:
@@ -212,6 +217,18 @@ class ErrorHandlingMiddleware:
         
         try:
             await self.app(scope, receive, send)
+        except ConnectionError as e:
+            logger.error(
+                "Database connection error",
+                error=str(e),
+                path=scope.get("path", ""),
+                method=scope.get("method", "")
+            )
+            response = JSONResponse(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                content={"detail": "Database connection error"}
+            )
+            await response(scope, receive, send)
         except Exception as e:
             # Log the full error for debugging
             logger.error(

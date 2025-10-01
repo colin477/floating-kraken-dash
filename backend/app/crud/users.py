@@ -83,6 +83,8 @@ async def create_user(user_data: UserCreate) -> Optional[dict]:
     """
     try:
         users_collection = await get_collection("users")
+        if users_collection is None:
+            raise ConnectionError("Database not connected")
         
         # CRITICAL FIX: Validate password FIRST before checking email
         # This ensures users get proper password validation errors instead of "Email already registered"
