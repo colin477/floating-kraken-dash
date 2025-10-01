@@ -8,8 +8,8 @@ const isTokenExpired = (token: string): boolean => {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     const currentTime = Math.floor(Date.now() / 1000);
-    // Check if token expires within 5 minutes (300 seconds)
-    return payload.exp < (currentTime + 300);
+    // Check if token expires within 30 seconds
+    return payload.exp < (currentTime + 30);
   } catch (error) {
     console.error('[AuthContext] Error decoding token:', error);
     return true; // Treat invalid tokens as expired
