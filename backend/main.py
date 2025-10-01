@@ -97,6 +97,9 @@ cors_config = {
     "max_age": 86400  # 24 hours
 }
 
+# Add CORS middleware FIRST (critical for preflight requests)
+app.add_middleware(CORSMiddleware, **cors_config)
+
 # Add security and performance middleware (order matters!)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
@@ -106,9 +109,6 @@ app.add_middleware(PerformanceMonitoringMiddleware)
 app.add_middleware(FixedCacheMiddleware, default_ttl=300)  # 5 minutes
 app.add_middleware(FixedCompressionMiddleware, minimum_size=1024)
 app.add_middleware(SlowAPIMiddleware)
-
-# Add CORS middleware
-app.add_middleware(CORSMiddleware, **cors_config)
 
 # Add rate limiting
 app.state.limiter = limiter

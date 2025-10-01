@@ -272,7 +272,39 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
             "error": "Rate limit exceeded",
             "message": "Too many requests. Please try again later.",
             "status_code": 429,
-            "retry_after": exc.retry_after
+            "retry_after": getattr(exc, 'retry_after', 60)
+        }
+    )
+
+# Generic exception handler for rate limiting middleware issues
+async def rate_limit_exception_handler(request: Request, exc: Exception):
+    """Handle exceptions in rate limiting middleware"""
+    logger.error(
+        "Rate limiting middleware error",
+        client_ip=get_remote_address(request),
+        path=request.url.path,
+        method=request.method,
+        error=str(exc),
+        error_type=type(exc).__name__
+    )
+    
+    # If it's a connection error (Redis), allow the request to proceed
+    if isinstance(exc, (ConnectionError, redis.ConnectionError)):
+        logger.warning("Redis connection error in rate limiting, allowing request to proceed")
+        # We can't easily continue the request here, so return a generic error
+        # The ErrorHandlingMiddleware will catch this and handle it properly
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Service temporarily unavailable due to rate limiting service issues"
+        )
+    
+    # For other exceptions, return a generic error
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "error": "Internal server error",
+            "message": "An error occurred in the rate limiting service",
+            "status_code": 500
         }
     )
 

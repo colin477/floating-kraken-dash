@@ -493,7 +493,7 @@ async def authenticate_user(email: str, password: str, request: Request) -> Opti
         return None
     
     # Verify password
-    if not verify_password(password, user["password"]):
+    if not verify_password(password, user["password_hash"]):
         await record_failed_login(email, request)
         return None
     
