@@ -14,6 +14,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 import structlog
 import redis.asyncio as redis
+from app.utils.redis_client import get_redis_client
 import os
 
 # Configure structured logging
@@ -36,28 +37,6 @@ structlog.configure(
 )
 
 logger = structlog.get_logger(__name__)
-
-# Redis connection for rate limiting and token blacklisting
-redis_client: Optional[redis.Redis] = None
-
-async def get_redis_client():
-    """Get Redis client for rate limiting and caching"""
-    global redis_client
-    if redis_client is None:
-        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-        try:
-            redis_client = redis.from_url(
-                redis_url,
-                decode_responses=True,
-                socket_connect_timeout=5,
-                socket_timeout=5,
-            )
-            await redis_client.ping()
-            logger.info("Connected to Redis for rate limiting and caching")
-        except Exception as e:
-            logger.warning(f"Could not connect to Redis: {e}. Rate limiting will use in-memory storage.")
-            redis_client = None
-    return redis_client
 
 # Rate limiter configuration
 def get_limiter():

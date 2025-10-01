@@ -11,6 +11,7 @@ import os
 from dotenv import load_dotenv
 
 from app.database import connect_to_mongo, close_mongo_connection
+from app.crud.users import create_user_indexes
 from app.models.responses import HealthResponse
 from app.routers import auth, profile, pantry, recipes, meal_plans, shopping_lists, community, receipts, leftovers
 
@@ -22,13 +23,14 @@ from app.middleware.security import (
     RequestSizeLimitMiddleware,
     limiter,
     rate_limit_handler,
-    get_redis_client
+    get_redis_client as get_security_redis_client
 )
 from app.middleware.fixed_performance import (
     FixedCompressionMiddleware,
     FixedCacheMiddleware,
     PerformanceMonitoringMiddleware
 )
+from app.utils.redis_client import get_redis_client
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -44,6 +46,7 @@ async def lifespan(app: FastAPI):
     # Startup
     try:
         await connect_to_mongo()
+        await create_user_indexes()
         # Initialize Redis connection for rate limiting and caching
         await get_redis_client()
     except ConnectionError as e:

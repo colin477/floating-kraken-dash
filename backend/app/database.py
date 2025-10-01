@@ -27,7 +27,15 @@ async def connect_to_mongo():
     
     logger.info(f"Attempting to connect to MongoDB at {mongodb_uri}")
     try:
-        db.client = AsyncIOMotorClient(mongodb_uri)
+        # For production, consider using a CA file instead of tlsAllowInvalidCertificates
+        # See: https://motor.readthedocs.io/en/stable/api-asyncio/asyncio_motor_client.html#motor.motor_asyncio.AsyncIOMotorClient
+        db.client = AsyncIOMotorClient(
+            mongodb_uri,
+            maxPoolSize=100,
+            minPoolSize=10,
+            tls=True,
+            tlsAllowInvalidCertificates=os.getenv("MONGODB_TLS_ALLOW_INVALID_CERTIFICATES", "false").lower() == "true"
+        )
         await db.client.admin.command('ping')
         db.database = db.client[database_name]
         logger.info(f"Successfully connected to MongoDB database: {database_name}")

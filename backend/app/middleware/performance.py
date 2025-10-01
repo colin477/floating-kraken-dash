@@ -11,30 +11,9 @@ from fastapi.responses import JSONResponse
 import redis.asyncio as redis
 import os
 import structlog
+from app.utils.redis_client import get_redis_client
 
 logger = structlog.get_logger(__name__)
-
-# Redis connection for caching
-redis_client: Optional[redis.Redis] = None
-
-async def get_redis_client():
-    """Get Redis client for caching"""
-    global redis_client
-    if redis_client is None:
-        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-        try:
-            redis_client = redis.from_url(
-                redis_url,
-                decode_responses=True,
-                socket_connect_timeout=5,
-                socket_timeout=5,
-            )
-            await redis_client.ping()
-            logger.info("Connected to Redis for caching")
-        except Exception as e:
-            logger.warning(f"Could not connect to Redis for caching: {e}")
-            redis_client = None
-    return redis_client
 
 class CompressionMiddleware:
     """Middleware for response compression"""

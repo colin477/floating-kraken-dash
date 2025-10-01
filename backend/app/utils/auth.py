@@ -376,7 +376,7 @@ async def is_account_locked(identifier: str) -> bool:
         True if account is locked, False otherwise
     """
     try:
-        from app.middleware.security import get_redis_client
+        from app.utils.redis_client import get_redis_client
         redis_conn = await get_redis_client()
         if redis_conn:
             lockout_key = await get_lockout_key(identifier)
@@ -396,7 +396,7 @@ async def record_failed_login(identifier: str, request: Request):
         request: FastAPI request object for logging
     """
     try:
-        from app.middleware.security import get_redis_client
+        from app.utils.redis_client import get_redis_client
         redis_conn = await get_redis_client()
         if not redis_conn:
             return
@@ -439,7 +439,7 @@ async def clear_failed_login_attempts(identifier: str):
         identifier: Email or IP address
     """
     try:
-        from app.middleware.security import get_redis_client
+        from app.utils.redis_client import get_redis_client
         redis_conn = await get_redis_client()
         if redis_conn:
             attempts_key = await get_login_attempts_key(identifier)
