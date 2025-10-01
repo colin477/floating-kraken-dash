@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { User, UserProfile, PantryItem, Recipe, MealPlan } from '@/types';
 import { storage } from '@/lib/storage';
+import { profileApi } from '@/services/api';
 import { Camera, ChefHat, ShoppingCart, Users, Calendar, DollarSign, Clock, ArrowRight, Utensils, ListChecks, RefreshCw, Plus, Link, Edit, List, FolderPlus } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 
@@ -14,12 +15,28 @@ interface DashboardProps {
   onNavigate: (page: string) => void;
 }
 
+interface DashboardStats {
+  pantry_items_count: number;
+  saved_recipes_count: number;
+}
+
 export const Dashboard = ({ user, profile, onNavigate }: DashboardProps) => {
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
   const [recentRecipes, setRecentRecipes] = useState<Recipe[]>([]);
   const [currentMealPlan, setCurrentMealPlan] = useState<MealPlan | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
 
   useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        const data = await profileApi.getDashboardStats();
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error);
+      }
+    };
+
+    fetchDashboardStats();
     setPantryItems(storage.getPantryItems());
     setRecentRecipes(storage.getRecipes().slice(-3));
     const mealPlans = storage.getMealPlans();
@@ -261,7 +278,7 @@ export const Dashboard = ({ user, profile, onNavigate }: DashboardProps) => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-muted-foreground">Pantry Items</p>
-                  <p className="text-2xl font-bold text-foreground">{pantryItems.length}</p>
+                  <p className="text-2xl font-bold text-foreground">{stats?.pantry_items_count ?? pantryItems.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -275,7 +292,7 @@ export const Dashboard = ({ user, profile, onNavigate }: DashboardProps) => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-muted-foreground">Saved Recipes</p>
-                  <p className="text-2xl font-bold text-foreground">{recentRecipes.length}</p>
+                  <p className="text-2xl font-bold text-foreground">{stats?.saved_recipes_count ?? recentRecipes.length}</p>
                 </div>
               </div>
             </CardContent>

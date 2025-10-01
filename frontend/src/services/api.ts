@@ -684,6 +684,12 @@ export const profileApi = {
       throw error;
     }
   },
+
+  // Get dashboard stats
+  getDashboardStats: async () => {
+    const response = await apiRequest('/profile/dashboard-stats');
+    return response.json();
+  },
 };
 
 // Receipt API service

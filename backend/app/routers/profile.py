@@ -21,6 +21,8 @@ from app.crud.profiles import (
     complete_onboarding,
     update_plan_selection
 )
+from app.crud.pantry import get_pantry_stats
+from app.crud.recipes import get_recipe_stats
 from app.models.responses import OnboardingStatusResponse, PlanSelectionRequest, ProfileOnboardingComplete
 from app.utils.auth import get_current_active_user
 
@@ -444,4 +446,39 @@ async def mark_onboarding_complete(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error completing onboarding"
+        )
+@router.get("/dashboard-stats", response_model=dict, status_code=status.HTTP_200_OK)
+async def get_dashboard_stats(current_user: dict = Depends(get_current_active_user)):
+    """
+    Get dashboard stats
+    
+    Returns the total number of pantry items and saved recipes for the current user.
+    
+    Args:
+        current_user: Current authenticated user from JWT token
+        
+    Returns:
+        dict: A dictionary with pantry_items_count and saved_recipes_count
+        
+    Raises:
+        HTTPException: 500 if stats retrieval fails
+    """
+    try:
+        user_id = str(current_user["_id"])
+        
+        pantry_stats = await get_pantry_stats(user_id)
+        recipes_stats = await get_recipe_stats(user_id)
+        
+        pantry_items_count = pantry_stats.total_items if pantry_stats else 0
+        saved_recipes_count = recipes_stats.total_recipes if recipes_stats else 0
+        
+        return {
+            "pantry_items_count": pantry_items_count,
+            "saved_recipes_count": saved_recipes_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error retrieving dashboard stats"
         )

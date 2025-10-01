@@ -24,9 +24,7 @@ async def signup(user_data: UserCreate):
     Returns JWT token for immediate login after registration.
     """
     try:
-        from app.crud.users import create_user, create_user_indexes
-        # Ensure indexes are created
-        await create_user_indexes()
+        from app.crud.users import create_user
         
         # Create the user
         created_user = await create_user(user_data)
