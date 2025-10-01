@@ -91,7 +91,6 @@ const Auth = () => {
           mealPreferences: ['Quick meals (under 30 min)', 'Kid-friendly'],
           kitchenEquipment: ['Oven', 'Stovetop', 'Microwave'],
           weeklyBudget: 150,
-          zipCode: '80202',
           familyMembers: [],
           preferredGrocers: ['kroger-local', 'safeway-local']
         };

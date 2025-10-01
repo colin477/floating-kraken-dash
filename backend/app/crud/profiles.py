@@ -67,7 +67,6 @@ async def create_profile(user_id: str, profile_data: UserProfileCreate) -> Optio
             "meal_preferences": profile_data.meal_preferences,
             "kitchen_equipment": profile_data.kitchen_equipment,
             "weekly_budget": profile_data.weekly_budget,
-            "zip_code": profile_data.zip_code,
             "family_members": family_members,
             "preferred_grocers": profile_data.preferred_grocers,
             "subscription": profile_data.subscription,
@@ -347,7 +346,6 @@ async def create_profile_stub(user_id: str) -> Optional[UserProfile]:
             "meal_preferences": [],
             "kitchen_equipment": [],
             "weekly_budget": None,
-            "zip_code": None,
             "family_members": [],
             "preferred_grocers": [],
             "subscription": "free",
@@ -414,7 +412,6 @@ async def get_onboarding_status(user_id: str) -> dict:
         # Check if profile has meaningful data (not just defaults)
         profile_completed = (
             profile.get("weekly_budget") is not None and
-            profile.get("zip_code") is not None and
             len(profile.get("dietary_restrictions", [])) > 0 or
             len(profile.get("allergies", [])) > 0 or
             len(profile.get("taste_preferences", [])) > 0 or

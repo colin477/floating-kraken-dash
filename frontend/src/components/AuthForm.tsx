@@ -48,7 +48,6 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
       mealPreferences: [],
       kitchenEquipment: [],
       weeklyBudget: 100,
-      zipCode: '',
       familyMembers: []
     };
   };

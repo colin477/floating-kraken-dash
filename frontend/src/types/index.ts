@@ -21,7 +21,6 @@ export interface UserProfile {
   mealPreferences: string[];
   kitchenEquipment: string[];
   weeklyBudget: number;
-  zipCode: string;
   familyMembers: FamilyMember[];
   preferredGrocers?: string[];
 }

@@ -70,7 +70,6 @@ class UserProfile(BaseModel):
     meal_preferences: List[str] = Field(default_factory=list, description="User's meal preferences")
     kitchen_equipment: List[str] = Field(default_factory=list, description="Available kitchen equipment")
     weekly_budget: Optional[float] = Field(None, gt=0, description="Weekly meal budget")
-    zip_code: Optional[str] = Field(None, description="User's zip code for local grocery stores")
     family_members: List[FamilyMember] = Field(default_factory=list, description="List of family members")
     preferred_grocers: List[str] = Field(default_factory=list, description="Preferred grocery stores")
     subscription: str = Field(default="free", description="Subscription tier")
@@ -101,15 +100,6 @@ class UserProfile(BaseModel):
             raise ValueError('Weekly budget must be positive')
         return v
 
-    @validator('zip_code')
-    def validate_zip_code(cls, v):
-        """Validate zip code format (5 digits)"""
-        if v is not None:
-            if not v.isdigit() or len(v) != 5:
-                raise ValueError('Zip code must be exactly 5 digits')
-        return v
-
-
 class UserProfileCreate(BaseModel):
     """Schema for creating new user profiles"""
     dietary_restrictions: List[str] = Field(default_factory=list, description="User's dietary restrictions")
@@ -118,7 +108,6 @@ class UserProfileCreate(BaseModel):
     meal_preferences: List[str] = Field(default_factory=list, description="User's meal preferences")
     kitchen_equipment: List[str] = Field(default_factory=list, description="Available kitchen equipment")
     weekly_budget: Optional[float] = Field(None, gt=0, description="Weekly meal budget")
-    zip_code: Optional[str] = Field(None, description="User's zip code for local grocery stores")
     family_members: List[FamilyMemberCreate] = Field(default_factory=list, description="List of family members")
     preferred_grocers: List[str] = Field(default_factory=list, description="Preferred grocery stores")
     subscription: str = Field(default="free", description="Subscription tier")
@@ -141,15 +130,6 @@ class UserProfileCreate(BaseModel):
             raise ValueError('Weekly budget must be positive')
         return v
 
-    @validator('zip_code')
-    def validate_zip_code(cls, v):
-        """Validate zip code format (5 digits)"""
-        if v is not None:
-            if not v.isdigit() or len(v) != 5:
-                raise ValueError('Zip code must be exactly 5 digits')
-        return v
-
-
 class UserProfileUpdate(BaseModel):
     """Schema for updating existing user profiles"""
     dietary_restrictions: Optional[List[str]] = Field(None, description="User's dietary restrictions")
@@ -158,7 +138,6 @@ class UserProfileUpdate(BaseModel):
     meal_preferences: Optional[List[str]] = Field(None, description="User's meal preferences")
     kitchen_equipment: Optional[List[str]] = Field(None, description="Available kitchen equipment")
     weekly_budget: Optional[float] = Field(None, gt=0, description="Weekly meal budget")
-    zip_code: Optional[str] = Field(None, description="User's zip code for local grocery stores")
     family_members: Optional[List[FamilyMemberUpdate]] = Field(None, description="List of family members")
     preferred_grocers: Optional[List[str]] = Field(None, description="Preferred grocery stores")
     subscription: Optional[str] = Field(None, description="Subscription tier")
@@ -180,12 +159,4 @@ class UserProfileUpdate(BaseModel):
         """Ensure budget is positive if provided"""
         if v is not None and v <= 0:
             raise ValueError('Weekly budget must be positive')
-        return v
-
-    @validator('zip_code')
-    def validate_zip_code(cls, v):
-        """Validate zip code format (5 digits)"""
-        if v is not None:
-            if not v.isdigit() or len(v) != 5:
-                raise ValueError('Zip code must be exactly 5 digits')
         return v

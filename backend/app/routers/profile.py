@@ -110,7 +110,6 @@ async def update_user_profile(
                 meal_preferences=profile_data.meal_preferences or [],
                 kitchen_equipment=profile_data.kitchen_equipment or [],
                 weekly_budget=profile_data.weekly_budget,
-                zip_code=profile_data.zip_code,
                 family_members=[],  # Family members handled separately
                 preferred_grocers=profile_data.preferred_grocers or [],
                 subscription=profile_data.subscription or "free",
@@ -173,7 +172,6 @@ async def add_family_member_to_profile(
                 meal_preferences=[],
                 kitchen_equipment=[],
                 weekly_budget=100,  # Set a default budget > 0
-                zip_code="00000",   # Set a default 5-digit zip code
                 family_members=[],  # Will be empty initially
                 preferred_grocers=[],
                 subscription="free",

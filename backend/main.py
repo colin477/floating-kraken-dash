@@ -75,6 +75,7 @@ origins = [
     "http://127.0.0.1:3002",  # Frontend development server (current)
     "http://127.0.0.1:5173",
     "https://ez-eatin-demo-backend-v1.onrender.com",  # Production backend URL
+    "https://ez-eatin-frontend-demo-v1.onrender.com", # Production frontend URL
 ]
 
 # Add production CORS origins from environment
