@@ -466,57 +466,6 @@ async def get_user_by_email(email: str) -> Optional[dict]:
         return None
 
 
-async def authenticate_user(email: str, password: str, request: Request) -> Optional[dict]:
-    """
-    Authenticate user with brute force protection
-    
-    Args:
-        email: User email
-        password: User password
-        request: FastAPI request object
-        
-    Returns:
-        User document if authentication successful, None otherwise
-    """
-    # Check if account is locked
-    if await is_account_locked(email):
-        logger.warning(f"Login attempt on locked account: {email}")
-        raise HTTPException(
-            status_code=status.HTTP_423_LOCKED,
-            detail=f"Account is locked due to too many failed login attempts. Try again in {LOCKOUT_DURATION_MINUTES} minutes."
-        )
-    
-    # Get user from database
-    user = await get_user_by_email(email)
-    if not user:
-        await record_failed_login(email, request)
-        return None
-    
-    # Verify password
-    if not verify_password(password, user["password_hash"]):
-        await record_failed_login(email, request)
-        return None
-    
-    # Check if user is active
-    if not user.get("is_active", True):
-        logger.warning(f"Login attempt on inactive account: {email}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Account is inactive"
-        )
-    
-    # Clear failed login attempts on successful authentication
-    await clear_failed_login_attempts(email)
-    
-    # Log successful login
-    logger.info(
-        "Successful login",
-        user_id=str(user["_id"]),
-        email=email,
-        client_ip=request.client.host if request.client else "unknown"
-    )
-    
-    return user
 
 
 async def logout_user(token: str) -> bool:

@@ -3,11 +3,10 @@ Authentication router for user signup, login, and logout
 """
 
 from datetime import timedelta
-from fastapi import APIRouter, HTTPException, status, Depends, Form
+from fastapi import APIRouter, HTTPException, status, Depends, Form, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from app.models.responses import SuccessResponse
 from app.models.auth import UserCreate, UserLogin, LoginResponse, UserResponse
-from app.crud.users import create_user, authenticate_user, update_user_last_login, create_user_indexes
 from app.crud.profiles import create_profile_stub
 from app.utils.auth import create_access_token, get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.utils.exceptions import PasswordValidationError, EmailAlreadyExistsError, UserCreationError
@@ -25,6 +24,7 @@ async def signup(user_data: UserCreate):
     Returns JWT token for immediate login after registration.
     """
     try:
+        from app.crud.users import create_user, create_user_indexes
         # Ensure indexes are created
         await create_user_indexes()
         
@@ -47,6 +47,7 @@ async def signup(user_data: UserCreate):
         )
         
         # Update last login for the new user
+        from app.crud.users import update_user_last_login
         await update_user_last_login(str(created_user["_id"]))
         
         # Prepare user response
@@ -106,15 +107,16 @@ async def register(user_data: UserCreate):
 
 
 @router.post("/login", response_model=LoginResponse)
-async def login(user_credentials: UserLogin):
+async def login(user_credentials: UserLogin, request: Request):
     """
     User login endpoint (JSON format)
     
     Authenticates user with email and password, returns JWT token on success.
     """
     try:
+        from app.crud.users import authenticate_user
         # Authenticate user
-        user = await authenticate_user(user_credentials.email, user_credentials.password)
+        user = await authenticate_user(user_credentials.email, user_credentials.password, request)
         
         if not user:
             raise HTTPException(
@@ -131,6 +133,7 @@ async def login(user_credentials: UserLogin):
         )
         
         # Update last login
+        from app.crud.users import update_user_last_login
         await update_user_last_login(str(user["_id"]))
         
         # Prepare user response
@@ -161,7 +164,7 @@ async def login(user_credentials: UserLogin):
 
 
 @router.post("/login-form", response_model=LoginResponse)
-async def login_form(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_form(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     """
     User login endpoint (form data format)
     
@@ -169,8 +172,9 @@ async def login_form(form_data: OAuth2PasswordRequestForm = Depends()):
     This endpoint provides compatibility with frontend form submissions.
     """
     try:
+        from app.crud.users import authenticate_user
         # Authenticate user (username field contains email)
-        user = await authenticate_user(form_data.username, form_data.password)
+        user = await authenticate_user(form_data.username, form_data.password, request)
         
         if not user:
             raise HTTPException(
@@ -187,6 +191,7 @@ async def login_form(form_data: OAuth2PasswordRequestForm = Depends()):
         )
         
         # Update last login
+        from app.crud.users import update_user_last_login
         await update_user_last_login(str(user["_id"]))
         
         # Prepare user response

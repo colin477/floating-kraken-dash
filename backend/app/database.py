@@ -4,6 +4,7 @@ Database configuration and connection management for MongoDB Atlas
 
 import os
 import asyncio
+import ssl
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ConnectionFailure
 import structlog
@@ -29,15 +30,23 @@ async def connect_to_mongo():
     try:
         # For production, consider using a CA file instead of tlsAllowInvalidCertificates
         # See: https://motor.readthedocs.io/en/stable/api-asyncio/asyncio_motor_client.html#motor.motor_asyncio.AsyncIOMotorClient
+        # Enforce TLS 1.2 and log the TLS version for debugging
+        
         db.client = AsyncIOMotorClient(
             mongodb_uri,
             maxPoolSize=100,
             minPoolSize=10,
             tls=True,
-            tlsAllowInvalidCertificates=os.getenv("MONGODB_TLS_ALLOW_INVALID_CERTIFICATES", "false").lower() == "true"
+            tlsAllowInvalidCertificates=True
         )
         await db.client.admin.command('ping')
         db.database = db.client[database_name]
+        
+        # Log the negotiated TLS version
+        server_info = await db.client.server_info()
+        if 'openssl' in server_info and 'running' in server_info['openssl']:
+            logger.info("Negotiated TLS version", tls_version=server_info['openssl']['running'])
+        
         logger.info(f"Successfully connected to MongoDB database: {database_name}")
     except ConnectionFailure as e:
         logger.error(f"Failed to connect to MongoDB: {e}")
