@@ -108,24 +108,25 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
 
     try {
       console.log('[AuthForm] Starting registration process...');
-      await register(formData.email, formData.password, formData.name);
+      const newUser = await register(formData.email, formData.password, formData.name);
       
       console.log('[AuthForm] Registration successful, showing success message');
       setSuccess('Welcome to EZ Eatin\'! Choose your plan to get started.');
-      const user = storage.getUser();
-      if (user) {
-        onAuthSuccess(user, true); // true = new user (show plan selection)
+      
+      if (newUser) {
+        onAuthSuccess(newUser, true); // true = new user (show plan selection)
       }
     } catch (error) {
       console.error('[AuthForm] 🚨 REGISTRATION ERROR CAUGHT:');
       console.error('[AuthForm] Error type:', error?.constructor?.name);
-      console.error('[AuthForm] Error message:', error?.message);
+      console.error('[AuthForm] Error message:', (error as Error)?.message);
       console.error('[AuthForm] Full error object:', error);
       
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.';
       console.error('[AuthForm] Displaying error message to user:', errorMessage);
       
       setError(errorMessage);
+      setSuccess(null);
     } finally {
       setIsLoading(false);
     }

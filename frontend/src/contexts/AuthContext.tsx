@@ -35,7 +35,7 @@ export interface AuthContextType {
   onboardingState: OnboardingState;
   isOnboardingLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<User>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   checkOnboardingStatus: () => Promise<void>;
@@ -253,35 +253,25 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (email: string, password: string, name: string): Promise<User> => {
     try {
       console.log('[AuthContext] Starting registration process...');
       const response = await authApi.register(email, password, name);
-      // DEBUG: Log the actual API response to diagnose the name field issue
       console.log('🔍 [AuthContext] Registration - Raw API response.user:', response.user);
-      console.log('🔍 [AuthContext] Registration - Available user fields:', Object.keys(response.user));
-      console.log('🔍 [AuthContext] Registration - response.user.name:', response.user.name);
-      console.log('🔍 [AuthContext] Registration - response.user.full_name:', response.user.full_name);
       
-      const userData = {
+      const userData: User = {
         id: response.user.id,
         email: response.user.email,
-        name: response.user.name || response.user.full_name, // Handle both name and full_name
+        name: response.user.name || response.user.full_name,
         createdAt: response.user.created_at,
         subscription: response.user.subscription || 'free',
         token: response.access_token,
       };
       
-      console.log('🔍 [AuthContext] REGISTER - Final userData.subscription:', userData.subscription);
-      console.log('🔍 [AuthContext] REGISTER - response.user.subscription:', response.user.subscription);
-      
-      console.log('🔍 [AuthContext] Registration - Final userData.name:', userData.name);
-      
       console.log('[AuthContext] Registration successful, setting user data');
       setUser(userData);
       storage.setUser(userData);
 
-      // For new registrations, set initial onboarding state
       console.log('[AuthContext] New user registered, setting initial onboarding state');
       setOnboardingState({
         isOnboardingComplete: false,
@@ -291,33 +281,33 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setupLevel: null,
         planType: null,
       });
+      
+      return userData;
     } catch (error) {
       console.error('[AuthContext] Registration failed:', error);
       
-      // Check if this is a legitimate registration error (400 for duplicate email) vs network/server error
-      const isRegistrationError = error?.message?.includes('Email already registered') ||
-                                 error?.message?.includes('400') ||
-                                 error?.message?.includes('Bad Request') ||
-                                 error?.message?.includes('already exists');
+      const isRegistrationError = (error as Error)?.message?.includes('Email already registered') ||
+                                 (error as Error)?.message?.includes('400') ||
+                                 (error as Error)?.message?.includes('Bad Request') ||
+                                 (error as Error)?.message?.includes('already exists');
       
       if (isRegistrationError) {
         console.error('[AuthContext] Registration failed - throwing error to display to user');
-        // Re-throw the error so it gets displayed to the user
         throw error;
       } else {
         console.warn('[AuthContext] Network/server error during registration, falling back to mock data for demo purposes');
-        // Only use mock data for non-registration errors (network issues, server down, etc.)
-        const mockUserData = {
+        const mockUserData: User = {
           id: Date.now().toString(),
           email: email,
           name: name,
           createdAt: new Date().toISOString(),
           subscription: 'free' as const,
-          token: 'mock-jwt-token-' + Date.now(), // Mock JWT token
+          token: 'mock-jwt-token-' + Date.now(),
         };
         
         setUser(mockUserData);
         storage.setUser(mockUserData);
+        return mockUserData;
       }
     }
   };
