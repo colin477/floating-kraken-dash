@@ -264,7 +264,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email: response.user.email,
         name: response.user.name || response.user.full_name,
         createdAt: response.user.created_at,
-        subscription: response.user.subscription || 'free',
+        subscription: response.user.subscription,
         token: response.access_token,
       };
       
