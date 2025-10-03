@@ -1,17 +1,41 @@
-import redis
-import os
+#!/usr/bin/env python3
+"""
+Test Redis connection to confirm the issue
+"""
 
-def test_redis_connection():
-    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-    print(f"Attempting to connect to Redis at {redis_url}")
-    try:
-        r = redis.from_url(redis_url, socket_connect_timeout=5)
-        r.ping()
-        print("Successfully connected to Redis and received a pong.")
-    except redis.exceptions.ConnectionError as e:
-        print(f"Failed to connect to Redis: {e}")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+import asyncio
+import os
+import sys
+sys.path.append('backend')
+
+# Load environment variables from backend/.env
+from dotenv import load_dotenv
+load_dotenv('backend/.env')
+
+from backend.app.utils.redis_client import get_redis_client
+
+async def test_redis_connection():
+    """Test Redis connection"""
+    print("Testing Redis connection...")
+    
+    # Test with default configuration
+    redis_client = await get_redis_client()
+    
+    if redis_client:
+        print("✅ Redis connection successful")
+        try:
+            await redis_client.ping()
+            print("✅ Redis ping successful")
+        except Exception as e:
+            print(f"❌ Redis ping failed: {e}")
+    else:
+        print("❌ Redis connection failed - client is None")
+    
+    # Test with explicit URL
+    print(f"\nRedis URL from environment: {os.getenv('REDIS_URL', 'Not set')}")
+    
+    return redis_client is not None
 
 if __name__ == "__main__":
-    test_redis_connection()
+    result = asyncio.run(test_redis_connection())
+    print(f"\nRedis connection test result: {'PASS' if result else 'FAIL'}")

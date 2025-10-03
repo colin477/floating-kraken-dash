@@ -86,10 +86,32 @@ async def signup(user_data: UserCreate):
         )
     except HTTPException:
         raise
+    except ConnectionError as e:
+        # Database connection issues
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Database connection error during registration: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service temporarily unavailable. Please try again later."
+        )
     except Exception as e:
+        # Log the actual error for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Unexpected error during user registration: {e}", exc_info=True)
+        
+        # Check if it's a Redis-related error
+        error_str = str(e).lower()
+        if any(keyword in error_str for keyword in ['redis', 'connection', 'timeout', 'rate limit']):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Service temporarily unavailable due to rate limiting service issues. Please try again in a moment."
+            )
+        
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error during user registration"
+            detail="Internal server error during user registration. Please try again later."
         )
 
 
@@ -154,10 +176,32 @@ async def login(user_credentials: UserLogin, request: Request):
         
     except HTTPException:
         raise
+    except ConnectionError as e:
+        # Database connection issues
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Database connection error during login: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service temporarily unavailable. Please try again later."
+        )
     except Exception as e:
+        # Log the actual error for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Unexpected error during login: {e}", exc_info=True)
+        
+        # Check if it's a Redis-related error
+        error_str = str(e).lower()
+        if any(keyword in error_str for keyword in ['redis', 'connection', 'timeout', 'rate limit']):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Service temporarily unavailable due to rate limiting service issues. Please try again in a moment."
+            )
+        
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error during login"
+            detail="Internal server error during login. Please try again later."
         )
 
 
@@ -212,10 +256,32 @@ async def login_form(request: Request, form_data: OAuth2PasswordRequestForm = De
         
     except HTTPException:
         raise
+    except ConnectionError as e:
+        # Database connection issues
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Database connection error during form login: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service temporarily unavailable. Please try again later."
+        )
     except Exception as e:
+        # Log the actual error for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Unexpected error during form login: {e}", exc_info=True)
+        
+        # Check if it's a Redis-related error
+        error_str = str(e).lower()
+        if any(keyword in error_str for keyword in ['redis', 'connection', 'timeout', 'rate limit']):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Service temporarily unavailable due to rate limiting service issues. Please try again in a moment."
+            )
+        
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error during login"
+            detail="Internal server error during login. Please try again later."
         )
 
 
