@@ -8,6 +8,11 @@ import ssl
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ConnectionFailure
 import structlog
+from dotenv import load_dotenv
+from app.middleware.performance import DatabasePoolConfig
+
+# Load environment variables
+load_dotenv()
 
 logger = structlog.get_logger(__name__)
 
@@ -28,17 +33,9 @@ async def connect_to_mongo():
     
     logger.info(f"Attempting to connect to MongoDB at {mongodb_uri}")
     try:
-        # For production, consider using a CA file instead of tlsAllowInvalidCertificates
-        # See: https://motor.readthedocs.io/en/stable/api-asyncio/asyncio_motor_client.html#motor.motor_asyncio.AsyncIOMotorClient
-        # Enforce TLS 1.2 and log the TLS version for debugging
-        
-        db.client = AsyncIOMotorClient(
-            mongodb_uri,
-            maxPoolSize=100,
-            minPoolSize=10,
-            tls=True,
-            tlsAllowInvalidCertificates=True
-        )
+        # Use the existing documented configuration approach
+        connection_options = DatabasePoolConfig.get_connection_options()
+        db.client = AsyncIOMotorClient(mongodb_uri, **connection_options)
         await db.client.admin.command('ping')
         db.database = db.client[database_name]
         

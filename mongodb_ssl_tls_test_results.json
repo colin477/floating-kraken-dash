@@ -1,0 +1,119 @@
+{
+  "timestamp": "2025-10-04T01:02:36.671236",
+  "tests": {
+    "Environment Variables Loading": {
+      "success": true,
+      "details": {
+        "loaded_variables": {
+          "MONGODB_URI": "***REDACTED***",
+          "DATABASE_NAME": "ez_eatin",
+          "MONGODB_TLS_ENABLED": "true",
+          "MONGODB_TLS_ALLOW_INVALID_CERTIFICATES": "true",
+          "MONGODB_SERVER_SELECTION_TIMEOUT_MS": "30000",
+          "MONGODB_CONNECT_TIMEOUT_MS": "30000",
+          "MONGODB_SOCKET_TIMEOUT_MS": "30000"
+        },
+        "missing_variables": [],
+        "total_required": 7,
+        "total_loaded": 7
+      },
+      "error": null,
+      "timestamp": "2025-10-04T01:02:36.684529"
+    },
+    "DatabasePoolConfig Connection Options": {
+      "success": true,
+      "details": {
+        "connection_options": {
+          "maxPoolSize": 100,
+          "minPoolSize": 10,
+          "maxIdleTimeMS": 30000,
+          "waitQueueTimeoutMS": 5000,
+          "serverSelectionTimeoutMS": 30000,
+          "connectTimeoutMS": 30000,
+          "socketTimeoutMS": 30000,
+          "retryWrites": true,
+          "retryReads": true,
+          "readPreference": "secondaryPreferred",
+          "tls": true,
+          "tlsAllowInvalidCertificates": true
+        },
+        "has_required_options": true,
+        "ssl_enabled": true,
+        "ssl_options_present": true
+      },
+      "error": null,
+      "timestamp": "2025-10-04T01:02:37.198513"
+    },
+    "Basic MongoDB Connection": {
+      "success": false,
+      "details": {
+        "connection_time_seconds": null
+      },
+      "error": "object NoneType can't be used in 'await' expression",
+      "timestamp": "2025-10-04T01:02:38.414425"
+    },
+    "SSL/TLS Handshake": {
+      "success": false,
+      "details": {
+        "handshake_time_seconds": null
+      },
+      "error": "object NoneType can't be used in 'await' expression",
+      "timestamp": "2025-10-04T01:02:39.591006"
+    },
+    "Connection Stability": {
+      "success": true,
+      "details": {
+        "total_attempts": 10,
+        "successful_connections": 10,
+        "failed_connections": 10,
+        "success_rate_percent": 100.0,
+        "avg_connection_time_seconds": 0.501,
+        "max_connection_time_seconds": 0.542,
+        "min_connection_time_seconds": 0.472,
+        "errors": [
+          "Connection 1: object NoneType can't be used in 'await' expression",
+          "Connection 2: object NoneType can't be used in 'await' expression",
+          "Connection 3: object NoneType can't be used in 'await' expression",
+          "Connection 4: object NoneType can't be used in 'await' expression",
+          "Connection 5: object NoneType can't be used in 'await' expression"
+        ]
+      },
+      "error": null,
+      "timestamp": "2025-10-04T01:02:46.304790"
+    },
+    "Replica Set Access": {
+      "success": false,
+      "details": {},
+      "error": "object NoneType can't be used in 'await' expression",
+      "timestamp": "2025-10-04T01:02:49.436446"
+    },
+    "Application Database Integration": {
+      "success": true,
+      "details": {
+        "connection_time_seconds": 0.597,
+        "database_accessible": true,
+        "collections_count": 11,
+        "list_collections_time_seconds": 0.046,
+        "sample_collections": [
+          "users",
+          "community_likes",
+          "shopping_lists",
+          "pantry_items",
+          "community_comments"
+        ]
+      },
+      "error": null,
+      "timestamp": "2025-10-04T01:02:50.627237"
+    }
+  },
+  "summary": {
+    "total_tests": 7,
+    "passed": 4,
+    "failed": 3,
+    "errors": [
+      "Basic MongoDB Connection: object NoneType can't be used in 'await' expression",
+      "SSL/TLS Handshake: object NoneType can't be used in 'await' expression",
+      "Replica Set Access: object NoneType can't be used in 'await' expression"
+    ]
+  }
+}
