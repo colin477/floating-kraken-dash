@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-10-06T10:58:07.764066",
+  "test_summary": {
+    "total_tests": 1,
+    "passed": 0,
+    "failed": 0,
+    "warnings": 1
+  },
+  "environment_scenarios": [
+    {
+      "scenario_name": "Local Development with TLS Disabled",
+      "description": "Local MongoDB with TLS explicitly disabled",
+      "status": "WARNING",
+      "details": {
+        "connection_options": {
+          "maxPoolSize": 100,
+          "minPoolSize": 10,
+          "maxIdleTimeMS": 30000,
+          "waitQueueTimeoutMS": 5000,
+          "serverSelectionTimeoutMS": 10000,
+          "connectTimeoutMS": 30000,
+          "socketTimeoutMS": 30000,
+          "retryWrites": true,
+          "retryReads": true,
+          "readPreference": "secondaryPreferred"
+        },
+        "database_operations": {
+          "test_name": "Database Operations - Local Development with TLS Disabled",
+          "status": "SKIPPED",
+          "operations": {},
+          "errors": [
+            "No MONGODB_URI available"
+          ],
+          "performance": {}
+        }
+      },
+      "errors": [],
+      "warnings": [
+        "Database operations skipped - no MONGODB_URI"
+      ]
+    }
+  ],
+  "test_details": [
+    {
+      "scenario_name": "Local Development with TLS Disabled",
+      "description": "Local MongoDB with TLS explicitly disabled",
+      "status": "WARNING",
+      "details": {
+        "connection_options": {
+          "maxPoolSize": 100,
+          "minPoolSize": 10,
+          "maxIdleTimeMS": 30000,
+          "waitQueueTimeoutMS": 5000,
+          "serverSelectionTimeoutMS": 10000,
+          "connectTimeoutMS": 30000,
+          "socketTimeoutMS": 30000,
+          "retryWrites": true,
+          "retryReads": true,
+          "readPreference": "secondaryPreferred"
+        },
+        "database_operations": {
+          "test_name": "Database Operations - Local Development with TLS Disabled",
+          "status": "SKIPPED",
+          "operations": {},
+          "errors": [
+            "No MONGODB_URI available"
+          ],
+          "performance": {}
+        }
+      },
+      "errors": [],
+      "warnings": [
+        "Database operations skipped - no MONGODB_URI"
+      ]
+    }
+  ]
+}

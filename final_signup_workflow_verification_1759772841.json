@@ -1,0 +1,286 @@
+{
+  "test_summary": {
+    "total_tests": 21,
+    "successful_tests": 14,
+    "failed_tests": 7,
+    "success_rate": 66.66666666666666,
+    "critical_tests_passed": false
+  },
+  "ssl_tls_verification": {
+    "ssl_errors_detected": 0,
+    "session_errors_detected": 0,
+    "ssl_fix_working": true,
+    "session_management_working": true
+  },
+  "workflow_verification": {
+    "registration_working": true,
+    "login_working": true,
+    "concurrent_signups_working": false,
+    "database_connectivity": true
+  },
+  "detailed_results": [
+    {
+      "test_name": "API Connectivity Check",
+      "success": true,
+      "duration_ms": 278.11384201049805,
+      "details": {
+        "response_code": 422,
+        "endpoint_reachable": true
+      },
+      "error": null
+    },
+    {
+      "test_name": "User Registration",
+      "success": true,
+      "duration_ms": 715.1241302490234,
+      "details": {
+        "user_id": "68e400a5d38a68debb09c32c",
+        "email": "test_final_verification_single_user@example.com",
+        "token_provided": true,
+        "response_code": 201
+      },
+      "error": null
+    },
+    {
+      "test_name": "User Login",
+      "success": true,
+      "duration_ms": 348.77753257751465,
+      "details": {
+        "user_id": "68e400a5d38a68debb09c32c",
+        "email": "test_final_verification_single_user@example.com",
+        "token_provided": true,
+        "token_type": "bearer",
+        "expires_in": 7200,
+        "response_code": 200
+      },
+      "error": null
+    },
+    {
+      "test_name": "Profile Access",
+      "success": false,
+      "duration_ms": 6.566047668457031,
+      "details": {
+        "response_code": 401,
+        "response_body": "{\"detail\":\"Could not validate credentials\"}"
+      },
+      "error": "Profile access failed with status 401"
+    },
+    {
+      "test_name": "User Registration",
+      "success": true,
+      "duration_ms": 1311.506748199463,
+      "details": {
+        "user_id": "68e400a6d38a68debb09c32e",
+        "email": "test_final_verification_concurrent_0_1759772838@example.com",
+        "token_provided": true,
+        "response_code": 201
+      },
+      "error": null
+    },
+    {
+      "test_name": "User Login",
+      "success": true,
+      "duration_ms": 1014.1644477844238,
+      "details": {
+        "user_id": "68e400a6d38a68debb09c32e",
+        "email": "test_final_verification_concurrent_0_1759772838@example.com",
+        "token_provided": true,
+        "token_type": "bearer",
+        "expires_in": 7200,
+        "response_code": 200
+      },
+      "error": null
+    },
+    {
+      "test_name": "Profile Access",
+      "success": false,
+      "duration_ms": 13.90695571899414,
+      "details": {
+        "response_code": 401,
+        "response_body": "{\"detail\":\"Could not validate credentials\"}"
+      },
+      "error": "Profile access failed with status 401"
+    },
+    {
+      "test_name": "User Registration",
+      "success": true,
+      "duration_ms": 2327.549934387207,
+      "details": {
+        "user_id": "68e400a7d38a68debb09c333",
+        "email": "test_final_verification_concurrent_1_1759772838@example.com",
+        "token_provided": true,
+        "response_code": 201
+      },
+      "error": null
+    },
+    {
+      "test_name": "User Login",
+      "success": true,
+      "duration_ms": 681.4713478088379,
+      "details": {
+        "user_id": "68e400a7d38a68debb09c333",
+        "email": "test_final_verification_concurrent_1_1759772838@example.com",
+        "token_provided": true,
+        "token_type": "bearer",
+        "expires_in": 7200,
+        "response_code": 200
+      },
+      "error": null
+    },
+    {
+      "test_name": "Profile Access",
+      "success": false,
+      "duration_ms": 11.047840118408203,
+      "details": {
+        "response_code": 401,
+        "response_body": "{\"detail\":\"Could not validate credentials\"}"
+      },
+      "error": "Profile access failed with status 401"
+    },
+    {
+      "test_name": "User Registration",
+      "success": true,
+      "duration_ms": 1323.3156204223633,
+      "details": {
+        "user_id": "68e400a6d38a68debb09c32f",
+        "email": "test_final_verification_concurrent_2_1759772838@example.com",
+        "token_provided": true,
+        "response_code": 201
+      },
+      "error": null
+    },
+    {
+      "test_name": "User Login",
+      "success": true,
+      "duration_ms": 996.6919422149658,
+      "details": {
+        "user_id": "68e400a6d38a68debb09c32f",
+        "email": "test_final_verification_concurrent_2_1759772838@example.com",
+        "token_provided": true,
+        "token_type": "bearer",
+        "expires_in": 7200,
+        "response_code": 200
+      },
+      "error": null
+    },
+    {
+      "test_name": "Profile Access",
+      "success": false,
+      "duration_ms": 13.487577438354492,
+      "details": {
+        "response_code": 401,
+        "response_body": "{\"detail\":\"Could not validate credentials\"}"
+      },
+      "error": "Profile access failed with status 401"
+    },
+    {
+      "test_name": "User Registration",
+      "success": true,
+      "duration_ms": 2323.9216804504395,
+      "details": {
+        "user_id": "68e400a7d38a68debb09c331",
+        "email": "test_final_verification_concurrent_3_1759772838@example.com",
+        "token_provided": true,
+        "response_code": 201
+      },
+      "error": null
+    },
+    {
+      "test_name": "User Login",
+      "success": true,
+      "duration_ms": 639.3375396728516,
+      "details": {
+        "user_id": "68e400a7d38a68debb09c331",
+        "email": "test_final_verification_concurrent_3_1759772838@example.com",
+        "token_provided": true,
+        "token_type": "bearer",
+        "expires_in": 7200,
+        "response_code": 200
+      },
+      "error": null
+    },
+    {
+      "test_name": "Profile Access",
+      "success": false,
+      "duration_ms": 6.387472152709961,
+      "details": {
+        "response_code": 401,
+        "response_body": "{\"detail\":\"Could not validate credentials\"}"
+      },
+      "error": "Profile access failed with status 401"
+    },
+    {
+      "test_name": "User Registration",
+      "success": true,
+      "duration_ms": 1350.9454727172852,
+      "details": {
+        "user_id": "68e400a7d38a68debb09c330",
+        "email": "test_final_verification_concurrent_4_1759772838@example.com",
+        "token_provided": true,
+        "response_code": 201
+      },
+      "error": null
+    },
+    {
+      "test_name": "User Login",
+      "success": true,
+      "duration_ms": 1012.127161026001,
+      "details": {
+        "user_id": "68e400a7d38a68debb09c330",
+        "email": "test_final_verification_concurrent_4_1759772838@example.com",
+        "token_provided": true,
+        "token_type": "bearer",
+        "expires_in": 7200,
+        "response_code": 200
+      },
+      "error": null
+    },
+    {
+      "test_name": "Profile Access",
+      "success": false,
+      "duration_ms": 7.484912872314453,
+      "details": {
+        "response_code": 401,
+        "response_body": "{\"detail\":\"Could not validate credentials\"}"
+      },
+      "error": "Profile access failed with status 401"
+    },
+    {
+      "test_name": "Concurrent Signups Summary",
+      "success": false,
+      "duration_ms": 3024.3818759918213,
+      "details": {
+        "total_users": 5,
+        "successful_flows": 0,
+        "success_rate": 0.0,
+        "total_operations": 15,
+        "successful_operations": 10
+      },
+      "error": null
+    },
+    {
+      "test_name": "MongoDB SSL Stability",
+      "success": true,
+      "duration_ms": 268.801212310791,
+      "details": {
+        "total_requests": 10,
+        "successful_requests": 10,
+        "ssl_errors": 0,
+        "success_rate": 100.0
+      },
+      "error": null
+    }
+  ],
+  "production_readiness": {
+    "ready_for_production": false,
+    "ssl_tls_fix_validated": true,
+    "session_expiration_resolved": true,
+    "concurrent_user_support": false
+  },
+  "test_metadata": {
+    "timestamp": "2025-10-06T17:47:21.684888",
+    "test_duration_seconds": 17.675111293792725,
+    "test_users_created": 6,
+    "api_base_url": "http://localhost:8000/api/v1"
+  }
+}

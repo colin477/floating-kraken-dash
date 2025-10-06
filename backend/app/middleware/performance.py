@@ -236,30 +236,126 @@ class PerformanceMonitoringMiddleware:
 
 # Database connection pooling configuration
 class DatabasePoolConfig:
-    """Configuration for MongoDB connection pooling"""
+    """Configuration for MongoDB connection pooling with production-safe SSL/TLS defaults"""
+    
+    @staticmethod
+    def _is_mongodb_atlas_uri(uri: str) -> bool:
+        """Detect if the MongoDB URI is for MongoDB Atlas"""
+        if not uri:
+            return False
+        return ".mongodb.net" in uri.lower()
+    
+    @staticmethod
+    def _get_env_bool(key: str, default: bool = False) -> bool:
+        """Safely get boolean environment variable with fallback"""
+        value = os.getenv(key)
+        if value is None:
+            return default
+        return value.lower() in ("true", "1", "yes", "on")
+    
+    @staticmethod
+    def _get_env_int(key: str, default: int) -> int:
+        """Safely get integer environment variable with fallback"""
+        try:
+            value = os.getenv(key)
+            return int(value) if value is not None else default
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid integer value for {key}, using default: {default}")
+            return default
     
     @staticmethod
     def get_connection_options():
-        """Get optimized MongoDB connection options for production with SSL/TLS support"""
+        """
+        Get optimized MongoDB connection options with production-safe SSL/TLS defaults.
+        
+        Automatically enables SSL/TLS for MongoDB Atlas connections even if environment
+        variables are not available in production.
+        """
+        # Get MongoDB URI to detect Atlas connections
+        mongodb_uri = os.getenv("MONGODB_URI", "")
+        is_atlas = DatabasePoolConfig._is_mongodb_atlas_uri(mongodb_uri)
+        
+        # Base connection options with safe defaults
         options = {
-            "maxPoolSize": int(os.getenv("MONGODB_MAX_POOL_SIZE", "100")),
-            "minPoolSize": int(os.getenv("MONGODB_MIN_POOL_SIZE", "10")),
-            "maxIdleTimeMS": int(os.getenv("MONGODB_MAX_IDLE_TIME_MS", "30000")),
-            "waitQueueTimeoutMS": int(os.getenv("MONGODB_WAIT_QUEUE_TIMEOUT_MS", "5000")),
-            "serverSelectionTimeoutMS": int(os.getenv("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "30000")),
-            "connectTimeoutMS": int(os.getenv("MONGODB_CONNECT_TIMEOUT_MS", "30000")),
-            "socketTimeoutMS": int(os.getenv("MONGODB_SOCKET_TIMEOUT_MS", "30000")),
+            "maxPoolSize": DatabasePoolConfig._get_env_int("MONGODB_MAX_POOL_SIZE", 100),
+            "minPoolSize": DatabasePoolConfig._get_env_int("MONGODB_MIN_POOL_SIZE", 10),
+            "maxIdleTimeMS": DatabasePoolConfig._get_env_int("MONGODB_MAX_IDLE_TIME_MS", 30000),
+            "waitQueueTimeoutMS": DatabasePoolConfig._get_env_int("MONGODB_WAIT_QUEUE_TIMEOUT_MS", 5000),
+            "serverSelectionTimeoutMS": DatabasePoolConfig._get_env_int("MONGODB_SERVER_SELECTION_TIMEOUT_MS", 30000),
+            "connectTimeoutMS": DatabasePoolConfig._get_env_int("MONGODB_CONNECT_TIMEOUT_MS", 30000),
+            "socketTimeoutMS": DatabasePoolConfig._get_env_int("MONGODB_SOCKET_TIMEOUT_MS", 30000),
             "retryWrites": True,
             "retryReads": True,
             "readPreference": "secondaryPreferred"
         }
         
-        # Add SSL/TLS options if enabled
-        if os.getenv("MONGODB_TLS_ENABLED", "false").lower() == "true":
-            options.update({
-                "tls": True,
-                "tlsAllowInvalidCertificates": os.getenv("MONGODB_TLS_ALLOW_INVALID_CERTIFICATES", "false").lower() == "true"
-            })
+        # SSL/TLS Configuration with intelligent defaults
+        # Priority: valid explicit env var > Atlas detection > fallback to false
+        tls_enabled_explicit = os.getenv("MONGODB_TLS_ENABLED")
+        
+        if tls_enabled_explicit is not None:
+            # Check if the explicit value is valid
+            valid_values = {"true", "1", "yes", "on", "false", "0", "no", "off"}
+            if tls_enabled_explicit.lower() in valid_values:
+                # Valid explicit environment variable takes precedence
+                tls_enabled = DatabasePoolConfig._get_env_bool("MONGODB_TLS_ENABLED", False)
+                logger.info(f"SSL/TLS explicitly configured via MONGODB_TLS_ENABLED: {tls_enabled}")
+            else:
+                # Invalid value - fall back to Atlas detection
+                logger.warning(f"Invalid MONGODB_TLS_ENABLED value '{tls_enabled_explicit}', falling back to Atlas detection")
+                if is_atlas:
+                    tls_enabled = True
+                    logger.info("SSL/TLS auto-enabled for MongoDB Atlas connection (fallback)")
+                else:
+                    tls_enabled = False
+                    logger.info("SSL/TLS disabled for non-Atlas connection (fallback)")
+        elif is_atlas:
+            # Auto-enable SSL/TLS for MongoDB Atlas connections
+            tls_enabled = True
+            logger.info("SSL/TLS auto-enabled for MongoDB Atlas connection")
+        else:
+            # Default to false for local/non-Atlas connections
+            tls_enabled = False
+            logger.info("SSL/TLS disabled for non-Atlas connection")
+        
+        # Apply SSL/TLS configuration if enabled
+        if tls_enabled:
+            # Production-safe SSL/TLS options
+            ssl_options = {
+                "tls": True
+            }
+            
+            # Handle certificate validation - these options are mutually exclusive
+            allow_invalid_certs = DatabasePoolConfig._get_env_bool(
+                "MONGODB_TLS_ALLOW_INVALID_CERTIFICATES",
+                False  # Default to strict certificate validation in production
+            )
+            
+            if allow_invalid_certs:
+                # Use tlsAllowInvalidCertificates for development/testing
+                ssl_options["tlsAllowInvalidCertificates"] = True
+            else:
+                # Use strict validation for production
+                ssl_options["tlsAllowInvalidCertificates"] = False
+            
+            # Add additional SSL/TLS options for production environments
+            if is_atlas:
+                # MongoDB Atlas specific optimizations
+                ssl_options.update({
+                    "authSource": "admin"  # Atlas typically uses admin auth source
+                })
+            
+            options.update(ssl_options)
+            logger.info(f"SSL/TLS configuration applied: {ssl_options}")
+        
+        # Log final configuration for debugging
+        logger.info(
+            "MongoDB connection options configured",
+            is_atlas=is_atlas,
+            tls_enabled=tls_enabled,
+            max_pool_size=options["maxPoolSize"],
+            server_selection_timeout=options["serverSelectionTimeoutMS"]
+        )
         
         return options
 

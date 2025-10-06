@@ -1,0 +1,178 @@
+{
+  "timestamp": "2025-10-06T10:37:11.331758",
+  "test_summary": {
+    "total_tests": 6,
+    "passed": 1,
+    "failed": 0,
+    "warnings": 5
+  },
+  "environment_info": {
+    "original_env": {
+      "MONGODB_URI": null,
+      "MONGODB_TLS_ENABLED": null,
+      "MONGODB_TLS_ALLOW_INVALID_CERTIFICATES": null,
+      "MONGODB_MAX_POOL_SIZE": null,
+      "MONGODB_SERVER_SELECTION_TIMEOUT_MS": null
+    }
+  },
+  "test_details": [
+    {
+      "test_name": "Current Environment Configuration",
+      "env_vars": {},
+      "expected_tls": false,
+      "should_succeed": true,
+      "status": "WARNING",
+      "details": {
+        "connection_options": {
+          "maxPoolSize": 100,
+          "minPoolSize": 10,
+          "maxIdleTimeMS": 30000,
+          "waitQueueTimeoutMS": 5000,
+          "serverSelectionTimeoutMS": 30000,
+          "connectTimeoutMS": 30000,
+          "socketTimeoutMS": 30000,
+          "retryWrites": true,
+          "retryReads": true,
+          "readPreference": "secondaryPreferred"
+        }
+      },
+      "errors": [],
+      "warnings": [
+        "No MONGODB_URI available for connection testing"
+      ]
+    },
+    {
+      "test_name": "Explicit TLS Enabled",
+      "env_vars": {
+        "MONGODB_TLS_ENABLED": "true"
+      },
+      "expected_tls": true,
+      "should_succeed": true,
+      "status": "WARNING",
+      "details": {
+        "connection_options": {
+          "maxPoolSize": 100,
+          "minPoolSize": 10,
+          "maxIdleTimeMS": 30000,
+          "waitQueueTimeoutMS": 5000,
+          "serverSelectionTimeoutMS": 30000,
+          "connectTimeoutMS": 30000,
+          "socketTimeoutMS": 30000,
+          "retryWrites": true,
+          "retryReads": true,
+          "readPreference": "secondaryPreferred",
+          "tls": true,
+          "tlsAllowInvalidCertificates": false
+        }
+      },
+      "errors": [],
+      "warnings": [
+        "No MONGODB_URI available for connection testing"
+      ]
+    },
+    {
+      "test_name": "Explicit TLS Disabled (Non-Atlas)",
+      "env_vars": {
+        "MONGODB_TLS_ENABLED": "false"
+      },
+      "expected_tls": false,
+      "should_succeed": true,
+      "status": "WARNING",
+      "details": {
+        "connection_options": {
+          "maxPoolSize": 100,
+          "minPoolSize": 10,
+          "maxIdleTimeMS": 30000,
+          "waitQueueTimeoutMS": 5000,
+          "serverSelectionTimeoutMS": 30000,
+          "connectTimeoutMS": 30000,
+          "socketTimeoutMS": 30000,
+          "retryWrites": true,
+          "retryReads": true,
+          "readPreference": "secondaryPreferred"
+        }
+      },
+      "errors": [],
+      "warnings": [
+        "No MONGODB_URI available for connection testing"
+      ]
+    },
+    {
+      "test_name": "Invalid TLS Env Var (Fallback Test)",
+      "env_vars": {
+        "MONGODB_TLS_ENABLED": "invalid_value"
+      },
+      "expected_tls": false,
+      "should_succeed": true,
+      "status": "WARNING",
+      "details": {
+        "connection_options": {
+          "maxPoolSize": 100,
+          "minPoolSize": 10,
+          "maxIdleTimeMS": 30000,
+          "waitQueueTimeoutMS": 5000,
+          "serverSelectionTimeoutMS": 30000,
+          "connectTimeoutMS": 30000,
+          "socketTimeoutMS": 30000,
+          "retryWrites": true,
+          "retryReads": true,
+          "readPreference": "secondaryPreferred"
+        }
+      },
+      "errors": [],
+      "warnings": [
+        "No MONGODB_URI available for connection testing"
+      ]
+    },
+    {
+      "test_name": "Atlas Auto-Detection",
+      "status": "PASSED",
+      "details": [
+        {
+          "test_name": "Atlas URI Detection - cluster0.mongodb.net",
+          "uri": "mongodb+srv://user:pass@cluster0.mongodb.net/dbname",
+          "expected_atlas": true,
+          "detected_atlas": true,
+          "status": "PASSED"
+        },
+        {
+          "test_name": "Atlas URI Detection - custom.mongodb.net",
+          "uri": "mongodb+srv://user:pass@custom-cluster.mongodb.net/dbname",
+          "expected_atlas": true,
+          "detected_atlas": true,
+          "status": "PASSED"
+        },
+        {
+          "test_name": "Local URI Detection - localhost",
+          "uri": "mongodb://localhost:27017/dbname",
+          "expected_atlas": false,
+          "detected_atlas": false,
+          "status": "PASSED"
+        },
+        {
+          "test_name": "Local URI Detection - 127.0.0.1",
+          "uri": "mongodb://127.0.0.1:27017/dbname",
+          "expected_atlas": false,
+          "detected_atlas": false,
+          "status": "PASSED"
+        },
+        {
+          "test_name": "Empty URI",
+          "uri": "",
+          "expected_atlas": false,
+          "detected_atlas": false,
+          "status": "PASSED"
+        }
+      ]
+    },
+    {
+      "test_name": "Sign-up Workflow Simulation",
+      "status": "WARNING",
+      "details": {},
+      "errors": [],
+      "warnings": [
+        "No MONGODB_URI for sign-up simulation"
+      ]
+    }
+  ]
+}

@@ -1,247 +1,183 @@
 #!/usr/bin/env python3
 """
-MongoDB SSL/TLS Connection Diagnosis Script
-Identifies specific SSL/TLS handshake issues with MongoDB Atlas
+Comprehensive MongoDB SSL/TLS Connection Diagnosis Script
 """
 
 import os
+import sys
 import asyncio
 import ssl
-import socket
-import time
-from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError, ConfigurationError
-import logging
+from pathlib import Path
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+# Add backend to path for imports
+sys.path.append(str(Path(__file__).parent / "backend"))
 
-# MongoDB connection details
-MONGODB_URI = "mongodb+srv://colin_db_user:FnaPFUQh6aAjhfiR@cluster0.vcpyxwh.mongodb.net/ez_eatin?retryWrites=true&w=majority&appName=Cluster0"
-REPLICA_SET_HOSTS = [
-    "ac-86ptaq4-shard-00-00.vcpyxwh.mongodb.net",
-    "ac-86ptaq4-shard-00-01.vcpyxwh.mongodb.net", 
-    "ac-86ptaq4-shard-00-02.vcpyxwh.mongodb.net"
-]
-
-def print_environment_info():
-    """Print current environment information"""
-    print("=== ENVIRONMENT DIAGNOSIS ===")
-    print(f"Python Version: {os.sys.version}")
-    print(f"OpenSSL Version: {ssl.OPENSSL_VERSION}")
+async def diagnose_mongodb_ssl():
+    """Comprehensive MongoDB SSL/TLS diagnosis"""
     
+    print("=" * 60)
+    print("MONGODB SSL/TLS CONNECTION DIAGNOSIS")
+    print("=" * 60)
+    
+    # 1. Environment Variables Check
+    print("\n1. ENVIRONMENT VARIABLES CHECK")
+    print("-" * 40)
+    
+    # Try loading from backend/.env
+    backend_env_path = Path(__file__).parent / "backend" / ".env"
+    if backend_env_path.exists():
+        print(f"✓ Found .env file at: {backend_env_path}")
+        
+        # Load environment variables manually
+        env_vars = {}
+        with open(backend_env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    env_vars[key] = value
+        
+        # Check MongoDB SSL/TLS variables
+        ssl_vars = [
+            'MONGODB_URI',
+            'MONGODB_TLS_ENABLED',
+            'MONGODB_TLS_ALLOW_INVALID_CERTIFICATES',
+            'MONGODB_SERVER_SELECTION_TIMEOUT_MS',
+            'MONGODB_CONNECT_TIMEOUT_MS',
+            'MONGODB_SOCKET_TIMEOUT_MS'
+        ]
+        
+        for var in ssl_vars:
+            value = env_vars.get(var, "NOT SET")
+            status = "✓" if value != "NOT SET" else "✗"
+            print(f"{status} {var}: {value}")
+    else:
+        print(f"✗ No .env file found at: {backend_env_path}")
+    
+    # 2. Python SSL Configuration
+    print("\n2. PYTHON SSL CONFIGURATION")
+    print("-" * 40)
+    print(f"✓ OpenSSL Version: {ssl.OPENSSL_VERSION}")
+    print(f"✓ Python SSL Module: {ssl}")
+    
+    # Check SSL context defaults
+    try:
+        context = ssl.create_default_context()
+        print(f"✓ Default SSL Context: {context}")
+        print(f"✓ SSL Context Protocol: {context.protocol}")
+        print(f"✓ SSL Context Options: {context.options}")
+        print(f"✓ SSL Context Verify Mode: {context.verify_mode}")
+    except Exception as e:
+        print(f"✗ SSL Context Error: {e}")
+    
+    # 3. MongoDB Driver Versions
+    print("\n3. MONGODB DRIVER VERSIONS")
+    print("-" * 40)
     try:
         import pymongo
-        print(f"PyMongo Version: {pymongo.version}")
-    except ImportError:
-        print("PyMongo: Not available")
+        print(f"✓ PyMongo Version: {pymongo.version}")
+    except ImportError as e:
+        print(f"✗ PyMongo Import Error: {e}")
     
     try:
         import motor
-        print(f"Motor Version: {motor.version}")
-    except ImportError:
-        print("Motor: Not available")
+        print(f"✓ Motor Version: {motor.version}")
+    except ImportError as e:
+        print(f"✗ Motor Import Error: {e}")
     
-    print(f"SSL Default Context Protocol: {ssl.create_default_context().protocol}")
-    print(f"SSL Supported Protocols: {ssl.get_default_verify_paths()}")
-    print()
-
-def test_basic_ssl_connectivity():
-    """Test basic SSL connectivity to MongoDB Atlas hosts"""
-    print("=== BASIC SSL CONNECTIVITY TEST ===")
+    # 4. Connection Configuration Test
+    print("\n4. CONNECTION CONFIGURATION TEST")
+    print("-" * 40)
     
-    for host in REPLICA_SET_HOSTS:
-        print(f"Testing SSL connection to {host}:27017...")
-        try:
-            # Test basic TCP connection
-            start_time = time.time()
-            sock = socket.create_connection((host, 27017), timeout=10)
-            tcp_time = time.time() - start_time
-            print(f"  ✓ TCP connection successful ({tcp_time:.2f}s)")
+    try:
+        # Try to import and test DatabasePoolConfig
+        from app.middleware.performance import DatabasePoolConfig
+        
+        # Set environment variables for testing
+        os.environ.update(env_vars)
+        
+        options = DatabasePoolConfig.get_connection_options()
+        print("✓ DatabasePoolConfig.get_connection_options():")
+        for key, value in options.items():
+            print(f"  {key}: {value}")
             
-            # Test SSL handshake
-            start_time = time.time()
-            context = ssl.create_default_context()
-            ssl_sock = context.wrap_socket(sock, server_hostname=host)
-            ssl_time = time.time() - start_time
-            print(f"  ✓ SSL handshake successful ({ssl_time:.2f}s)")
-            print(f"  SSL Version: {ssl_sock.version()}")
-            print(f"  Cipher: {ssl_sock.cipher()}")
+    except Exception as e:
+        print(f"✗ DatabasePoolConfig Error: {e}")
+    
+    # 5. MongoDB Connection Test
+    print("\n5. MONGODB CONNECTION TEST")
+    print("-" * 40)
+    
+    try:
+        from motor.motor_asyncio import AsyncIOMotorClient
+        
+        # Get MongoDB URI from env vars
+        mongodb_uri = env_vars.get('MONGODB_URI')
+        if not mongodb_uri:
+            print("✗ MONGODB_URI not found in environment variables")
+            return
+        
+        print(f"✓ MongoDB URI: {mongodb_uri[:50]}...")
+        
+        # Test connection with current configuration
+        options = DatabasePoolConfig.get_connection_options()
+        
+        print("✓ Testing connection with SSL/TLS options...")
+        client = AsyncIOMotorClient(mongodb_uri, **options)
+        
+        # Test ping with timeout
+        await asyncio.wait_for(client.admin.command('ping'), timeout=10.0)
+        print("✓ MongoDB connection successful!")
+        
+        # Get server info
+        server_info = await client.server_info()
+        print(f"✓ MongoDB Server Version: {server_info.get('version', 'Unknown')}")
+        
+        client.close()
+        
+    except asyncio.TimeoutError:
+        print("✗ MongoDB connection timeout - SSL handshake may be failing")
+    except Exception as e:
+        print(f"✗ MongoDB connection error: {e}")
+        if "SSL" in str(e) or "TLS" in str(e):
+            print("  → This appears to be an SSL/TLS related error")
+    
+    # 6. Network Connectivity Test
+    print("\n6. NETWORK CONNECTIVITY TEST")
+    print("-" * 40)
+    
+    try:
+        import socket
+        
+        # Extract hostname from MongoDB URI
+        if mongodb_uri and "mongodb+srv://" in mongodb_uri:
+            # Parse hostname from URI
+            uri_parts = mongodb_uri.split("@")[1].split("/")[0]
+            hostname = uri_parts.split("?")[0]
             
-            ssl_sock.close()
+            print(f"✓ Testing connectivity to: {hostname}")
             
-        except socket.timeout:
-            print(f"  ✗ Connection timeout to {host}")
-        except ssl.SSLError as e:
-            print(f"  ✗ SSL Error: {e}")
-        except Exception as e:
-            print(f"  ✗ Connection failed: {e}")
-        print()
-
-async def test_motor_connections():
-    """Test various Motor connection configurations"""
-    print("=== MOTOR CONNECTION TESTS ===")
-    
-    # Test 1: Basic connection (current failing case)
-    print("Test 1: Basic Motor connection with short timeout")
-    try:
-        client = AsyncIOMotorClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
-        await client.admin.command('ping')
-        print("  ✓ Basic connection successful")
-        client.close()
+            # Test DNS resolution
+            try:
+                ip = socket.gethostbyname(hostname)
+                print(f"✓ DNS Resolution: {hostname} → {ip}")
+            except Exception as e:
+                print(f"✗ DNS Resolution Error: {e}")
+            
+            # Test TCP connection
+            try:
+                sock = socket.create_connection((hostname, 27017), timeout=5)
+                sock.close()
+                print("✓ TCP Connection: Port 27017 is reachable")
+            except Exception as e:
+                print(f"✗ TCP Connection Error: {e}")
+                
     except Exception as e:
-        print(f"  ✗ Basic connection failed: {e}")
-        print(f"  Error type: {type(e).__name__}")
+        print(f"✗ Network test error: {e}")
     
-    # Test 2: Connection with extended timeouts
-    print("\nTest 2: Motor connection with extended timeouts")
-    try:
-        client = AsyncIOMotorClient(
-            MONGODB_URI,
-            serverSelectionTimeoutMS=30000,
-            connectTimeoutMS=30000,
-            socketTimeoutMS=30000
-        )
-        await client.admin.command('ping')
-        print("  ✓ Extended timeout connection successful")
-        client.close()
-    except Exception as e:
-        print(f"  ✗ Extended timeout connection failed: {e}")
-        print(f"  Error type: {type(e).__name__}")
-    
-    # Test 3: Connection with TLS options (Motor 3.2.0 syntax)
-    print("\nTest 3: Motor connection with TLS options")
-    try:
-        client = AsyncIOMotorClient(
-            MONGODB_URI,
-            serverSelectionTimeoutMS=30000,
-            connectTimeoutMS=30000,
-            socketTimeoutMS=30000,
-            tls=True,
-            tlsAllowInvalidCertificates=True
-        )
-        await client.admin.command('ping')
-        print("  ✓ TLS connection successful")
-        client.close()
-    except Exception as e:
-        print(f"  ✗ TLS connection failed: {e}")
-        print(f"  Error type: {type(e).__name__}")
-    
-    # Test 4: Connection with TLS and additional options
-    print("\nTest 4: Motor connection with comprehensive TLS options")
-    try:
-        client = AsyncIOMotorClient(
-            MONGODB_URI,
-            serverSelectionTimeoutMS=30000,
-            connectTimeoutMS=30000,
-            socketTimeoutMS=30000,
-            tls=True,
-            tlsAllowInvalidCertificates=True,
-            tlsInsecure=True,
-            maxPoolSize=10,
-            minPoolSize=1
-        )
-        await client.admin.command('ping')
-        print("  ✓ Comprehensive TLS connection successful")
-        client.close()
-    except Exception as e:
-        print(f"  ✗ Comprehensive TLS connection failed: {e}")
-        print(f"  Error type: {type(e).__name__}")
-
-def analyze_version_compatibility():
-    """Analyze version compatibility issues"""
-    print("=== VERSION COMPATIBILITY ANALYSIS ===")
-    
-    # Current versions
-    current_versions = {
-        "Python": "3.13.3",
-        "OpenSSL": "3.0.16", 
-        "PyMongo": "4.5.0",
-        "Motor": "3.2.0"
-    }
-    
-    # Documented working versions
-    documented_versions = {
-        "Python": "3.13",
-        "OpenSSL": "3.0.16",
-        "PyMongo": "4.6.0", 
-        "Motor": "3.3.2"
-    }
-    
-    print("Current vs Documented Working Versions:")
-    for component, current in current_versions.items():
-        documented = documented_versions.get(component, "N/A")
-        status = "✓" if current == documented else "⚠" if documented == "N/A" else "✗"
-        print(f"  {status} {component}: {current} (documented: {documented})")
-    
-    print("\nCompatibility Issues Identified:")
-    if current_versions["PyMongo"] != documented_versions["PyMongo"]:
-        print(f"  ⚠ PyMongo version mismatch: {current_versions['PyMongo']} vs {documented_versions['PyMongo']}")
-        print("    - PyMongo 4.5.0 may have different SSL/TLS handling than 4.6.0")
-        print("    - SSL parameter names may have changed between versions")
-    
-    if current_versions["Motor"] != documented_versions["Motor"]:
-        print(f"  ⚠ Motor version mismatch: {current_versions['Motor']} vs {documented_versions['Motor']}")
-        print("    - Motor 3.2.0 may have different SSL/TLS API than 3.3.2")
-        print("    - SSL context handling may be different")
-    
-    print()
-
-def analyze_database_implementation():
-    """Analyze current database.py implementation vs documented fixes"""
-    print("=== DATABASE IMPLEMENTATION ANALYSIS ===")
-    
-    print("Current database.py configuration:")
-    print("  - Uses hardcoded TLS settings: tls=True, tlsAllowInvalidCertificates=True")
-    print("  - Does NOT use environment variables for SSL/TLS configuration")
-    print("  - Does NOT use extended timeout values from environment")
-    print("  - Missing serverSelectionTimeoutMS, connectTimeoutMS, socketTimeoutMS")
-    
-    print("\nDocumented fixes that are NOT implemented:")
-    print("  ✗ Environment variable-based SSL/TLS configuration")
-    print("  ✗ Extended timeout values (30000ms)")
-    print("  ✗ Conditional TLS configuration based on MONGODB_TLS_ENABLED")
-    print("  ✗ SSL-specific error handling and logging")
-    
-    print("\nEnvironment variables defined but not used:")
-    env_vars = [
-        "MONGODB_TLS_ENABLED",
-        "MONGODB_TLS_ALLOW_INVALID_CERTIFICATES", 
-        "MONGODB_SERVER_SELECTION_TIMEOUT_MS",
-        "MONGODB_CONNECT_TIMEOUT_MS",
-        "MONGODB_SOCKET_TIMEOUT_MS"
-    ]
-    
-    for var in env_vars:
-        value = os.getenv(var, "NOT SET")
-        print(f"  - {var}={value}")
-    
-    print()
-
-async def main():
-    """Run comprehensive MongoDB SSL/TLS diagnosis"""
-    print("MongoDB SSL/TLS Connection Diagnosis")
-    print("=" * 50)
-    print()
-    
-    # Step 1: Environment information
-    print_environment_info()
-    
-    # Step 2: Version compatibility analysis
-    analyze_version_compatibility()
-    
-    # Step 3: Database implementation analysis
-    analyze_database_implementation()
-    
-    # Step 4: Basic SSL connectivity test
-    test_basic_ssl_connectivity()
-    
-    # Step 5: Motor connection tests
-    await test_motor_connections()
-    
-    print("=== DIAGNOSIS COMPLETE ===")
-    print("Check the output above for specific SSL/TLS issues and recommendations.")
+    print("\n" + "=" * 60)
+    print("DIAGNOSIS COMPLETE")
+    print("=" * 60)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(diagnose_mongodb_ssl())

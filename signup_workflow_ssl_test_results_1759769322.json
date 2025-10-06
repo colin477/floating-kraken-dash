@@ -1,0 +1,89 @@
+{
+  "timestamp": "2025-10-06T10:48:39.251647",
+  "base_url": "http://localhost:8000",
+  "test_summary": {
+    "total_tests": 4,
+    "passed": 4,
+    "failed": 0,
+    "ssl_handshake_errors": 0
+  },
+  "test_details": [
+    {
+      "test_name": "API Health Check",
+      "status": "PASSED",
+      "details": {
+        "status_code": 200,
+        "response_time_ms": 0,
+        "response_data": {
+          "status": "healthy",
+          "message": "API is running and database is connected",
+          "database_connected": true,
+          "timestamp": "2025-10-06T16:28:12.240210"
+        }
+      },
+      "errors": []
+    },
+    {
+      "test_name": "User Registration",
+      "user_email": "test_ssl_fix_s7lt1gxt@example.com",
+      "status": "PASSED",
+      "details": {
+        "status_code": 201,
+        "response_time_ms": 614.34,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGUzZjJlN2QzOGE2OGRlYmIwOWMzMjAiLCJlbWFpbCI6InRlc3Rfc3NsX2ZpeF9zN2x0MWd4dEBleGFtcGxlLmNvbSIsImV4cCI6MTc1OTc3NjUyMCwiaWF0IjoxNzU5NzY5MzIwLCJ0eXBlIjoiYWNjZXNzIn0.W0cWGFIcJoGVlD45yi7Cvhjpy0KowutQ6UYzn6Xwjg8",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e3f2e7d38a68debb09c320",
+            "email": "test_ssl_fix_s7lt1gxt@example.com",
+            "full_name": "SSL Test User",
+            "created_at": "2025-10-06T16:48:39.936000",
+            "updated_at": "2025-10-06T16:48:39.936000",
+            "is_active": true
+          }
+        }
+      },
+      "errors": [],
+      "ssl_related": false
+    },
+    {
+      "test_name": "User Login",
+      "user_email": "test_ssl_fix_s7lt1gxt@example.com",
+      "status": "PASSED",
+      "details": {
+        "status_code": 200,
+        "response_time_ms": 778.73,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGUzZjJlN2QzOGE2OGRlYmIwOWMzMjAiLCJlbWFpbCI6InRlc3Rfc3NsX2ZpeF9zN2x0MWd4dEBleGFtcGxlLmNvbSIsImV4cCI6MTc1OTc3NjUyMCwiaWF0IjoxNzU5NzY5MzIwLCJ0eXBlIjoiYWNjZXNzIn0.W0cWGFIcJoGVlD45yi7Cvhjpy0KowutQ6UYzn6Xwjg8",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e3f2e7d38a68debb09c320",
+            "email": "test_ssl_fix_s7lt1gxt@example.com",
+            "full_name": "SSL Test User",
+            "created_at": "2025-10-06T16:48:39.936000",
+            "updated_at": "2025-10-06T16:48:39.936000",
+            "is_active": true
+          }
+        }
+      },
+      "errors": [],
+      "ssl_related": false
+    },
+    {
+      "test_name": "Concurrent Sign-ups",
+      "concurrent_count": 5,
+      "status": "PASSED",
+      "details": {
+        "total_time_ms": 1983.5,
+        "successful_registrations": 5,
+        "failed_registrations": 0,
+        "ssl_related_errors": 0,
+        "average_time_per_request": 396.7
+      },
+      "errors": [],
+      "ssl_related": false
+    }
+  ]
+}
