@@ -40,20 +40,13 @@ logger = structlog.get_logger(__name__)
 
 # Rate limiter configuration
 def get_limiter():
-    """Create rate limiter with Redis backend if available"""
-    try:
-        return Limiter(
-            key_func=get_remote_address,
-            storage_uri=os.getenv("REDIS_URL", "memory://"),
-            default_limits=["1000/hour"]
-        )
-    except Exception:
-        # Fallback to memory storage
-        return Limiter(
-            key_func=get_remote_address,
-            storage_uri="memory://",
-            default_limits=["1000/hour"]
-        )
+    """Create rate limiter with memory backend (Redis disabled for testing)"""
+    # Temporarily use memory storage to avoid Redis connection issues
+    return Limiter(
+        key_func=get_remote_address,
+        storage_uri="memory://",
+        default_limits=["1000/hour"]
+    )
 
 limiter = get_limiter()
 

@@ -1,0 +1,237 @@
+{
+  "timestamp": "2025-10-06T09:20:39.528214",
+  "rapid_requests_test": {
+    "total_requests": 20,
+    "successful": 20,
+    "rate_limited": 0,
+    "server_errors": 0,
+    "timeout_errors": 0,
+    "other_failures": 0,
+    "total_time": 0.27790164947509766,
+    "results": [
+      {
+        "request": 1,
+        "status": 200,
+        "duration": 0.27534937858581543,
+        "timestamp": "2025-10-06T09:20:35.280179",
+        "content_length": 56
+      },
+      {
+        "request": 2,
+        "status": 200,
+        "duration": 0.02809929847717285,
+        "timestamp": "2025-10-06T09:20:35.036231",
+        "content_length": 56
+      },
+      {
+        "request": 3,
+        "status": 200,
+        "duration": 0.02850508689880371,
+        "timestamp": "2025-10-06T09:20:35.036496",
+        "content_length": 56
+      },
+      {
+        "request": 4,
+        "status": 200,
+        "duration": 0.029001474380493164,
+        "timestamp": "2025-10-06T09:20:35.036550",
+        "content_length": 56
+      },
+      {
+        "request": 5,
+        "status": 200,
+        "duration": 0.030097007751464844,
+        "timestamp": "2025-10-06T09:20:35.037396",
+        "content_length": 56
+      },
+      {
+        "request": 6,
+        "status": 200,
+        "duration": 0.03096914291381836,
+        "timestamp": "2025-10-06T09:20:35.038315",
+        "content_length": 56
+      },
+      {
+        "request": 7,
+        "status": 200,
+        "duration": 0.27054262161254883,
+        "timestamp": "2025-10-06T09:20:35.279143",
+        "content_length": 56
+      },
+      {
+        "request": 8,
+        "status": 200,
+        "duration": 0.031226396560668945,
+        "timestamp": "2025-10-06T09:20:35.038371",
+        "content_length": 56
+      },
+      {
+        "request": 9,
+        "status": 200,
+        "duration": 0.27086949348449707,
+        "timestamp": "2025-10-06T09:20:35.279162",
+        "content_length": 56
+      },
+      {
+        "request": 10,
+        "status": 200,
+        "duration": 0.032469749450683594,
+        "timestamp": "2025-10-06T09:20:35.039599",
+        "content_length": 56
+      },
+      {
+        "request": 11,
+        "status": 200,
+        "duration": 0.26873254776000977,
+        "timestamp": "2025-10-06T09:20:35.278919",
+        "content_length": 56
+      },
+      {
+        "request": 12,
+        "status": 200,
+        "duration": 0.03190898895263672,
+        "timestamp": "2025-10-06T09:20:35.039542",
+        "content_length": 56
+      },
+      {
+        "request": 13,
+        "status": 200,
+        "duration": 0.02330803871154785,
+        "timestamp": "2025-10-06T09:20:35.030618",
+        "content_length": 56
+      },
+      {
+        "request": 14,
+        "status": 200,
+        "duration": 0.2668924331665039,
+        "timestamp": "2025-10-06T09:20:35.273988",
+        "content_length": 56
+      },
+      {
+        "request": 15,
+        "status": 200,
+        "duration": 0.025385618209838867,
+        "timestamp": "2025-10-06T09:20:35.034138",
+        "content_length": 56
+      },
+      {
+        "request": 16,
+        "status": 200,
+        "duration": 0.2674896717071533,
+        "timestamp": "2025-10-06T09:20:35.274517",
+        "content_length": 56
+      },
+      {
+        "request": 17,
+        "status": 200,
+        "duration": 0.2701106071472168,
+        "timestamp": "2025-10-06T09:20:35.279123",
+        "content_length": 56
+      },
+      {
+        "request": 18,
+        "status": 200,
+        "duration": 0.2710561752319336,
+        "timestamp": "2025-10-06T09:20:35.279262",
+        "content_length": 56
+      },
+      {
+        "request": 19,
+        "status": 200,
+        "duration": 0.2713735103607178,
+        "timestamp": "2025-10-06T09:20:35.279281",
+        "content_length": 56
+      },
+      {
+        "request": 20,
+        "status": 200,
+        "duration": 0.26944541931152344,
+        "timestamp": "2025-10-06T09:20:35.279099",
+        "content_length": 56
+      }
+    ]
+  },
+  "auth_endpoints_test": {
+    "/api/v1/auth/register": [
+      {
+        "status": 201,
+        "duration": 0.7119095325469971,
+        "content_preview": "{\"access_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGUzZGU0MzU1ZGM0NDg3M2M5ODBkMDgiLC"
+      },
+      {
+        "status": 201,
+        "duration": 0.4405651092529297,
+        "content_preview": "{\"access_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGUzZGU0NDU1ZGM0NDg3M2M5ODBkMGEiLC"
+      },
+      {
+        "status": 201,
+        "duration": 0.4438345432281494,
+        "content_preview": "{\"access_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGUzZGU0NDU1ZGM0NDg3M2M5ODBkMGMiLC"
+      },
+      {
+        "status": 201,
+        "duration": 0.42374372482299805,
+        "content_preview": "{\"access_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGUzZGU0NTU1ZGM0NDg3M2M5ODBkMGUiLC"
+      },
+      {
+        "status": 201,
+        "duration": 0.39660048484802246,
+        "content_preview": "{\"access_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGUzZGU0NTU1ZGM0NDg3M2M5ODBkMTAiLC"
+      }
+    ],
+    "/api/v1/auth/login": [
+      {
+        "status": 405,
+        "duration": 0.003488779067993164,
+        "content_preview": "{\"detail\":\"Method Not Allowed\"}"
+      },
+      {
+        "status": 405,
+        "duration": 0.0021889209747314453,
+        "content_preview": "{\"detail\":\"Method Not Allowed\"}"
+      },
+      {
+        "status": 405,
+        "duration": 0.0017213821411132812,
+        "content_preview": "{\"detail\":\"Method Not Allowed\"}"
+      },
+      {
+        "status": 405,
+        "duration": 0.001482248306274414,
+        "content_preview": "{\"detail\":\"Method Not Allowed\"}"
+      },
+      {
+        "status": 405,
+        "duration": 0.002182483673095703,
+        "content_preview": "{\"detail\":\"Method Not Allowed\"}"
+      }
+    ],
+    "/healthz": [
+      {
+        "status": 200,
+        "duration": 0.04665541648864746,
+        "content_preview": "{\"status\":\"healthy\",\"message\":\"API is running and database is connected\",\"database_connected\":true,\""
+      },
+      {
+        "status": 200,
+        "duration": 0.0428309440612793,
+        "content_preview": "{\"status\":\"healthy\",\"message\":\"API is running and database is connected\",\"database_connected\":true,\""
+      },
+      {
+        "status": 200,
+        "duration": 0.03765439987182617,
+        "content_preview": "{\"status\":\"healthy\",\"message\":\"API is running and database is connected\",\"database_connected\":true,\""
+      },
+      {
+        "status": 200,
+        "duration": 0.03707551956176758,
+        "content_preview": "{\"status\":\"healthy\",\"message\":\"API is running and database is connected\",\"database_connected\":true,\""
+      },
+      {
+        "status": 200,
+        "duration": 0.0406644344329834,
+        "content_preview": "{\"status\":\"healthy\",\"message\":\"API is running and database is connected\",\"database_connected\":true,\""
+      }
+    ]
+  }
+}

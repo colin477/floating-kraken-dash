@@ -1,0 +1,61 @@
+{
+  "timestamp": "2025-10-06T09:08:30.393852",
+  "redis_connectivity": false,
+  "backend_health": false,
+  "rate_limiting_results": [
+    {
+      "request": 1,
+      "error": "",
+      "timestamp": "2025-10-06T09:06:29.374353"
+    },
+    {
+      "request": 2,
+      "error": "",
+      "timestamp": "2025-10-06T09:06:40.383019"
+    },
+    {
+      "request": 3,
+      "error": "",
+      "timestamp": "2025-10-06T09:06:51.379798"
+    },
+    {
+      "request": 4,
+      "error": "",
+      "timestamp": "2025-10-06T09:07:02.385806"
+    },
+    {
+      "request": 5,
+      "error": "",
+      "timestamp": "2025-10-06T09:07:13.377279"
+    },
+    {
+      "request": 6,
+      "error": "",
+      "timestamp": "2025-10-06T09:07:24.382011"
+    },
+    {
+      "request": 7,
+      "error": "",
+      "timestamp": "2025-10-06T09:07:35.387486"
+    },
+    {
+      "request": 8,
+      "error": "",
+      "timestamp": "2025-10-06T09:07:46.383238"
+    },
+    {
+      "request": 9,
+      "error": "",
+      "timestamp": "2025-10-06T09:07:57.431771"
+    },
+    {
+      "request": 10,
+      "error": "",
+      "timestamp": "2025-10-06T09:08:08.389430"
+    }
+  ],
+  "auth_endpoints_results": {
+    "/api/v1/auth/register_error": "",
+    "/api/v1/auth/login_error": ""
+  }
+}

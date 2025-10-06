@@ -3,9 +3,10 @@ EZ Eatin' Backend API
 FastAPI application for meal planning and recipe management
 """
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import os
 from dotenv import load_dotenv
@@ -57,6 +58,12 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown
     await close_mongo_connection()
+    # Close Redis connection
+    try:
+        from app.utils.redis_client import close_redis_client
+        await close_redis_client()
+    except Exception as e:
+        print(f"Warning: Error closing Redis connection: {e}")
 
 # Create FastAPI application with production settings
 app = FastAPI(
@@ -119,6 +126,18 @@ app.add_middleware(SlowAPIMiddleware)
 # Add rate limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+
+# Add TimeoutError exception handler for rate limiting middleware
+@app.exception_handler(TimeoutError)
+async def timeout_error_handler(request: Request, exc: TimeoutError):
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content={
+            "error": "Service timeout",
+            "message": "The request timed out. Please try again.",
+            "status_code": 503
+        }
+    )
 
 # Health check endpoint with rate limiting
 @app.get("/healthz", response_model=HealthResponse)
