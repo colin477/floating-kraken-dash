@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 from app.database import connect_to_mongo, close_mongo_connection
 from app.crud.users import create_user_indexes
 from app.models.responses import HealthResponse
-from app.routers import auth, profile, pantry, recipes, meal_plans, shopping_lists, community, receipts, leftovers
+from app.routers import auth, profile, pantry, recipes, meal_plans, shopping_lists, community, receipts, leftovers, health
 
 # Import security and performance middleware
 from app.middleware.security import (
@@ -177,6 +177,7 @@ app.include_router(meal_plans.router, prefix="/api/v1/meal-plans", tags=["meal-p
 app.include_router(shopping_lists.router, prefix="/api/v1/shopping-lists", tags=["shopping-lists"])
 app.include_router(community.router, prefix="/api/v1/community", tags=["community"])
 app.include_router(leftovers.router, prefix="/api/v1/leftovers", tags=["leftovers"])
+app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
 
 # Root endpoint with rate limiting
 @app.get("/")

@@ -1,0 +1,116 @@
+{
+  "timestamp": "2025-10-07T06:57:01.066033",
+  "tests": {
+    "Backend Health Check": {
+      "status": "PASSED",
+      "timestamp": "2025-10-07T06:57:10.539255",
+      "details": {
+        "status_code": 200,
+        "response": {
+          "message": "EZ Eatin' API is healthy",
+          "data": null
+        }
+      }
+    },
+    "Frontend Accessibility": {
+      "status": "PASSED",
+      "timestamp": "2025-10-07T06:57:10.548047",
+      "details": {
+        "status_code": 200,
+        "content_length": 592
+      }
+    },
+    "OCR Service Configuration": {
+      "status": "PASSED",
+      "timestamp": "2025-10-07T06:57:15.883948",
+      "details": {
+        "service_status": {
+          "enabled": false,
+          "demo_mode": true,
+          "fallback_enabled": true,
+          "credentials_configured": false,
+          "google_vision_available": true,
+          "client_initialized": false
+        },
+        "demo_mode": true,
+        "fallback_enabled": true
+      }
+    },
+    "OCR Text Extraction": {
+      "status": "FAILED",
+      "timestamp": "2025-10-07T06:57:15.885952",
+      "details": {
+        "error": "No text extracted from image"
+      }
+    },
+    "Category Mapping": {
+      "status": "PASSED",
+      "timestamp": "2025-10-07T06:57:15.898811",
+      "details": {
+        "mapping_results": {
+          "chicken breast": "meat",
+          "milk": "dairy",
+          "bananas": "produce",
+          "bread": "grains",
+          "cheese": "dairy",
+          "tomatoes": "produce",
+          "rice": "grains",
+          "unknown item": "other"
+        },
+        "accuracy": 1.0,
+        "correct_mappings": 7,
+        "total_tested": 7
+      }
+    },
+    "Demo Mode Functionality": {
+      "status": "FAILED",
+      "timestamp": "2025-10-07T06:57:15.906780",
+      "details": {
+        "error": "No module named 'frontend.src.lib.mockData'"
+      }
+    },
+    "API Endpoints Structure": {
+      "status": "PASSED",
+      "timestamp": "2025-10-07T06:57:17.982307",
+      "details": {
+        "endpoint_results": {
+          "/receipts/upload": {
+            "status_code": 405,
+            "exists": true
+          },
+          "/pantry/": {
+            "status_code": 405,
+            "exists": true
+          },
+          "/auth/register": {
+            "status_code": 405,
+            "exists": true
+          },
+          "/auth/login-form": {
+            "status_code": 405,
+            "exists": true
+          }
+        },
+        "critical_endpoints_available": 2
+      }
+    },
+    "Error Handling": {
+      "status": "PASSED",
+      "timestamp": "2025-10-07T06:57:17.983111",
+      "details": {
+        "invalid_url_handling": "Handled gracefully",
+        "fallback_enabled": true,
+        "result": false
+      }
+    }
+  },
+  "summary": {
+    "total_tests": 8,
+    "passed": 6,
+    "failed": 2,
+    "errors": [
+      "OCR Text Extraction: No text extracted from image",
+      "Demo Mode Functionality: No module named 'frontend.src.lib.mockData'"
+    ]
+  }
+}

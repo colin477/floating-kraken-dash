@@ -7,6 +7,7 @@ from typing import Optional, List
 from datetime import date
 from app.models.responses import SuccessResponse
 from app.utils.cloud_storage import cloud_storage_service
+from app.utils.category_mapper import category_mapper
 from app.models.receipts import (
     ReceiptCreate,
     ReceiptUpdate,

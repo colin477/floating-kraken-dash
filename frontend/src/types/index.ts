@@ -206,7 +206,7 @@ export interface ReceiptItem {
   name: string;
   quantity: number;
   price: number;
-  category: string;
+  category: PantryCategory; // Use standardized category enum
 }
 
 // Sprint 6: Community Features Types

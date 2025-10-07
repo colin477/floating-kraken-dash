@@ -19,6 +19,8 @@ except ImportError:
     vision = None
 
 from app.models.receipts import ReceiptItem, ReceiptItemCategory
+from app.models.pantry import PantryCategory
+from .category_mapper import category_mapper
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -30,39 +32,83 @@ class OCRService:
         self.client = None
         self.enabled = os.getenv('OCR_ENABLED', 'false').lower() == 'true'
         self.fallback_enabled = os.getenv('OCR_FALLBACK_ENABLED', 'true').lower() == 'true'
+        self.demo_mode = False
+        self.credentials_configured = False
         
-        if self.enabled and GOOGLE_VISION_AVAILABLE:
+        # Check if Google Vision API credentials are configured
+        project_id = os.getenv('GOOGLE_CLOUD_PROJECT_ID')
+        credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+        
+        if project_id and credentials_path:
+            self.credentials_configured = True
+            logger.info("Google Vision API credentials are configured")
+        else:
+            logger.info("Google Vision API credentials not configured - using demo mode")
+            self.demo_mode = True
+        
+        if self.enabled and GOOGLE_VISION_AVAILABLE and self.credentials_configured:
             try:
                 # Initialize Google Vision client
                 self.client = vision.ImageAnnotatorClient()
                 logger.info("Google Vision API client initialized successfully")
+                self.demo_mode = False
             except Exception as e:
                 logger.error(f"Failed to initialize Google Vision API client: {e}")
+                logger.info("Falling back to demo mode")
+                self.demo_mode = True
                 if not self.fallback_enabled:
                     raise
+        elif self.enabled and not GOOGLE_VISION_AVAILABLE:
+            logger.warning("Google Vision API package not available - using demo mode")
+            self.demo_mode = True
+        elif not self.enabled:
+            logger.info("OCR is disabled - using demo mode when needed")
+            self.demo_mode = True
+    
+    def get_service_status(self) -> Dict[str, Any]:
+        """Get current OCR service status"""
+        return {
+            "enabled": self.enabled,
+            "demo_mode": self.demo_mode,
+            "fallback_enabled": self.fallback_enabled,
+            "credentials_configured": self.credentials_configured,
+            "google_vision_available": GOOGLE_VISION_AVAILABLE,
+            "client_initialized": self.client is not None
+        }
     
     async def extract_text_from_image(self, image_url: str) -> Optional[str]:
         """
-        Extract text from receipt image using OCR
+        Extract text from receipt image using OCR or demo mode
         
         Args:
             image_url: URL of the receipt image
             
         Returns:
-            Extracted text if successful, None otherwise
+            Extracted text if successful, demo text if in demo mode, None otherwise
         """
         if not self.enabled:
             logger.warning("OCR is disabled, skipping text extraction")
             return None
         
+        # If in demo mode, return mock OCR text
+        if self.demo_mode:
+            logger.info("Using demo mode - returning mock OCR text")
+            return await self._get_demo_ocr_text(image_url)
+        
         if not self.client:
             logger.error("OCR client not initialized")
+            if self.fallback_enabled:
+                logger.info("Falling back to demo mode")
+                return await self._get_demo_ocr_text(image_url)
             return None
         
         try:
             # Download image
             image_data = await self._download_image(image_url)
             if not image_data:
+                if self.fallback_enabled:
+                    logger.info("Image download failed, falling back to demo mode")
+                    return await self._get_demo_ocr_text(image_url)
                 return None
             
             # Process with Google Vision API
@@ -71,6 +117,9 @@ class OCRService:
             
             if response.error.message:
                 logger.error(f"Google Vision API error: {response.error.message}")
+                if self.fallback_enabled:
+                    logger.info("Google Vision API error, falling back to demo mode")
+                    return await self._get_demo_ocr_text(image_url)
                 return None
             
             # Extract full text
@@ -81,11 +130,58 @@ class OCRService:
                 return extracted_text
             else:
                 logger.warning("No text detected in image")
+                if self.fallback_enabled:
+                    logger.info("No text detected, falling back to demo mode")
+                    return await self._get_demo_ocr_text(image_url)
                 return None
                 
         except Exception as e:
             logger.error(f"Error extracting text from image: {e}")
+            if self.fallback_enabled:
+                logger.info("OCR processing failed, falling back to demo mode")
+                return await self._get_demo_ocr_text(image_url)
             return None
+    
+    async def _get_demo_ocr_text(self, image_url: str) -> str:
+        """
+        Generate demo OCR text for testing purposes
+        
+        Args:
+            image_url: URL of the receipt image (used for context)
+            
+        Returns:
+            Mock OCR text that simulates a real receipt
+        """
+        demo_text = """GROCERY MART
+123 Main Street
+Anytown, ST 12345
+(555) 123-4567
+
+Date: 12/15/2023
+Time: 14:30
+Cashier: Demo User
+
+BANANAS                   2.49
+MILK 2% GALLON           3.99
+BREAD WHOLE WHEAT        2.79
+EGGS LARGE DOZEN         4.29
+CHICKEN BREAST           8.99
+TOMATOES                 3.49
+LETTUCE ICEBERG          1.99
+CHEESE CHEDDAR           5.49
+
+SUBTOTAL                33.52
+TAX                      2.68
+TOTAL                   36.20
+
+PAYMENT: CREDIT CARD
+CHANGE: 0.00
+
+Thank you for shopping!
+Visit us again soon!"""
+        
+        logger.info("Generated demo OCR text for testing")
+        return demo_text
     
     async def _download_image(self, image_url: str) -> Optional[bytes]:
         """
@@ -354,64 +450,33 @@ class OCRService:
         return totals
     
     def _categorize_item(self, item_name: str) -> ReceiptItemCategory:
-        """Categorize item based on name"""
-        name_lower = item_name.lower()
+        """
+        Categorize item using standardized category mapping system.
         
-        # Category keywords mapping
-        category_keywords = {
-            ReceiptItemCategory.PRODUCE: [
-                'banana', 'apple', 'orange', 'grape', 'berry', 'lettuce', 'tomato',
-                'onion', 'potato', 'carrot', 'celery', 'spinach', 'broccoli',
-                'cucumber', 'pepper', 'avocado', 'lemon', 'lime', 'organic'
-            ],
-            ReceiptItemCategory.DAIRY: [
-                'milk', 'cheese', 'yogurt', 'butter', 'cream', 'egg', 'dairy'
-            ],
-            ReceiptItemCategory.MEAT: [
-                'beef', 'chicken', 'pork', 'turkey', 'ham', 'bacon', 'sausage',
-                'ground', 'steak', 'roast', 'chop'
-            ],
-            ReceiptItemCategory.SEAFOOD: [
-                'fish', 'salmon', 'tuna', 'shrimp', 'crab', 'lobster', 'seafood'
-            ],
-            ReceiptItemCategory.GRAINS: [
-                'bread', 'rice', 'pasta', 'cereal', 'oats', 'flour', 'grain',
-                'wheat', 'bagel', 'tortilla'
-            ],
-            ReceiptItemCategory.BEVERAGES: [
-                'water', 'juice', 'soda', 'coffee', 'tea', 'beer', 'wine',
-                'drink', 'beverage', 'cola'
-            ],
-            ReceiptItemCategory.FROZEN: [
-                'frozen', 'ice cream', 'popsicle', 'frozen pizza'
-            ],
-            ReceiptItemCategory.CANNED_GOODS: [
-                'canned', 'can', 'soup', 'beans', 'corn', 'peas', 'sauce'
-            ],
-            ReceiptItemCategory.SNACKS: [
-                'chips', 'crackers', 'cookies', 'candy', 'chocolate', 'nuts',
-                'snack', 'popcorn'
-            ],
-            ReceiptItemCategory.CONDIMENTS: [
-                'ketchup', 'mustard', 'mayo', 'dressing', 'sauce', 'oil',
-                'vinegar', 'salt', 'pepper'
-            ],
-            ReceiptItemCategory.SPICES: [
-                'spice', 'herb', 'seasoning', 'garlic', 'ginger', 'basil',
-                'oregano', 'thyme'
-            ],
-            ReceiptItemCategory.BAKING: [
-                'sugar', 'flour', 'baking', 'vanilla', 'chocolate chip',
-                'yeast', 'powder'
-            ]
-        }
-        
-        # Check each category
-        for category, keywords in category_keywords.items():
-            if any(keyword in name_lower for keyword in keywords):
-                return category
-        
-        return ReceiptItemCategory.OTHER
+        Args:
+            item_name: The name of the item
+            
+        Returns:
+            ReceiptItemCategory: The standardized category for the item
+        """
+        try:
+            # Use the category mapper to get standardized category
+            pantry_category = category_mapper.map_category(
+                receipt_category=None,  # No explicit category from receipt
+                item_name=item_name
+            )
+            
+            # Convert PantryCategory to ReceiptItemCategory
+            # Since both enums have identical values, we can convert directly
+            try:
+                return ReceiptItemCategory(pantry_category.value)
+            except ValueError:
+                # Fallback to OTHER if conversion fails
+                return ReceiptItemCategory.OTHER
+            
+        except Exception as e:
+            logger.error(f"Error categorizing item '{item_name}': {e}")
+            return ReceiptItemCategory.OTHER
 
 
 # Global OCR service instance

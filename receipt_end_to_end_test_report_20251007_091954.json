@@ -1,0 +1,29 @@
+{
+  "test_execution": {
+    "timestamp": "2025-10-07T09:19:54.118744",
+    "api_base_url": "http://localhost:8000/api/v1",
+    "test_user": "receipt_test_user@example.com",
+    "user_id": null,
+    "created_receipt_id": null
+  },
+  "test_results": {
+    "User Authentication Setup": false,
+    "File Upload with Validation": false,
+    "Storage System Verification": true,
+    "Database Record Verification": false,
+    "OCR Processing and Extraction": false,
+    "File Retrieval via Secure URLs": false,
+    "Pantry Integration Workflow": false,
+    "Receipt Statistics": false
+  },
+  "summary": {
+    "total_tests": 8,
+    "passed_tests": 1,
+    "success_rate": 12.5
+  },
+  "system_info": {
+    "backend_running": true,
+    "ocr_enabled": true,
+    "storage_type": "local"
+  }
+}

@@ -209,9 +209,11 @@ class ReceiptProcessingRequest(BaseModel):
 
 class ReceiptProcessingResponse(BaseModel):
     """Schema for receipt processing response"""
-    receipt_id: str
-    processing_status: ReceiptProcessingStatus
-    extracted_items: List[ReceiptItem]
+    success: bool = Field(True, description="Whether the processing was successful")
+    items: List[ReceiptItem] = Field(default=[], description="Extracted receipt items")
+    message: str = Field(..., description="Processing result message")
+    receipt_id: Optional[str] = Field(None, description="Receipt ID for reference")
+    processing_status: Optional[ReceiptProcessingStatus] = Field(None, description="Processing status")
     confidence_score: Optional[float] = Field(None, ge=0, le=1, description="AI confidence score")
     processing_notes: Optional[str] = Field(None, description="Notes from processing")
 

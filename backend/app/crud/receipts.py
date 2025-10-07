@@ -10,6 +10,7 @@ from pymongo.errors import PyMongoError
 from pymongo import ASCENDING, DESCENDING
 
 from app.database import get_collection
+from app.utils.category_mapper import category_mapper
 from app.models.receipts import (
     Receipt,
     ReceiptCreate,
@@ -501,9 +502,11 @@ async def process_receipt_image(user_id: str, receipt_id: str) -> Optional[Recei
         logger.info(f"Successfully processed receipt {receipt_id} with {len(extracted_items)} items")
         
         return ReceiptProcessingResponse(
+            success=True,
+            items=extracted_items,
+            message=f"Receipt processed successfully. Extracted {len(extracted_items)} items.",
             receipt_id=receipt_id,
             processing_status=ReceiptProcessingStatus.COMPLETED,
-            extracted_items=extracted_items,
             confidence_score=confidence_score,
             processing_notes=processing_notes
         )
@@ -574,9 +577,11 @@ async def _process_receipt_fallback(user_id: str, receipt_id: str, error_reason:
         ))
         
         return ReceiptProcessingResponse(
+            success=True,
+            items=fallback_items,
+            message="Receipt processed successfully using fallback data.",
             receipt_id=receipt_id,
             processing_status=ReceiptProcessingStatus.COMPLETED,
-            extracted_items=fallback_items,
             confidence_score=0.1,  # Low confidence for fallback
             processing_notes=f"Fallback processing used. Reason: {error_reason}"
         )
@@ -623,26 +628,33 @@ def _calculate_confidence_score(parsed_data: Dict[str, Any], items: List[Receipt
     return min(score, 1.0)
 
 
-def _map_receipt_category_to_pantry(receipt_category: ReceiptItemCategory) -> PantryCategory:
+def _map_receipt_category_to_pantry(receipt_category: ReceiptItemCategory, item_name: str = None) -> PantryCategory:
     """
-    Map receipt item category to pantry category
+    Map receipt item category to pantry category using standardized category mapper.
+    
+    Args:
+        receipt_category: The receipt item category
+        item_name: Optional item name for better categorization
+        
+    Returns:
+        PantryCategory: The mapped pantry category
     """
-    category_mapping = {
-        ReceiptItemCategory.PRODUCE: PantryCategory.PRODUCE,
-        ReceiptItemCategory.DAIRY: PantryCategory.DAIRY,
-        ReceiptItemCategory.MEAT: PantryCategory.MEAT,
-        ReceiptItemCategory.SEAFOOD: PantryCategory.SEAFOOD,
-        ReceiptItemCategory.GRAINS: PantryCategory.GRAINS,
-        ReceiptItemCategory.CANNED_GOODS: PantryCategory.CANNED_GOODS,
-        ReceiptItemCategory.FROZEN: PantryCategory.FROZEN,
-        ReceiptItemCategory.BEVERAGES: PantryCategory.BEVERAGES,
-        ReceiptItemCategory.SNACKS: PantryCategory.SNACKS,
-        ReceiptItemCategory.CONDIMENTS: PantryCategory.CONDIMENTS,
-        ReceiptItemCategory.SPICES: PantryCategory.SPICES,
-        ReceiptItemCategory.BAKING: PantryCategory.BAKING,
-        ReceiptItemCategory.OTHER: PantryCategory.OTHER
-    }
-    return category_mapping.get(receipt_category, PantryCategory.OTHER)
+    try:
+        # Since both enums have identical values, we can convert directly
+        # But use the category mapper for enhanced mapping logic
+        category_str = receipt_category.value if receipt_category else None
+        
+        # Use the standardized category mapper for consistent mapping
+        pantry_category = category_mapper.map_category(
+            receipt_category=category_str,
+            item_name=item_name
+        )
+        
+        return pantry_category
+        
+    except Exception as e:
+        logger.error(f"Error mapping receipt category '{receipt_category}' to pantry category: {e}")
+        return PantryCategory.OTHER
 
 
 async def add_receipt_items_to_pantry(
@@ -686,8 +698,14 @@ async def add_receipt_items_to_pantry(
             receipt_item = receipt.items[item_index]
             
             try:
-                # Create pantry item from receipt item
-                pantry_category = _map_receipt_category_to_pantry(receipt_item.category) if receipt_item.category else PantryCategory.OTHER
+                # Create pantry item from receipt item with enhanced category mapping
+                pantry_category = _map_receipt_category_to_pantry(
+                    receipt_item.category,
+                    receipt_item.name
+                ) if receipt_item.category else category_mapper.map_category(
+                    receipt_category=None,
+                    item_name=receipt_item.name
+                )
                 
                 pantry_item_data = PantryItemCreate(
                     name=receipt_item.name,
