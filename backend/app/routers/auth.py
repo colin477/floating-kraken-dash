@@ -6,7 +6,7 @@ from datetime import timedelta
 from fastapi import APIRouter, HTTPException, status, Depends, Form, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from app.models.responses import SuccessResponse
-from app.models.auth import UserCreate, UserLogin, LoginResponse, UserResponse
+from app.models.auth import UserCreate, UserLogin, LoginResponse, UserResponse, GoogleOAuthRequest, GoogleUserInfo
 from app.crud.profiles import create_profile_stub
 from app.utils.auth import create_access_token, get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.utils.exceptions import PasswordValidationError, EmailAlreadyExistsError, UserCreationError
@@ -333,4 +333,142 @@ async def logout(current_user: dict = Depends(get_current_active_user)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error during logout"
+        )
+
+
+@router.post("/google/verify", response_model=LoginResponse, status_code=status.HTTP_200_OK)
+async def verify_google_oauth(oauth_request: GoogleOAuthRequest, request: Request):
+    """
+    Google OAuth ID token verification endpoint
+    
+    Verifies Google ID token from frontend, creates or logs in user,
+    and returns JWT token for application authentication.
+    """
+    try:
+        import os
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+        
+        # Check if Google OAuth is enabled
+        google_oauth_enabled = os.getenv("GOOGLE_OAUTH_ENABLED", "false").lower() == "true"
+        if not google_oauth_enabled:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Google OAuth is currently disabled"
+            )
+        
+        # Get Google Client ID from environment
+        google_client_id = os.getenv("GOOGLE_CLIENT_ID")
+        if not google_client_id:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Google OAuth configuration error"
+            )
+        
+        # Verify the Google ID token
+        try:
+            # Verify token with Google
+            idinfo = id_token.verify_oauth2_token(
+                oauth_request.id_token,
+                google_requests.Request(),
+                google_client_id
+            )
+            
+            # Verify the issuer
+            if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+                raise ValueError('Wrong issuer.')
+            
+            # Extract user information from Google token
+            google_user = GoogleUserInfo(
+                email=idinfo['email'],
+                name=idinfo.get('name', ''),
+                picture=idinfo.get('picture'),
+                email_verified=idinfo.get('email_verified', True),
+                google_id=idinfo['sub']
+            )
+            
+        except ValueError as e:
+            # Invalid token
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid Google ID token: {str(e)}"
+            )
+        
+        # Check if user already exists by email
+        from app.crud.users import get_user_by_email, create_user_from_google
+        existing_user = await get_user_by_email(google_user.email)
+        
+        if existing_user:
+            # User exists, log them in
+            user = existing_user
+        else:
+            # Create new user from Google profile
+            user = await create_user_from_google(google_user)
+            
+            # Create profile stub for the new user
+            profile_stub = await create_profile_stub(str(user["_id"]))
+            if not profile_stub:
+                # Log warning but don't fail OAuth
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to create profile stub for Google OAuth user {user['_id']}")
+        
+        # Create access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": str(user["_id"]), "email": user["email"]},
+            expires_delta=access_token_expires
+        )
+        
+        # Update last login
+        from app.crud.users import update_user_last_login
+        await update_user_last_login(str(user["_id"]))
+        
+        # Prepare user response
+        user_response = UserResponse(
+            id=str(user["_id"]),
+            email=user["email"],
+            full_name=user["full_name"],
+            created_at=user["created_at"],
+            updated_at=user["updated_at"],
+            is_active=user["is_active"]
+        )
+        
+        # Return login response with token and user info
+        return LoginResponse(
+            access_token=access_token,
+            token_type="bearer",
+            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convert to seconds
+            user=user_response
+        )
+        
+    except HTTPException:
+        raise
+    except ImportError as e:
+        # Google auth libraries not installed
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Google OAuth libraries not available: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google OAuth service temporarily unavailable"
+        )
+    except ConnectionError as e:
+        # Database connection issues
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Database connection error during Google OAuth: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service temporarily unavailable. Please try again later."
+        )
+    except Exception as e:
+        # Log the actual error for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Unexpected error during Google OAuth: {e}", exc_info=True)
+        
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error during Google OAuth. Please try again later."
         )

@@ -69,3 +69,23 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     user: UserResponse
+
+
+class GoogleOAuthRequest(BaseModel):
+    """Schema for Google OAuth token verification request"""
+    id_token: str = Field(..., description="Google ID token from frontend")
+
+
+class GoogleOAuthCallback(BaseModel):
+    """Schema for Google OAuth callback data"""
+    code: str = Field(..., description="Authorization code from Google")
+    state: Optional[str] = Field(None, description="State parameter for CSRF protection")
+
+
+class GoogleUserInfo(BaseModel):
+    """Schema for Google user profile information"""
+    email: EmailStr
+    name: str
+    picture: Optional[str] = None
+    email_verified: bool = True
+    google_id: str = Field(..., description="Google user ID")

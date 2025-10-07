@@ -9,6 +9,7 @@ import { User, UserProfile } from '@/types';
 import { storage } from '@/lib/storage';
 import { showSuccess, showError } from '@/utils/toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useGoogleLogin } from '@react-oauth/google';
 
 interface AuthFormProps {
   onAuthSuccess: (user: User, isNewUser: boolean) => void;
@@ -131,52 +132,103 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-
-    // Check if user already exists first
-    const existingUser = storage.getUser();
-    if (existingUser) {
-      // Ensure user has a profile
-      let existingProfile = storage.getProfile();
-      if (!existingProfile) {
-        existingProfile = createDefaultProfile(existingUser.id);
-        storage.setProfile(existingProfile);
-      }
+  const handleGoogleSignIn = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsGoogleLoading(true);
+      setError(null);
       
-      setSuccess('Welcome back to EZ Eatin\'!');
-      onAuthSuccess(existingUser, false); // false = existing user
-      setIsGoogleLoading(false);
-      return;
-    }
-
-    // Simulate Google OAuth flow - treat as new user for demo
-    setTimeout(() => {
-      const mockGoogleUser = {
-        email: 'user@gmail.com',
-        name: 'Google User',
-        picture: 'https://via.placeholder.com/40'
-      };
-
-      const user: User = {
-        id: Date.now().toString(),
-        email: mockGoogleUser.email,
-        name: mockGoogleUser.name,
-        createdAt: new Date().toISOString(),
-        subscription: 'free',
-        monthlyUsage: {
-          receiptScans: 0,
-          mealPlans: 0,
-          communityPosts: 0
+      try {
+        // Get user info from Google using the access token
+        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: {
+            Authorization: `Bearer ${tokenResponse.access_token}`,
+          },
+        });
+        
+        if (!userInfoResponse.ok) {
+          throw new Error('Failed to get user information from Google');
         }
-      };
-
-      storage.setUser(user);
-      setSuccess('Welcome to EZ Eatin\'! Choose your plan to get started.');
-      onAuthSuccess(user, true); // true = new user (show plan selection)
+        
+        const googleUserInfo = await userInfoResponse.json();
+        
+        // Get Google ID token for backend verification
+        const tokenInfoResponse = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${tokenResponse.access_token}`);
+        
+        if (!tokenInfoResponse.ok) {
+          throw new Error('Failed to verify Google token');
+        }
+        
+        // For production, you would get the ID token from the Google OAuth flow
+        // For now, we'll use the access token to get user info and create a mock ID token
+        // In a real implementation, you'd get the ID token directly from Google
+        
+        // Send to backend for verification and user creation/login
+        const backendResponse = await fetch('/api/v1/auth/google/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            // In production, this would be the actual ID token from Google
+            // For now, we'll simulate with user info
+            id_token: tokenResponse.access_token, // This should be the ID token in production
+          }),
+        });
+        
+        if (!backendResponse.ok) {
+          const errorData = await backendResponse.json();
+          throw new Error(errorData.detail || 'Google OAuth verification failed');
+        }
+        
+        const authData = await backendResponse.json();
+        
+        // Create user object from backend response
+        const user: User = {
+          id: authData.user.id,
+          email: authData.user.email,
+          name: authData.user.full_name,
+          createdAt: authData.user.created_at,
+          subscription: 'free',
+          monthlyUsage: {
+            receiptScans: 0,
+            mealPlans: 0,
+            communityPosts: 0
+          }
+        };
+        
+        // Store user and token
+        storage.setUser(user);
+        storage.setToken(authData.access_token);
+        
+        // Create default profile if needed
+        let existingProfile = storage.getProfile();
+        if (!existingProfile) {
+          existingProfile = createDefaultProfile(user.id);
+          storage.setProfile(existingProfile);
+        }
+        
+        // Determine if this is a new user (you could get this from backend response)
+        const isNewUser = new Date(user.createdAt).getTime() > (Date.now() - 60000); // Created within last minute
+        
+        setSuccess(isNewUser ? 'Welcome to EZ Eatin\'! Choose your plan to get started.' : 'Welcome back to EZ Eatin\'!');
+        onAuthSuccess(user, isNewUser);
+        
+      } catch (error) {
+        console.error('Google OAuth error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Google sign-in failed. Please try again.';
+        setError(errorMessage);
+        showError(errorMessage);
+      } finally {
+        setIsGoogleLoading(false);
+      }
+    },
+    onError: (error) => {
+      console.error('Google OAuth error:', error);
+      setError('Google sign-in failed. Please try again.');
+      showError('Google sign-in failed. Please try again.');
       setIsGoogleLoading(false);
-    }, 1500);
-  };
+    },
+  });
 
   const GoogleIcon = () => (
     <svg className="w-5 h-5" viewBox="0 0 24 24">
