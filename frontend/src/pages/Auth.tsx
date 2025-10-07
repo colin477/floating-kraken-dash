@@ -25,7 +25,7 @@ import { Menu } from 'lucide-react';
 import { shouldBypassAuth, isDemoModeEnabled } from '@/lib/demoMode';
 
 const Auth = () => {
-  const { user: authUser, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const { user: authUser, isAuthenticated, isLoading: authLoading, logout, onboardingState } = useAuth();
   
   // Demo mode support
   const demoModeEnabled = isDemoModeEnabled();
@@ -101,7 +101,7 @@ const Auth = () => {
       
       setProfile(savedProfile);
     }
-  }, [isAuthenticated, authUser]);
+  }, [isAuthenticated, authUser, onboardingState.isOnboardingComplete]);
 
   const handleAuthSuccess = (newUser: User, isNewUserFlag: boolean) => {
     // Server-side onboarding status will be checked by OnboardingGuard
