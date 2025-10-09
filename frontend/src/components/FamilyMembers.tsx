@@ -41,6 +41,35 @@ const COMMON_DISLIKED_FOODS = [
 ];
 
 export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => {
+  // All hooks must be called at the top level, before any early returns
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [newMember, setNewMember] = useState({
+    name: '',
+    age: '',
+    dietaryRestrictions: [] as string[],
+    allergies: [] as string[],
+    lovedFoods: [] as string[],
+    dislikedFoods: [] as string[]
+  });
+
+  const availableDietaryRestrictions = [
+    'Vegetarian', 'Vegan', 'Gluten-free', 'Dairy-free', 'Nut-free',
+    'Low-carb', 'Keto', 'Paleo', 'Mediterranean', 'Low-sodium'
+  ];
+
+  useEffect(() => {
+    console.log('🔍 [DIAGNOSIS] useEffect - familyMembers data:', {
+      profileFamilyMembers: profile?.familyMembers,
+      profileFamilyMembersLength: profile?.familyMembers?.length || 0,
+      profileFamilyMembersArray: Array.isArray(profile?.familyMembers),
+      timestamp: new Date().toISOString()
+    });
+    setFamilyMembers(profile?.familyMembers || []);
+  }, [profile?.familyMembers]);
+
   // DEBUG: Log props to diagnose the issue
   console.log('🔍 [FamilyMembers] Component props:', {
     user: user,
@@ -78,34 +107,6 @@ export const FamilyMembers = ({ user, profile, onBack }: FamilyMembersProps) => 
       </div>
     );
   }
-
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [newMember, setNewMember] = useState({
-    name: '',
-    age: '',
-    dietaryRestrictions: [] as string[],
-    allergies: [] as string[],
-    lovedFoods: [] as string[],
-    dislikedFoods: [] as string[]
-  });
-
-  const availableDietaryRestrictions = [
-    'Vegetarian', 'Vegan', 'Gluten-free', 'Dairy-free', 'Nut-free', 
-    'Low-carb', 'Keto', 'Paleo', 'Mediterranean', 'Low-sodium'
-  ];
-
-  useEffect(() => {
-    console.log('🔍 [DIAGNOSIS] useEffect - familyMembers data:', {
-      profileFamilyMembers: profile?.familyMembers,
-      profileFamilyMembersLength: profile?.familyMembers?.length || 0,
-      profileFamilyMembersArray: Array.isArray(profile?.familyMembers),
-      timestamp: new Date().toISOString()
-    });
-    setFamilyMembers(profile?.familyMembers || []);
-  }, [profile?.familyMembers]);
 
   const handleAddMember = async () => {
     console.log('🔍 [DEBUG] handleAddMember called');

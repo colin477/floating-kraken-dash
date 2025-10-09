@@ -23,7 +23,9 @@ from app.models.leftovers import (
 from app.models.recipes import RecipeResponse
 from app.models.pantry import PantryItemResponse
 from app.crud.pantry import get_pantry_items
-from app.crud.recipes import get_recipes
+from app.crud.recipes import get_recipes, create_recipe
+from app.services.ai_recipe_generator import ai_recipe_generator
+from app.models.ai_recipes import RecipeGenerationSource
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -563,6 +565,169 @@ def rank_suggestions_by_priority(suggestions: List[LeftoverSuggestion]) -> List[
     return sorted(suggestions, key=lambda x: x.priority_score, reverse=True)
 
 
+async def generate_ai_recipe_suggestions(
+    user_id: str,
+    available_ingredients: List[PantryIngredientInfo],
+    filters: Optional[SuggestionFilters] = None,
+    max_ai_recipes: int = 3
+) -> List[LeftoverSuggestion]:
+    """
+    Generate AI-powered recipe suggestions when existing recipes don't match well
+    
+    Args:
+        user_id: User's ObjectId as string
+        available_ingredients: List of available pantry ingredients
+        filters: Optional filters to apply
+        max_ai_recipes: Maximum number of AI recipes to generate
+        
+    Returns:
+        List of LeftoverSuggestion objects with AI-generated recipes
+    """
+    try:
+        ai_suggestions = []
+        
+        # Check if AI recipe generation is available
+        if not ai_recipe_generator.enabled:
+            logger.info("AI recipe generation is disabled, skipping AI suggestions")
+            return []
+        
+        # Extract ingredient names for AI generation
+        ingredient_names = [ing.name for ing in available_ingredients[:10]]  # Limit to top 10 ingredients
+        
+        if not ingredient_names:
+            return []
+        
+        # Determine preferences from filters
+        cuisine_preference = None
+        meal_type = None
+        dietary_restrictions = []
+        difficulty_preference = None
+        
+        if filters:
+            if filters.meal_types and len(filters.meal_types) > 0:
+                # Convert string to MealType enum
+                try:
+                    from app.models.recipes import MealType
+                    meal_type = MealType(filters.meal_types[0])
+                except (ValueError, AttributeError):
+                    pass
+            
+            if filters.dietary_restrictions:
+                # Convert strings to DietaryRestriction enums
+                try:
+                    from app.models.recipes import DietaryRestriction
+                    dietary_restrictions = [
+                        DietaryRestriction(dr) for dr in filters.dietary_restrictions
+                        if dr in [e.value for e in DietaryRestriction]
+                    ]
+                except (ValueError, AttributeError):
+                    pass
+            
+            if filters.difficulty_levels and len(filters.difficulty_levels) > 0:
+                try:
+                    from app.models.recipes import DifficultyLevel
+                    difficulty_preference = DifficultyLevel(filters.difficulty_levels[0])
+                except (ValueError, AttributeError):
+                    pass
+        
+        # Generate AI recipes
+        for i in range(max_ai_recipes):
+            try:
+                # Vary the cuisine for diversity
+                cuisines = ["Italian", "Asian", "Mexican", "Mediterranean", "American", "Indian"]
+                if i < len(cuisines):
+                    cuisine_preference = cuisines[i]
+                
+                # Generate AI recipe
+                ai_recipe = await ai_recipe_generator.generate_recipe_from_ingredients(
+                    ingredients=ingredient_names,
+                    cuisine_preference=cuisine_preference,
+                    meal_type=meal_type,
+                    dietary_restrictions=dietary_restrictions,
+                    difficulty_preference=difficulty_preference,
+                    servings=4,
+                    max_prep_time=filters.max_prep_time if filters else None,
+                    max_cook_time=filters.max_cook_time if filters else None
+                )
+                
+                if not ai_recipe:
+                    continue
+                
+                # Save the AI recipe to database
+                saved_recipe = await create_recipe(user_id=user_id, recipe_data=ai_recipe)
+                
+                if not saved_recipe:
+                    continue
+                
+                # Calculate match details for the AI recipe
+                ai_ingredient_names = [ing.name for ing in ai_recipe.ingredients]
+                match_percentage, matched_ingredients, missing_ingredients = calculate_recipe_match_score(
+                    ai_ingredient_names,
+                    available_ingredients,
+                    include_substitutes=filters.include_substitutes if filters else True
+                )
+                
+                # Calculate priority score for AI recipe
+                priority_score, score_breakdown = calculate_suggestion_priority_score(
+                    saved_recipe,
+                    match_percentage,
+                    matched_ingredients,
+                    available_ingredients,
+                    filters
+                )
+                
+                # Add AI generation bonus
+                ai_bonus = 20.0  # Bonus for being AI-generated and novel
+                priority_score += ai_bonus
+                score_breakdown["ai_generation_bonus"] = ai_bonus
+                
+                # Create suggestion reason
+                reason_parts = ["AI-generated recipe using your available ingredients"]
+                if match_percentage >= 80:
+                    reason_parts.append("high ingredient match")
+                elif match_percentage >= 60:
+                    reason_parts.append("good ingredient match")
+                
+                if cuisine_preference:
+                    reason_parts.append(f"{cuisine_preference} cuisine")
+                
+                if ai_recipe.difficulty == "easy":
+                    reason_parts.append("easy to prepare")
+                
+                suggestion_reason = ", ".join(reason_parts).capitalize()
+                
+                # Create AI suggestion
+                ai_suggestion = LeftoverSuggestion(
+                    recipe=saved_recipe,
+                    match_score=priority_score,
+                    match_percentage=match_percentage,
+                    matched_ingredients=matched_ingredients,
+                    missing_ingredients=missing_ingredients,
+                    total_ingredients=len(ai_ingredient_names),
+                    available_ingredients_count=len(matched_ingredients),
+                    missing_ingredients_count=len(missing_ingredients),
+                    suggestion_reason=suggestion_reason,
+                    priority_score=priority_score,
+                    estimated_prep_time=ai_recipe.prep_time,
+                    difficulty_bonus=score_breakdown.get("difficulty_bonus", 0.0),
+                    freshness_bonus=score_breakdown.get("freshness_bonus", 0.0),
+                    expiration_urgency=score_breakdown.get("expiration_bonus", 0.0)
+                )
+                
+                ai_suggestions.append(ai_suggestion)
+                
+            except Exception as e:
+                logger.error(f"Error generating AI recipe {i+1} for user {user_id}: {e}")
+                continue
+        
+        logger.info(f"Generated {len(ai_suggestions)} AI recipe suggestions for user {user_id}")
+        return ai_suggestions
+        
+    except Exception as e:
+        logger.error(f"Error in AI recipe suggestion generation for user {user_id}: {e}")
+        return []
+
+
 async def get_leftover_suggestions(
     db,
     user_id: str,
@@ -571,6 +736,7 @@ async def get_leftover_suggestions(
 ) -> Optional[LeftoverSuggestionsResponse]:
     """
     Main function to get recipe suggestions based on available pantry ingredients
+    Enhanced with AI-generated recipes when existing recipes don't match well enough
     
     Args:
         db: Database connection
@@ -612,19 +778,7 @@ async def get_leftover_suggestions(
             filters
         )
         
-        if not filtered_recipes:
-            logger.info(f"No recipes match availability criteria for user {user_id}")
-            return LeftoverSuggestionsResponse(
-                suggestions=[],
-                total_suggestions=0,
-                user_id=user_id,
-                pantry_items_count=len(available_ingredients),
-                recipes_analyzed=0,
-                min_match_percentage=filters.min_match_percentage,
-                filters_applied=filters.dict()
-            )
-        
-        # Generate suggestions
+        # Generate suggestions from existing recipes
         suggestions = []
         
         for recipe in filtered_recipes:
@@ -656,8 +810,8 @@ async def get_leftover_suggestions(
             else:
                 reason_parts.append("Partial ingredient match")
             
-            if any(ing.is_expiring_soon for match in matched_ingredients 
-                   for ing in available_ingredients 
+            if any(ing.is_expiring_soon for match in matched_ingredients
+                   for ing in available_ingredients
                    if ing.name == match.available_ingredient):
                 reason_parts.append("uses expiring ingredients")
             
@@ -686,17 +840,50 @@ async def get_leftover_suggestions(
             
             suggestions.append(suggestion)
         
-        # Rank suggestions by priority
+        # Rank existing suggestions by priority
         ranked_suggestions = rank_suggestions_by_priority(suggestions)
         
+        # Determine if we need AI-generated recipes
+        need_ai_recipes = False
+        high_quality_suggestions = [s for s in ranked_suggestions if s.match_percentage >= 70]
+        
+        # Generate AI recipes if:
+        # 1. No existing recipes found, OR
+        # 2. Less than 3 high-quality suggestions (>=70% match), OR
+        # 3. User specifically requested more variety
+        if (not filtered_recipes or
+            len(high_quality_suggestions) < 3 or
+            len(ranked_suggestions) < filters.max_suggestions // 2):
+            need_ai_recipes = True
+        
+        ai_suggestions = []
+        if need_ai_recipes:
+            logger.info(f"Generating AI recipes for user {user_id} - existing suggestions: {len(ranked_suggestions)}, high quality: {len(high_quality_suggestions)}")
+            
+            # Calculate how many AI recipes to generate
+            max_ai_recipes = min(3, max(1, filters.max_suggestions - len(ranked_suggestions)))
+            
+            ai_suggestions = await generate_ai_recipe_suggestions(
+                user_id=user_id,
+                available_ingredients=available_ingredients,
+                filters=filters,
+                max_ai_recipes=max_ai_recipes
+            )
+        
+        # Combine existing and AI suggestions
+        all_suggestions = ranked_suggestions + ai_suggestions
+        
+        # Re-rank all suggestions together
+        final_ranked_suggestions = rank_suggestions_by_priority(all_suggestions)
+        
         # Limit to max suggestions
-        final_suggestions = ranked_suggestions[:filters.max_suggestions]
+        final_suggestions = final_ranked_suggestions[:filters.max_suggestions]
         
         # Calculate processing time
         end_time = datetime.utcnow()
         processing_time = (end_time - start_time).total_seconds() * 1000
         
-        logger.info(f"Generated {len(final_suggestions)} suggestions for user {user_id} in {processing_time:.2f}ms")
+        logger.info(f"Generated {len(final_suggestions)} total suggestions ({len(ranked_suggestions)} existing + {len(ai_suggestions)} AI) for user {user_id} in {processing_time:.2f}ms")
         
         return LeftoverSuggestionsResponse(
             suggestions=final_suggestions,
@@ -709,7 +896,10 @@ async def get_leftover_suggestions(
             performance_metrics={
                 "processing_time_ms": processing_time,
                 "total_recipes_considered": len(filtered_recipes),
-                "suggestions_generated": len(suggestions)
+                "suggestions_generated": len(suggestions),
+                "ai_recipes_generated": len(ai_suggestions),
+                "high_quality_suggestions": len(high_quality_suggestions),
+                "ai_generation_triggered": need_ai_recipes
             }
         )
         

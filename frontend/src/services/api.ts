@@ -20,6 +20,14 @@ import {
 
 const API_BASE_URL = (import.meta as any).env?.VITE_APP_BASE_URL || 'http://localhost:8000/api/v1';
 
+// Debug logging to verify which URL is being used
+console.log('🔧 [API Debug] Environment variables:', {
+  VITE_APP_BASE_URL: (import.meta as any).env?.VITE_APP_BASE_URL,
+  NODE_ENV: (import.meta as any).env?.NODE_ENV,
+  MODE: (import.meta as any).env?.MODE
+});
+console.log('🔧 [API Debug] Final API_BASE_URL:', API_BASE_URL);
+
 // Helper function to decode JWT token and check expiry
 const isTokenExpired = (token: string): boolean => {
   try {
@@ -865,4 +873,332 @@ export const receiptApi = {
       return getMockReceiptStatsResponse();
     }
   },
+
+  // Get recipe suggestions based on receipt items
+  getReceiptRecipeSuggestions: async (receiptId: string, filters?: {
+    max_suggestions?: number;
+    min_match_percentage?: number;
+    max_prep_time?: number;
+    max_cook_time?: number;
+    difficulty_level?: string;
+    meal_type?: string;
+  }) => {
+    if (shouldUseMockData()) {
+      console.log('🧪 [Demo Mode] Getting mock recipe suggestions for receipt:', receiptId);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      // Return mock recipe suggestions based on receipt items
+      return {
+        suggestions: [
+          {
+            recipe: {
+              id: 'mock-recipe-1',
+              name: 'Chicken Stir Fry',
+              description: 'Quick and easy chicken stir fry with vegetables',
+              prep_time: 15,
+              cook_time: 20,
+              servings: 4,
+              difficulty: 'easy',
+              ingredients: [
+                { name: 'Chicken breast', quantity: 1, unit: 'lb' },
+                { name: 'Mixed vegetables', quantity: 2, unit: 'cups' },
+                { name: 'Soy sauce', quantity: 2, unit: 'tbsp' }
+              ],
+              instructions: ['Cook chicken', 'Add vegetables', 'Season with soy sauce'],
+              meal_types: ['dinner'],
+              dietary_restrictions: []
+            },
+            match_percentage: 85.0,
+            matched_ingredients: 3,
+            missing_ingredients: 0,
+            suggestion_reason: 'High ingredient match with receipt items, easy to prepare'
+          },
+          {
+            recipe: {
+              id: 'mock-recipe-2',
+              name: 'Vegetable Pasta',
+              description: 'Healthy pasta with fresh vegetables',
+              prep_time: 10,
+              cook_time: 15,
+              servings: 3,
+              difficulty: 'easy',
+              ingredients: [
+                { name: 'Pasta', quantity: 8, unit: 'oz' },
+                { name: 'Bell peppers', quantity: 1, unit: 'piece' },
+                { name: 'Olive oil', quantity: 2, unit: 'tbsp' }
+              ],
+              instructions: ['Boil pasta', 'Sauté vegetables', 'Combine and serve'],
+              meal_types: ['lunch', 'dinner'],
+              dietary_restrictions: ['vegetarian']
+            },
+            match_percentage: 70.0,
+            matched_ingredients: 2,
+            missing_ingredients: 1,
+            suggestion_reason: 'Good ingredient match with receipt items'
+          }
+        ],
+        total_suggestions: 2,
+        receipt_id: receiptId,
+        receipt_store: 'Demo Store',
+        receipt_date: new Date().toISOString(),
+        pantry_items_count: 5,
+        recipes_analyzed: 10,
+        min_match_percentage: filters?.min_match_percentage || 0.3
+      };
+    }
+
+    try {
+      const searchParams = new URLSearchParams();
+      if (filters?.max_suggestions) searchParams.append('max_suggestions', filters.max_suggestions.toString());
+      if (filters?.min_match_percentage) searchParams.append('min_match_percentage', filters.min_match_percentage.toString());
+      if (filters?.max_prep_time) searchParams.append('max_prep_time', filters.max_prep_time.toString());
+      if (filters?.max_cook_time) searchParams.append('max_cook_time', filters.max_cook_time.toString());
+      if (filters?.difficulty_level) searchParams.append('difficulty_level', filters.difficulty_level);
+      if (filters?.meal_type) searchParams.append('meal_type', filters.meal_type);
+      
+      const query = searchParams.toString();
+      const endpoint = `/receipts/${receiptId}/suggest-recipes${query ? `?${query}` : ''}`;
+      
+      const response = await apiRequest(endpoint);
+      return response.json();
+    } catch (error) {
+      console.warn('🧪 [Demo Mode] API failed, falling back to mock recipe suggestions:', error);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return {
+        suggestions: [
+          {
+            recipe: {
+              id: 'fallback-recipe-1',
+              name: 'Simple Meal',
+              description: 'A simple meal you can make with your receipt items',
+              prep_time: 20,
+              cook_time: 25,
+              servings: 2,
+              difficulty: 'easy',
+              ingredients: [
+                { name: 'Main ingredient', quantity: 1, unit: 'piece' },
+                { name: 'Side ingredient', quantity: 2, unit: 'cups' }
+              ],
+              instructions: ['Prepare ingredients', 'Cook together', 'Serve hot'],
+              meal_types: ['dinner'],
+              dietary_restrictions: []
+            },
+            match_percentage: 60.0,
+            matched_ingredients: 2,
+            missing_ingredients: 1,
+            suggestion_reason: 'Partial ingredient match with receipt items'
+          }
+        ],
+        total_suggestions: 1,
+        receipt_id: receiptId,
+        receipt_store: 'Store',
+        receipt_date: new Date().toISOString(),
+        pantry_items_count: 3,
+        recipes_analyzed: 5,
+        min_match_percentage: filters?.min_match_percentage || 0.3
+      };
+    }
+  },
+};
+
+// Meal Photo Analysis API service
+export const mealPhotoApi = {
+  // Analyze meal photo and generate recipe
+  analyzeMealPhoto: async (file: File, generateRecipe: boolean = true) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Use a different content type for file upload
+      const token = getAuthToken();
+      const config: RequestInit = {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+          // Don't set Content-Type - let browser set it with boundary for FormData
+        },
+        body: formData,
+      };
+
+      const endpoint = `/recipes/from-photo?generate_recipe=${generateRecipe}`;
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Analysis failed' }));
+        throw new Error(errorData.detail || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('🔍 [API] Meal photo analysis failed:', error);
+      throw error;
+    }
+  },
+
+  // Get meal analysis service status
+  getServiceStatus: async () => {
+    try {
+      const response = await apiRequest('/recipes/service-status');
+      return response.json();
+    } catch (error) {
+      console.warn('🔍 [API] Failed to get service status:', error);
+      return {
+        enabled: false,
+        demo_mode: true,
+        error: error.message
+      };
+    }
+  },
+};
+
+// AI Recipe Generation API service
+export const aiRecipeApi = {
+  // Generate recipe from ingredients
+  generateFromIngredients: async (requestData: {
+    ingredients: string[];
+    cuisine_preference?: string;
+    meal_type?: string;
+    dietary_restrictions?: string[];
+    difficulty_preference?: string;
+    servings?: number;
+    max_prep_time?: number;
+    max_cook_time?: number;
+    exclude_ingredients?: string[];
+    include_nutrition?: boolean;
+  }) => {
+    try {
+      const response = await apiRequest('/recipes/generate-from-ingredients', {
+        method: 'POST',
+        body: JSON.stringify(requestData),
+      });
+      return response.json();
+    } catch (error) {
+      console.error('🤖 [API] AI recipe generation failed:', error);
+      throw error;
+    }
+  },
+
+  // Generate multiple recipes from same ingredients
+  generateBulkFromIngredients: async (requestData: {
+    ingredients: string[];
+    recipe_count?: number;
+    variety_preference?: string;
+    base_preferences?: any;
+  }) => {
+    try {
+      const response = await apiRequest('/recipes/generate-bulk-from-ingredients', {
+        method: 'POST',
+        body: JSON.stringify(requestData),
+      });
+      return response.json();
+    } catch (error) {
+      console.error('🤖 [API] Bulk AI recipe generation failed:', error);
+      throw error;
+    }
+  },
+
+  // Get AI service status
+  getServiceStatus: async () => {
+    try {
+      const response = await apiRequest('/recipes/ai-service-status');
+      return response.json();
+    } catch (error) {
+      console.warn('🤖 [API] Failed to get AI service status:', error);
+      return {
+        service_name: "AI Recipe Generator",
+        status: { enabled: false, demo_mode: true, error: error.message },
+        capabilities: {},
+        supported_features: [],
+        limitations: { service_unavailable: true }
+      };
+    }
+  },
+
+  // Generate recipe from pantry items (enhanced leftover suggestions)
+  generateFromPantry: async (filters?: {
+    max_suggestions?: number;
+    min_match_percentage?: number;
+    max_prep_time?: number;
+    max_cook_time?: number;
+    difficulty_levels?: string[];
+    meal_types?: string[];
+    dietary_restrictions?: string[];
+    exclude_expired?: boolean;
+    prioritize_expiring?: boolean;
+    include_substitutes?: boolean;
+  }) => {
+    try {
+      // This uses the enhanced leftover suggestions that now include AI recipes
+      const response = await leftoverApi.getPantrySuggestions(filters);
+      return response;
+    } catch (error) {
+      console.error('🤖 [API] AI pantry recipe generation failed:', error);
+      throw error;
+    }
+  }
+};
+
+// Recipe URL Import API service
+export const recipeImportApi = {
+  // Import recipe from URL
+  importFromUrl: async (requestData: {
+    url: string;
+    override_duplicate?: boolean;
+    custom_tags?: string[];
+  }) => {
+    try {
+      const response = await apiRequest('/recipes/from-link', {
+        method: 'POST',
+        body: JSON.stringify(requestData),
+      });
+      return response.json();
+    } catch (error) {
+      console.error('🔗 [API] Recipe URL import failed:', error);
+      throw error;
+    }
+  },
+
+  // Validate recipe URL before import
+  validateUrl: async (url: string) => {
+    try {
+      const response = await apiRequest('/recipes/validate-url', {
+        method: 'POST',
+        body: JSON.stringify({ url }),
+      });
+      return response.json();
+    } catch (error) {
+      console.error('🔗 [API] Recipe URL validation failed:', error);
+      throw error;
+    }
+  },
+
+  // Get supported domains
+  getSupportedDomains: async () => {
+    try {
+      // This would be a new endpoint to get supported domains
+      // For now, return a static list based on the scraper service
+      return {
+        domains: [
+          'allrecipes.com',
+          'food.com',
+          'foodnetwork.com',
+          'bonappetit.com',
+          'seriouseats.com',
+          'epicurious.com',
+          'delish.com',
+          'tasteofhome.com',
+          'simplyrecipes.com',
+          'thekitchn.com',
+          'cooking.nytimes.com',
+          'bbc.co.uk',
+          'jamieoliver.com',
+          'recipetineats.com',
+          'minimalistbaker.com',
+          'budgetbytes.com'
+        ]
+      };
+    } catch (error) {
+      console.error('🔗 [API] Failed to get supported domains:', error);
+      return { domains: [] };
+    }
+  }
 };

@@ -4,16 +4,20 @@ import { receiptApi } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  ArrowLeft, 
-  Calendar, 
-  DollarSign, 
-  Store, 
-  ShoppingBag, 
+import {
+  ArrowLeft,
+  Calendar,
+  DollarSign,
+  Store,
+  ShoppingBag,
   Image as ImageIcon,
   Download,
   Trash2,
-  Receipt as ReceiptIcon
+  Receipt as ReceiptIcon,
+  ChefHat,
+  Clock,
+  Users,
+  Lightbulb
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -32,6 +36,10 @@ export const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [recipeSuggestions, setRecipeSuggestions] = useState<any>(null);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     const fetchImageUrl = async () => {
@@ -64,6 +72,32 @@ export const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
       } finally {
         setIsDeleting(false);
       }
+    }
+  };
+
+  const fetchRecipeSuggestions = async () => {
+    if (!receipt.processed || !receipt.items.length) {
+      setSuggestionsError('Receipt must be processed and have items to generate suggestions');
+      return;
+    }
+
+    setSuggestionsLoading(true);
+    setSuggestionsError(null);
+    
+    try {
+      const suggestions = await receiptApi.getReceiptRecipeSuggestions(receipt.id, {
+        max_suggestions: 5,
+        min_match_percentage: 0.3,
+        difficulty_level: 'easy'
+      });
+      
+      setRecipeSuggestions(suggestions);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error('Failed to fetch recipe suggestions:', error);
+      setSuggestionsError('Failed to load recipe suggestions. Please try again.');
+    } finally {
+      setSuggestionsLoading(false);
     }
   };
 
@@ -231,12 +265,46 @@ export const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
                 </div>
                 
                 <div className="mt-4 pt-4 border-t">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-3">
                     <span className="text-sm text-gray-600">Status</span>
                     <Badge variant={receipt.processed ? "default" : "secondary"}>
                       {receipt.processed ? "Processed" : "Pending"}
                     </Badge>
                   </div>
+                  
+                  {/* Recipe Suggestions Button */}
+                  {receipt.processed && receipt.items.length > 0 && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={fetchRecipeSuggestions}
+                        disabled={suggestionsLoading}
+                        className="flex-1"
+                      >
+                        {suggestionsLoading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-2"></div>
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            <ChefHat className="h-4 w-4 mr-2" />
+                            Get Recipe Ideas
+                          </>
+                        )}
+                      </Button>
+                      {showSuggestions && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowSuggestions(false)}
+                        >
+                          Hide
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -300,6 +368,114 @@ export const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
                 </div>
               </CardContent>
             </Card>
+
+            {/* Recipe Suggestions */}
+            {showSuggestions && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Lightbulb className="h-5 w-5 text-yellow-500" />
+                    Recipe Suggestions
+                    {recipeSuggestions && (
+                      <Badge variant="secondary" className="ml-2">
+                        {recipeSuggestions.total_suggestions} found
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  {recipeSuggestions?.receipt_store && (
+                    <p className="text-sm text-gray-600">
+                      Based on items from {recipeSuggestions.receipt_store}
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  {suggestionsError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                      <p className="text-sm text-red-800">{suggestionsError}</p>
+                    </div>
+                  )}
+                  
+                  {recipeSuggestions?.suggestions && recipeSuggestions.suggestions.length > 0 ? (
+                    <div className="space-y-4">
+                      {recipeSuggestions.suggestions.map((suggestion: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-lg mb-1">{suggestion.recipe.name}</h4>
+                              <p className="text-sm text-gray-600 mb-2">{suggestion.recipe.description}</p>
+                              <div className="flex items-center gap-4 text-sm text-gray-500">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-4 w-4" />
+                                  {(suggestion.recipe.prep_time || 0) + (suggestion.recipe.cook_time || 0)} min
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Users className="h-4 w-4" />
+                                  {suggestion.recipe.servings} servings
+                                </div>
+                                <Badge variant="outline" className="text-xs">
+                                  {suggestion.recipe.difficulty}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-semibold text-green-600 mb-1">
+                                {Math.round(suggestion.match_percentage)}% match
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {suggestion.matched_ingredients}/{suggestion.matched_ingredients + suggestion.missing_ingredients} ingredients
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mb-3">
+                            <p className="text-sm text-gray-700 italic">
+                              "{suggestion.suggestion_reason}"
+                            </p>
+                          </div>
+                          
+                          {/* Ingredients Preview */}
+                          <div className="border-t pt-3">
+                            <h5 className="text-sm font-medium text-gray-700 mb-2">Key Ingredients:</h5>
+                            <div className="flex flex-wrap gap-1">
+                              {suggestion.recipe.ingredients.slice(0, 6).map((ingredient: any, idx: number) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">
+                                  {ingredient.name}
+                                </Badge>
+                              ))}
+                              {suggestion.recipe.ingredients.length > 6 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{suggestion.recipe.ingredients.length - 6} more
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Meal Types */}
+                          {suggestion.recipe.meal_types && suggestion.recipe.meal_types.length > 0 && (
+                            <div className="mt-2 pt-2 border-t">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500">Meal types:</span>
+                                {suggestion.recipe.meal_types.map((type: string, idx: number) => (
+                                  <Badge key={idx} variant="outline" className="text-xs capitalize">
+                                    {type}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : recipeSuggestions && recipeSuggestions.suggestions.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <ChefHat className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                      <p className="text-sm">No recipe suggestions found for these items.</p>
+                      <p className="text-xs mt-1">Try adjusting the filters or add more items to your receipt.</p>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>

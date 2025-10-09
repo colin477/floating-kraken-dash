@@ -419,3 +419,288 @@ async def get_receipt_image_url(
         "expires_in": 3600,
         "storage_type": cloud_storage_service.get_storage_type(receipt.photo_url)
     }
+
+
+@router.get("/{receipt_id}/suggest-recipes")
+async def get_receipt_recipe_suggestions(
+    receipt_id: str,
+    max_suggestions: int = Query(10, ge=1, le=20, description="Maximum number of suggestions (1-20)"),
+    min_match_percentage: float = Query(0.3, ge=0.1, le=1.0, description="Minimum ingredient match percentage (0.1-1.0)"),
+    max_prep_time: Optional[int] = Query(None, ge=0, description="Maximum prep time in minutes"),
+    max_cook_time: Optional[int] = Query(None, ge=0, description="Maximum cook time in minutes"),
+    difficulty_level: Optional[str] = Query(None, regex="^(easy|medium|hard)$", description="Filter by difficulty (easy, medium, hard)"),
+    meal_type: Optional[str] = Query(None, regex="^(breakfast|lunch|dinner|snack)$", description="Filter by meal type (breakfast, lunch, dinner, snack)"),
+    current_user: dict = Depends(get_current_active_user)
+):
+    """
+    Get recipe suggestions based on receipt items
+    
+    This endpoint takes a processed receipt and generates recipe suggestions
+    based on the items found in that receipt, using the same algorithm as
+    the leftover suggestions but with receipt items instead of pantry items.
+    
+    **Requirements:**
+    - Receipt must exist and belong to the authenticated user
+    - Receipt must be processed (status = completed)
+    - Receipt must have items extracted
+    
+    **Query Parameters:**
+    - **max_suggestions**: Maximum number of suggestions to return (1-20)
+    - **min_match_percentage**: Minimum percentage of ingredients you must have (0.1-1.0)
+    - **max_prep_time**: Maximum preparation time in minutes
+    - **max_cook_time**: Maximum cooking time in minutes
+    - **difficulty_level**: Filter by recipe difficulty (easy, medium, hard)
+    - **meal_type**: Filter by meal type (breakfast, lunch, dinner, snack)
+    
+    **Example Usage:**
+    ```
+    GET /api/v1/receipts/507f1f77bcf86cd799439011/suggest-recipes?max_suggestions=5&difficulty_level=easy
+    ```
+    
+    **Response:** Same format as leftover suggestions but based on receipt items
+    """
+    try:
+        from app.models.leftovers import SuggestionFilters, PantryIngredientInfo
+        from app.crud.leftovers import get_leftover_suggestions
+        from app.database import get_database
+        
+        user_id = str(current_user["_id"])
+        
+        # First check if receipt exists and belongs to user
+        receipt = await get_receipt_by_id(user_id=user_id, receipt_id=receipt_id)
+        if receipt is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Receipt not found"
+            )
+        
+        # Check if receipt is processed
+        if receipt.processing_status != ReceiptProcessingStatus.COMPLETED:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Receipt must be processed before generating recipe suggestions"
+            )
+        
+        # Check if receipt has items
+        if not receipt.items:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Receipt has no items to generate suggestions from"
+            )
+        
+        # Convert receipt items to PantryIngredientInfo format for the suggestions algorithm
+        from datetime import date, timedelta
+        
+        # Create mock pantry ingredients from receipt items
+        mock_pantry_ingredients = []
+        for item in receipt.items:
+            # Create a mock pantry ingredient with good freshness (since it was just purchased)
+            mock_ingredient = PantryIngredientInfo(
+                name=item.name,
+                normalized_name=item.name.lower().strip(),
+                category=item.category.value if item.category else "other",
+                quantity=item.quantity,
+                unit="piece",  # Default unit
+                expiration_date=date.today() + timedelta(days=7),  # Assume 7 days freshness
+                days_until_expiration=7,
+                is_expired=False,
+                is_expiring_soon=False,
+                freshness_score=1.0  # Fresh items from receipt
+            )
+            mock_pantry_ingredients.append(mock_ingredient)
+        
+        # Create suggestion filters
+        filters = SuggestionFilters(
+            max_suggestions=max_suggestions,
+            min_match_percentage=min_match_percentage,
+            max_prep_time=max_prep_time,
+            max_cook_time=max_cook_time,
+            difficulty_levels=[difficulty_level] if difficulty_level else None,
+            meal_types=[meal_type] if meal_type else None,
+            exclude_expired=False,  # Receipt items are fresh
+            prioritize_expiring=False,  # Receipt items are fresh
+            include_substitutes=True
+        )
+        
+        # Get database connection
+        db = await get_database()
+        
+        # Use a modified version of the leftover suggestions algorithm
+        # We'll temporarily replace the user's pantry with receipt items
+        suggestions_response = await _get_receipt_based_suggestions(
+            db=db,
+            user_id=user_id,
+            receipt_items=mock_pantry_ingredients,
+            max_suggestions=max_suggestions,
+            filters=filters
+        )
+        
+        if suggestions_response is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to generate recipe suggestions from receipt items"
+            )
+        
+        # Add receipt context to the response
+        suggestions_response.receipt_id = receipt_id
+        suggestions_response.receipt_store = receipt.store_name
+        suggestions_response.receipt_date = receipt.receipt_date
+        
+        return suggestions_response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating recipe suggestions for receipt {receipt_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while generating recipe suggestions"
+        )
+
+
+async def _get_receipt_based_suggestions(
+    db,
+    user_id: str,
+    receipt_items: List,
+    max_suggestions: int = 10,
+    filters = None
+):
+    """
+    Generate recipe suggestions based on receipt items using the leftover suggestions algorithm
+    
+    This is a modified version of get_leftover_suggestions that works with receipt items
+    instead of pantry items.
+    """
+    try:
+        from app.crud.leftovers import (
+            filter_recipes_by_availability,
+            calculate_recipe_match_score,
+            calculate_suggestion_priority_score,
+            rank_suggestions_by_priority
+        )
+        from app.models.leftovers import LeftoverSuggestion, LeftoverSuggestionsResponse
+        from datetime import datetime
+        
+        start_time = datetime.utcnow()
+        
+        # Use provided filters or create default
+        if not filters:
+            from app.models.leftovers import SuggestionFilters
+            filters = SuggestionFilters(max_suggestions=max_suggestions)
+        
+        if not receipt_items:
+            return LeftoverSuggestionsResponse(
+                suggestions=[],
+                total_suggestions=0,
+                user_id=user_id,
+                pantry_items_count=0,
+                recipes_analyzed=0,
+                min_match_percentage=filters.min_match_percentage,
+                filters_applied=filters.dict()
+            )
+        
+        # Filter recipes by availability using receipt items
+        filtered_recipes = await filter_recipes_by_availability(
+            db,
+            receipt_items,
+            user_id,
+            filters.min_match_percentage,
+            filters
+        )
+        
+        if not filtered_recipes:
+            return LeftoverSuggestionsResponse(
+                suggestions=[],
+                total_suggestions=0,
+                user_id=user_id,
+                pantry_items_count=len(receipt_items),
+                recipes_analyzed=0,
+                min_match_percentage=filters.min_match_percentage,
+                filters_applied=filters.dict()
+            )
+        
+        # Generate suggestions
+        suggestions = []
+        
+        for recipe in filtered_recipes:
+            # Extract ingredient names
+            ingredient_names = [ing.name for ing in recipe.ingredients]
+            
+            # Calculate match details
+            match_percentage, matched_ingredients, missing_ingredients = calculate_recipe_match_score(
+                ingredient_names,
+                receipt_items,
+                filters.include_substitutes
+            )
+            
+            # Calculate priority score
+            priority_score, score_breakdown = calculate_suggestion_priority_score(
+                recipe,
+                match_percentage,
+                matched_ingredients,
+                receipt_items,
+                filters
+            )
+            
+            # Create suggestion reason
+            reason_parts = []
+            if match_percentage >= 80:
+                reason_parts.append("High ingredient match with receipt items")
+            elif match_percentage >= 60:
+                reason_parts.append("Good ingredient match with receipt items")
+            else:
+                reason_parts.append("Partial ingredient match with receipt items")
+            
+            if recipe.difficulty == "easy":
+                reason_parts.append("easy to prepare")
+            
+            suggestion_reason = ", ".join(reason_parts).capitalize()
+            
+            # Create suggestion
+            suggestion = LeftoverSuggestion(
+                recipe=recipe,
+                match_score=priority_score,
+                match_percentage=match_percentage,
+                matched_ingredients=matched_ingredients,
+                missing_ingredients=missing_ingredients,
+                total_ingredients=len(ingredient_names),
+                available_ingredients_count=len(matched_ingredients),
+                missing_ingredients_count=len(missing_ingredients),
+                suggestion_reason=suggestion_reason,
+                priority_score=priority_score,
+                estimated_prep_time=recipe.prep_time,
+                difficulty_bonus=score_breakdown.get("difficulty_bonus", 0.0),
+                freshness_bonus=score_breakdown.get("freshness_bonus", 0.0),
+                expiration_urgency=0.0  # Receipt items are fresh
+            )
+            
+            suggestions.append(suggestion)
+        
+        # Rank suggestions by priority
+        ranked_suggestions = rank_suggestions_by_priority(suggestions)
+        
+        # Limit to max suggestions
+        final_suggestions = ranked_suggestions[:filters.max_suggestions]
+        
+        # Calculate processing time
+        end_time = datetime.utcnow()
+        processing_time = (end_time - start_time).total_seconds() * 1000
+        
+        return LeftoverSuggestionsResponse(
+            suggestions=final_suggestions,
+            total_suggestions=len(final_suggestions),
+            user_id=user_id,
+            pantry_items_count=len(receipt_items),
+            recipes_analyzed=len(filtered_recipes),
+            min_match_percentage=filters.min_match_percentage,
+            filters_applied=filters.dict(),
+            performance_metrics={
+                "processing_time_ms": processing_time,
+                "total_recipes_considered": len(filtered_recipes),
+                "suggestions_generated": len(suggestions)
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error generating receipt-based suggestions for user {user_id}: {e}")
+        return None

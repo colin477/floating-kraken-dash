@@ -60,6 +60,11 @@ class LeftoverSuggestionsResponse(BaseModel):
     generated_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp when suggestions were generated")
     filters_applied: Dict[str, Any] = Field(default={}, description="Filters applied during suggestion generation")
     performance_metrics: Optional[Dict[str, Any]] = Field(None, description="Performance metrics for the suggestion process")
+    
+    # Optional receipt context fields (used when suggestions are based on receipt items)
+    receipt_id: Optional[str] = Field(None, description="Receipt ID if suggestions are based on receipt items")
+    receipt_store: Optional[str] = Field(None, description="Store name from receipt")
+    receipt_date: Optional[datetime] = Field(None, description="Receipt date")
 
 
 class SuggestionFilters(BaseModel):

@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Camera, Upload, Loader2, Check, Clock, Users } from 'lucide-react';
-import { simulateMealPhotoAnalysis } from '@/lib/mockData';
+import { ArrowLeft, Camera, Upload, Loader2, Check, Clock, Users, AlertCircle } from 'lucide-react';
+import { mealPhotoApi } from '@/services/api';
 import { storage } from '@/lib/storage';
 import { Recipe } from '@/types';
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
 
 interface MealPhotoAnalysisProps {
   onBack: () => void;
@@ -15,25 +15,86 @@ interface MealPhotoAnalysisProps {
 export const MealPhotoAnalysis = ({ onBack }: MealPhotoAnalysisProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [analyzedRecipe, setAnalyzedRecipe] = useState<Recipe | null>(null);
-  const [step, setStep] = useState<'upload' | 'processing' | 'review' | 'complete'>('upload');
+  const [step, setStep] = useState<'upload' | 'processing' | 'review' | 'complete' | 'error'>('upload');
   const [uploadedImage, setUploadedImage] = useState<string>('');
+  const [detectedFoods, setDetectedFoods] = useState<any[]>([]);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showError('Please select a valid image file');
+      return;
+    }
+
+    // Validate file size (10MB limit)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      showError('File size must be less than 10MB');
+      return;
+    }
+
     const imageUrl = URL.createObjectURL(file);
     setUploadedImage(imageUrl);
     setStep('processing');
     setIsProcessing(true);
+    setErrorMessage('');
 
     try {
-      // Simulate AI processing
-      const recipe = await simulateMealPhotoAnalysis(imageUrl);
-      setAnalyzedRecipe(recipe);
-      setStep('review');
-    } catch (error) {
+      // Call real API for meal photo analysis
+      const result = await mealPhotoApi.analyzeMealPhoto(file, true);
+      
+      if (result.success) {
+        setAnalysisResult(result);
+        setDetectedFoods(result.detected_foods || []);
+        
+        if (result.recipe) {
+          // Convert API response to Recipe format
+          const recipe: Recipe = {
+            id: result.recipe.id,
+            title: result.recipe.title,
+            description: result.recipe.description || '',
+            ingredients: result.recipe.ingredients.map((ing: any) => ({
+              name: ing.name,
+              quantity: ing.quantity,
+              unit: ing.unit
+            })),
+            instructions: result.recipe.instructions,
+            prepTime: result.recipe.prep_time || 0,
+            cookTime: result.recipe.cook_time || 0,
+            servings: result.recipe.servings,
+            difficulty: result.recipe.difficulty,
+            tags: result.recipe.tags || [],
+            nutritionInfo: result.recipe.nutrition_info ? {
+              calories: result.recipe.nutrition_info.calories_per_serving || 0,
+              protein: result.recipe.nutrition_info.protein_g || 0,
+              carbs: result.recipe.nutrition_info.carbs_g || 0,
+              fat: result.recipe.nutrition_info.fat_g || 0,
+              fiber: result.recipe.nutrition_info.fiber_g || 0
+            } : undefined,
+            source: 'photo-analysis',
+            createdAt: new Date().toISOString()
+          };
+          
+          setAnalyzedRecipe(recipe);
+          setStep('review');
+        } else {
+          // Show detected foods even if no recipe was generated
+          setStep('review');
+        }
+      } else {
+        setErrorMessage(result.error_message || 'Failed to analyze meal photo');
+        setStep('error');
+      }
+    } catch (error: any) {
       console.error('Error analyzing meal photo:', error);
+      setErrorMessage(error.message || 'Failed to analyze meal photo');
+      setStep('error');
+      showError('Failed to analyze meal photo. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -244,6 +305,58 @@ export const MealPhotoAnalysis = ({ onBack }: MealPhotoAnalysisProps) => {
     </div>
   );
 
+  const renderErrorStep = () => (
+    <div className="text-center space-y-6">
+      <div className="mx-auto w-24 h-24 bg-red-100 rounded-full flex items-center justify-center">
+        <AlertCircle className="h-12 w-12 text-red-600" />
+      </div>
+      
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Analysis Failed</h2>
+        <p className="text-gray-600 mb-4">
+          We couldn't analyze your meal photo. This might be due to image quality or service issues.
+        </p>
+        {errorMessage && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-red-700 text-sm">{errorMessage}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <Button onClick={() => setStep('upload')} className="w-full" size="lg">
+          Try Another Photo
+        </Button>
+        <Button variant="outline" onClick={onBack} className="w-full">
+          Back to Dashboard
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderDetectedFoodsSection = () => {
+    if (!detectedFoods || detectedFoods.length === 0) return null;
+
+    return (
+      <div className="mb-6">
+        <h4 className="font-semibold mb-3">Detected Foods</h4>
+        <div className="grid gap-2">
+          {detectedFoods.map((food, index) => (
+            <div key={index} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+              <div>
+                <span className="font-medium">{food.name}</span>
+                <span className="text-sm text-gray-600 ml-2">({food.category})</span>
+              </div>
+              <div className="text-sm text-blue-600">
+                {Math.round(food.confidence * 100)}% confidence
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -267,8 +380,30 @@ export const MealPhotoAnalysis = ({ onBack }: MealPhotoAnalysisProps) => {
           <CardContent className="p-8">
             {step === 'upload' && renderUploadStep()}
             {step === 'processing' && renderProcessingStep()}
-            {step === 'review' && renderReviewStep()}
+            {step === 'review' && (
+              <div className="space-y-6">
+                {renderDetectedFoodsSection()}
+                {analyzedRecipe ? renderReviewStep() : (
+                  <div className="text-center space-y-4">
+                    <h2 className="text-2xl font-bold text-gray-900">Foods Detected!</h2>
+                    <p className="text-gray-600">
+                      We detected some food items in your photo, but couldn't generate a complete recipe.
+                      You can try with a different photo or manually create a recipe.
+                    </p>
+                    <div className="flex gap-3">
+                      <Button variant="outline" onClick={() => setStep('upload')} className="flex-1">
+                        Try Another Photo
+                      </Button>
+                      <Button onClick={onBack} className="flex-1">
+                        Back to Dashboard
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             {step === 'complete' && renderCompleteStep()}
+            {step === 'error' && renderErrorStep()}
           </CardContent>
         </Card>
       </div>
