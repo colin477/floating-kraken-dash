@@ -1,0 +1,710 @@
+{
+  "timestamp": "2025-10-09T16:00:47.210832",
+  "single_user_test": {
+    "passed": false,
+    "response_time": 0.044007062911987305,
+    "status_code": 422,
+    "error": {
+      "detail": [
+        {
+          "type": "missing",
+          "loc": [
+            "body",
+            "full_name"
+          ],
+          "msg": "Field required",
+          "input": {
+            "email": "test_user_single@example.com",
+            "password": "TestPassword123!",
+            "first_name": "Testsingle",
+            "last_name": "User",
+            "plan_type": "basic"
+          },
+          "url": "https://errors.pydantic.dev/2.8/v/missing"
+        }
+      ]
+    },
+    "user_email": "test_user_single@example.com"
+  },
+  "concurrent_test": {
+    "total_requests": 25,
+    "successful_registrations": 0,
+    "failed_registrations": 25,
+    "timeout_errors": 0,
+    "success_rate": 0.0,
+    "response_time_stats": {},
+    "all_results": [
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.02130436897277832,
+        "user_email": "test_user_concurrent_0@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_0@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_0",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.07714700698852539,
+        "user_email": "test_user_concurrent_1@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_1@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_1",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.29651641845703125,
+        "user_email": "test_user_concurrent_2@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_2@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_2",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.0837397575378418,
+        "user_email": "test_user_concurrent_3@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_3@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_3",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.29921817779541016,
+        "user_email": "test_user_concurrent_4@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_4@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_4",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.08913707733154297,
+        "user_email": "test_user_concurrent_5@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_5@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_5",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.2998466491699219,
+        "user_email": "test_user_concurrent_6@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_6@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_6",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.08614730834960938,
+        "user_email": "test_user_concurrent_7@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_7@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_7",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.023641347885131836,
+        "user_email": "test_user_concurrent_8@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_8@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_8",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.033101558685302734,
+        "user_email": "test_user_concurrent_9@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_9@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_9",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.03590583801269531,
+        "user_email": "test_user_concurrent_10@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_10@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_10",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.03790903091430664,
+        "user_email": "test_user_concurrent_11@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_11@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_11",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.03254127502441406,
+        "user_email": "test_user_concurrent_12@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_12@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_12",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.030575275421142578,
+        "user_email": "test_user_concurrent_13@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_13@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_13",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.03190159797668457,
+        "user_email": "test_user_concurrent_14@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_14@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_14",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.027874469757080078,
+        "user_email": "test_user_concurrent_15@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_15@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_15",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.01856827735900879,
+        "user_email": "test_user_concurrent_16@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_16@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_16",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.025120973587036133,
+        "user_email": "test_user_concurrent_17@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_17@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_17",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.02306509017944336,
+        "user_email": "test_user_concurrent_18@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_18@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_18",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.021140336990356445,
+        "user_email": "test_user_concurrent_19@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_19@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_19",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.022807598114013672,
+        "user_email": "test_user_concurrent_20@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_20@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_20",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.02608799934387207,
+        "user_email": "test_user_concurrent_21@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_21@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_21",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.02601933479309082,
+        "user_email": "test_user_concurrent_22@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_22@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_22",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.027362346649169922,
+        "user_email": "test_user_concurrent_23@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_23@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_23",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      },
+      {
+        "success": false,
+        "status_code": 422,
+        "response_time": 0.0190582275390625,
+        "user_email": "test_user_concurrent_24@example.com",
+        "error": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "full_name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "test_user_concurrent_24@example.com",
+                "password": "TestPassword123!",
+                "first_name": "Testconcurrent_24",
+                "last_name": "User",
+                "plan_type": "basic"
+              },
+              "url": "https://errors.pydantic.dev/2.8/v/missing"
+            }
+          ]
+        }
+      }
+    ],
+    "passed": false
+  },
+  "performance_metrics": {
+    "single_user_performance": {},
+    "concurrent_performance": {},
+    "overall_assessment": "poor"
+  },
+  "connection_pool_validation": {
+    "rapid_requests_sent": 10,
+    "successful_requests": 0,
+    "failed_requests": 10,
+    "total_time": 0.27638888359069824,
+    "avg_time_per_request": 0.027638888359069823,
+    "pool_exhaustion_errors": 0,
+    "passed": false
+  },
+  "errors": [],
+  "recommendations": [
+    "\u274c Single user registration is failing - check basic MongoDB connectivity",
+    "\u274c Low success rate (0.0%) - investigate connection pool settings and server capacity",
+    "\u274c Connection pool validation failed - verify pool size and timeout settings"
+  ]
+}

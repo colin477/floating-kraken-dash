@@ -31,9 +31,9 @@ async def connect_to_mongo():
     mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
     database_name = os.getenv("DATABASE_NAME", "ez_eatin")
     
-    # Retry configuration
-    max_retries = int(os.getenv("MONGODB_MAX_RETRIES", "3"))
-    retry_delay = float(os.getenv("MONGODB_RETRY_DELAY", "2.0"))
+    # Retry configuration with optimized defaults
+    max_retries = int(os.getenv("MONGODB_MAX_RETRIES", "4"))
+    retry_delay = float(os.getenv("MONGODB_RETRY_DELAY", "3.0"))
     
     logger.info(f"Attempting to connect to MongoDB at {mongodb_uri[:50]}...")
     

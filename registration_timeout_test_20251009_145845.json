@@ -1,0 +1,71 @@
+{
+  "timestamp": "2025-10-09T14:58:45.698907",
+  "test_results": [
+    {
+      "scenario": "Single Registration",
+      "concurrent_requests": 1,
+      "total_requests": 1,
+      "successful": 1,
+      "failed": 0,
+      "timeout_errors": 0,
+      "connection_errors": 0,
+      "other_errors": 0,
+      "total_duration": 0.7006011009216309,
+      "errors": []
+    },
+    {
+      "scenario": "Multiple Sequential Registrations",
+      "concurrent_requests": 1,
+      "total_requests": 5,
+      "successful": 5,
+      "failed": 0,
+      "timeout_errors": 0,
+      "connection_errors": 0,
+      "other_errors": 0,
+      "total_duration": 5.430915117263794,
+      "errors": []
+    },
+    {
+      "scenario": "Concurrent Registrations (Low Load)",
+      "concurrent_requests": 3,
+      "total_requests": 3,
+      "successful": 3,
+      "failed": 0,
+      "timeout_errors": 0,
+      "connection_errors": 0,
+      "other_errors": 0,
+      "total_duration": 0.9660022258758545,
+      "errors": []
+    },
+    {
+      "scenario": "Concurrent Registrations (Medium Load)",
+      "concurrent_requests": 5,
+      "total_requests": 5,
+      "successful": 5,
+      "failed": 0,
+      "timeout_errors": 0,
+      "connection_errors": 0,
+      "other_errors": 0,
+      "total_duration": 1.5482494831085205,
+      "errors": []
+    },
+    {
+      "scenario": "Concurrent Registrations (High Load)",
+      "concurrent_requests": 10,
+      "total_requests": 10,
+      "successful": 10,
+      "failed": 0,
+      "timeout_errors": 0,
+      "connection_errors": 0,
+      "other_errors": 0,
+      "total_duration": 2.4766335487365723,
+      "errors": []
+    }
+  ],
+  "summary": {
+    "total_requests": 24,
+    "total_successful": 24,
+    "total_timeout_errors": 0,
+    "total_connection_errors": 0
+  }
+}

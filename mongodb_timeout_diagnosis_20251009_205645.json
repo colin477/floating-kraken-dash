@@ -1,0 +1,104 @@
+{
+  "timestamp": "2025-10-09T20:56:39.776987",
+  "environment_config": {
+    "MONGODB_URI": "mongodb+srv://colin_db_user:FnaPFUQh6aAjhfiR@clust...",
+    "DATABASE_NAME": "ez_eatin",
+    "MONGODB_TLS_ENABLED": "true",
+    "MONGODB_TLS_ALLOW_INVALID_CERTIFICATES": "true",
+    "MONGODB_SERVER_SELECTION_TIMEOUT_MS": "30000",
+    "MONGODB_CONNECT_TIMEOUT_MS": "30000",
+    "MONGODB_SOCKET_TIMEOUT_MS": "30000",
+    "MONGODB_MAX_RETRIES": null,
+    "MONGODB_RETRY_DELAY": null,
+    "is_atlas_connection": true
+  },
+  "connection_tests": {
+    "basic": {
+      "success": true,
+      "error": null,
+      "duration": 1.1210265159606934,
+      "server_info": {
+        "version": "8.0.14",
+        "openssl": null
+      }
+    },
+    "retry_mechanism": [
+      {
+        "timeout_ms": 5000,
+        "attempts": 1,
+        "success": true,
+        "total_duration": 0.6402149200439453,
+        "errors": []
+      },
+      {
+        "timeout_ms": 10000,
+        "attempts": 1,
+        "success": true,
+        "total_duration": 0.6079022884368896,
+        "errors": []
+      },
+      {
+        "timeout_ms": 15000,
+        "attempts": 1,
+        "success": true,
+        "total_duration": 0.6495707035064697,
+        "errors": []
+      },
+      {
+        "timeout_ms": 30000,
+        "attempts": 1,
+        "success": true,
+        "total_duration": 0.6115739345550537,
+        "errors": []
+      }
+    ]
+  },
+  "timeout_analysis": {},
+  "ssl_tls_analysis": {
+    "tls_enabled": true,
+    "allow_invalid_certs": true,
+    "is_atlas": true,
+    "ssl_tests": [
+      {
+        "config_name": "Current Config",
+        "tls_enabled": true,
+        "allow_invalid_certs": true,
+        "success": true,
+        "error": null,
+        "duration": 0.5879786014556885
+      },
+      {
+        "config_name": "Force TLS On",
+        "tls_enabled": true,
+        "allow_invalid_certs": false,
+        "success": true,
+        "error": null,
+        "duration": 0.576422929763794
+      },
+      {
+        "config_name": "TLS with Invalid Certs",
+        "tls_enabled": true,
+        "allow_invalid_certs": true,
+        "success": true,
+        "error": null,
+        "duration": 0.7053196430206299
+      }
+    ]
+  },
+  "recommendations": [
+    {
+      "priority": "MEDIUM",
+      "category": "Retry Configuration",
+      "issue": "MONGODB_MAX_RETRIES not set - using default of 3",
+      "recommendation": "Explicitly set MONGODB_MAX_RETRIES=4 for better reliability",
+      "action": "Add MONGODB_MAX_RETRIES=4 to .env file"
+    },
+    {
+      "priority": "MEDIUM",
+      "category": "Retry Configuration",
+      "issue": "MONGODB_RETRY_DELAY not set - using default of 2.0s",
+      "recommendation": "Explicitly set MONGODB_RETRY_DELAY=3.0 for better spacing between retries",
+      "action": "Add MONGODB_RETRY_DELAY=3.0 to .env file"
+    }
+  ]
+}

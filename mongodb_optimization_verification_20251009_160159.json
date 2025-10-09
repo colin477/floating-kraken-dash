@@ -1,0 +1,554 @@
+{
+  "timestamp": "2025-10-09T16:01:42.053418",
+  "single_user_test": {
+    "passed": true,
+    "response_time": 0.8528616428375244,
+    "status_code": 201,
+    "error": null,
+    "user_email": "test_user_single@example.com"
+  },
+  "concurrent_test": {
+    "total_requests": 25,
+    "successful_registrations": 25,
+    "failed_registrations": 0,
+    "timeout_errors": 0,
+    "success_rate": 100.0,
+    "response_time_stats": {
+      "avg_response_time": 3.2218484592437746,
+      "median_response_time": 3.3789095878601074,
+      "min_response_time": 0.8820087909698486,
+      "max_response_time": 3.675140619277954,
+      "p95_response_time": 3.6625221490859987
+    },
+    "all_results": [
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.3517675399780273,
+        "user_email": "test_user_concurrent_0@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjNzJmYzMxNjFiNjZkOTZlNDkiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzBAZXhhbXBsZS5jb20iLCJleHAiOjE3NjAwNTQ1MDYsImlhdCI6MTc2MDA0NzMwNiwidHlwZSI6ImFjY2VzcyJ9.Gj1WiuJRFfg3JwYXV06JqDfBjHPZDCW5pu9xsTphavE",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830c72fc3161b66d96e49",
+            "email": "test_user_concurrent_0@example.com",
+            "full_name": "Test Concurrent_0 User",
+            "created_at": "2025-10-09T22:01:43.673000",
+            "updated_at": "2025-10-09T22:01:43.673000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.378582000732422,
+        "user_email": "test_user_concurrent_1@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjNzJmYzMxNjFiNjZkOTZlNGEiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzFAZXhhbXBsZS5jb20iLCJleHAiOjE3NjAwNTQ1MDYsImlhdCI6MTc2MDA0NzMwNiwidHlwZSI6ImFjY2VzcyJ9.YzYzFdEJmO9aqjU58nZLYmvxG5MCAEWCwTLy2SNRfzI",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830c72fc3161b66d96e4a",
+            "email": "test_user_concurrent_1@example.com",
+            "full_name": "Test Concurrent_1 User",
+            "created_at": "2025-10-09T22:01:43.881000",
+            "updated_at": "2025-10-09T22:01:43.881000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.4663145542144775,
+        "user_email": "test_user_concurrent_2@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjYTJmYzMxNjFiNjZkOTZlNTQiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzJAZXhhbXBsZS5jb20iLCJleHAiOjE3NjAwNTQ1MDYsImlhdCI6MTc2MDA0NzMwNiwidHlwZSI6ImFjY2VzcyJ9.uiDCMN1StCPJejLNOGW2cd0-slAi9kgSOrq2jWfVvTg",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830ca2fc3161b66d96e54",
+            "email": "test_user_concurrent_2@example.com",
+            "full_name": "Test Concurrent_2 User",
+            "created_at": "2025-10-09T22:01:46.484000",
+            "updated_at": "2025-10-09T22:01:46.484000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.3789095878601074,
+        "user_email": "test_user_concurrent_3@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjODJmYzMxNjFiNjZkOTZlNGMiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzNAZXhhbXBsZS5jb20iLCJleHAiOjE3NjAwNTQ1MDYsImlhdCI6MTc2MDA0NzMwNiwidHlwZSI6ImFjY2VzcyJ9.GsedxSJS-6V-RutAczHtDFBVeY5PdW92FlpP_unzDtk",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830c82fc3161b66d96e4c",
+            "email": "test_user_concurrent_3@example.com",
+            "full_name": "Test Concurrent_3 User",
+            "created_at": "2025-10-09T22:01:44.721000",
+            "updated_at": "2025-10-09T22:01:44.721000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.4695916175842285,
+        "user_email": "test_user_concurrent_4@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjOTJmYzMxNjFiNjZkOTZlNGUiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzRAZXhhbXBsZS5jb20iLCJleHAiOjE3NjAwNTQ1MDYsImlhdCI6MTc2MDA0NzMwNiwidHlwZSI6ImFjY2VzcyJ9.o1ZOuclc5u1y_hgZg2NB-q6nErQnxiF-EhjLUQH_KIk",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830c92fc3161b66d96e4e",
+            "email": "test_user_concurrent_4@example.com",
+            "full_name": "Test Concurrent_4 User",
+            "created_at": "2025-10-09T22:01:45.825000",
+            "updated_at": "2025-10-09T22:01:45.825000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.3702616691589355,
+        "user_email": "test_user_concurrent_5@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjODJmYzMxNjFiNjZkOTZlNGIiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzVAZXhhbXBsZS5jb20iLCJleHAiOjE3NjAwNTQ1MDYsImlhdCI6MTc2MDA0NzMwNiwidHlwZSI6ImFjY2VzcyJ9.cIByzE_WeqCVUlSwkKhnbRhGyRAvqT7k19OIjr6_v8o",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830c82fc3161b66d96e4b",
+            "email": "test_user_concurrent_5@example.com",
+            "full_name": "Test Concurrent_5 User",
+            "created_at": "2025-10-09T22:01:44.091000",
+            "updated_at": "2025-10-09T22:01:44.091000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.4494712352752686,
+        "user_email": "test_user_concurrent_6@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjYTJmYzMxNjFiNjZkOTZlNGYiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzZAZXhhbXBsZS5jb20iLCJleHAiOjE3NjAwNTQ1MDYsImlhdCI6MTc2MDA0NzMwNiwidHlwZSI6ImFjY2VzcyJ9.7Ij2nMqnTBkYsEokYqDKfor30Q2-APugy_o0XPj5eaU",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830ca2fc3161b66d96e4f",
+            "email": "test_user_concurrent_6@example.com",
+            "full_name": "Test Concurrent_6 User",
+            "created_at": "2025-10-09T22:01:46.188000",
+            "updated_at": "2025-10-09T22:01:46.188000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.382514476776123,
+        "user_email": "test_user_concurrent_7@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjOTJmYzMxNjFiNjZkOTZlNGQiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzdAZXhhbXBsZS5jb20iLCJleHAiOjE3NjAwNTQ1MDYsImlhdCI6MTc2MDA0NzMwNiwidHlwZSI6ImFjY2VzcyJ9.E-RH5vaJBQUapKguVt50VLf5CcoXPtWGWS4G-9R7vls",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830c92fc3161b66d96e4d",
+            "email": "test_user_concurrent_7@example.com",
+            "full_name": "Test Concurrent_7 User",
+            "created_at": "2025-10-09T22:01:45.252000",
+            "updated_at": "2025-10-09T22:01:45.252000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.5865204334259033,
+        "user_email": "test_user_concurrent_8@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjYjJmYzMxNjFiNjZkOTZlNTkiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzhAZXhhbXBsZS5jb20iLCJleHAiOjE3NjAwNTQ1MTAsImlhdCI6MTc2MDA0NzMxMCwidHlwZSI6ImFjY2VzcyJ9.BGKatcPGqR6QqORUXj3nk9DBP6bqz-tPqOI3bBnsEmU",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830cb2fc3161b66d96e59",
+            "email": "test_user_concurrent_8@example.com",
+            "full_name": "Test Concurrent_8 User",
+            "created_at": "2025-10-09T22:01:47.684000",
+            "updated_at": "2025-10-09T22:01:47.684000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.5825374126434326,
+        "user_email": "test_user_concurrent_9@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjYzJmYzMxNjFiNjZkOTZlNWIiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzlAZXhhbXBsZS5jb20iLCJleHAiOjE3NjAwNTQ1MTAsImlhdCI6MTc2MDA0NzMxMCwidHlwZSI6ImFjY2VzcyJ9.RSxP_Lc7SiS8wFcJSNtKXALm0WbJflRNYOuPRBfAVTE",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830cc2fc3161b66d96e5b",
+            "email": "test_user_concurrent_9@example.com",
+            "full_name": "Test Concurrent_9 User",
+            "created_at": "2025-10-09T22:01:48.519000",
+            "updated_at": "2025-10-09T22:01:48.519000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.5830390453338623,
+        "user_email": "test_user_concurrent_10@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjZDJmYzMxNjFiNjZkOTZlNWUiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzEwQGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTEwLCJpYXQiOjE3NjAwNDczMTAsInR5cGUiOiJhY2Nlc3MifQ._Ijw1SK9ZaZxLJ6MHSo_pZ7U1GWHCBiX3QJl9inXq5s",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830cd2fc3161b66d96e5e",
+            "email": "test_user_concurrent_10@example.com",
+            "full_name": "Test Concurrent_10 User",
+            "created_at": "2025-10-09T22:01:49.668000",
+            "updated_at": "2025-10-09T22:01:49.668000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.675140619277954,
+        "user_email": "test_user_concurrent_11@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjZTJmYzMxNjFiNjZkOTZlNjAiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzExQGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTEwLCJpYXQiOjE3NjAwNDczMTAsInR5cGUiOiJhY2Nlc3MifQ.DTumdQiWZBcVJnEC-SAdHUzEImlzM4zOysimg_xgwbI",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830ce2fc3161b66d96e60",
+            "email": "test_user_concurrent_11@example.com",
+            "full_name": "Test Concurrent_11 User",
+            "created_at": "2025-10-09T22:01:50.565000",
+            "updated_at": "2025-10-09T22:01:50.565000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.6330790519714355,
+        "user_email": "test_user_concurrent_12@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjYzJmYzMxNjFiNjZkOTZlNWMiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzEyQGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTEwLCJpYXQiOjE3NjAwNDczMTAsInR5cGUiOiJhY2Nlc3MifQ.P8lgMI1RYhMn6Gd_d2aLa7pE7ueIXsR_Om23mv0hu9M",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830cc2fc3161b66d96e5c",
+            "email": "test_user_concurrent_12@example.com",
+            "full_name": "Test Concurrent_12 User",
+            "created_at": "2025-10-09T22:01:48.976000",
+            "updated_at": "2025-10-09T22:01:48.976000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.5974135398864746,
+        "user_email": "test_user_concurrent_13@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjZDJmYzMxNjFiNjZkOTZlNWQiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzEzQGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTEwLCJpYXQiOjE3NjAwNDczMTAsInR5cGUiOiJhY2Nlc3MifQ.IYaCb4RWZSWLIrbHAr0JhprCbohFmEBJaNnsB2-JMkM",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830cd2fc3161b66d96e5d",
+            "email": "test_user_concurrent_13@example.com",
+            "full_name": "Test Concurrent_13 User",
+            "created_at": "2025-10-09T22:01:49.324000",
+            "updated_at": "2025-10-09T22:01:49.324000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.620285749435425,
+        "user_email": "test_user_concurrent_14@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjYjJmYzMxNjFiNjZkOTZlNWEiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzE0QGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTEwLCJpYXQiOjE3NjAwNDczMTAsInR5cGUiOiJhY2Nlc3MifQ.90iSqxCrruUvTCDLh2hV-usv3bWk7t-TcZov783ORtw",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830cb2fc3161b66d96e5a",
+            "email": "test_user_concurrent_14@example.com",
+            "full_name": "Test Concurrent_14 User",
+            "created_at": "2025-10-09T22:01:47.945000",
+            "updated_at": "2025-10-09T22:01:47.945000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.5459041595458984,
+        "user_email": "test_user_concurrent_15@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjZTJmYzMxNjFiNjZkOTZlNWYiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzE1QGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTEwLCJpYXQiOjE3NjAwNDczMTAsInR5cGUiOiJhY2Nlc3MifQ.SWlhaPt8TbLqvkh2SPu_zZ5s0v4uilpPjeQclw3_3V4",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830ce2fc3161b66d96e5f",
+            "email": "test_user_concurrent_15@example.com",
+            "full_name": "Test Concurrent_15 User",
+            "created_at": "2025-10-09T22:01:50.149000",
+            "updated_at": "2025-10-09T22:01:50.149000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 2.9300622940063477,
+        "user_email": "test_user_concurrent_16@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBjZjJmYzMxNjFiNjZkOTZlNjkiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzE2QGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTE0LCJpYXQiOjE3NjAwNDczMTQsInR5cGUiOiJhY2Nlc3MifQ.YispB7620iiHAPDZ_MRZ1pGQjyiiQpzs6hvSDTLU0pI",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830cf2fc3161b66d96e69",
+            "email": "test_user_concurrent_16@example.com",
+            "full_name": "Test Concurrent_16 User",
+            "created_at": "2025-10-09T22:01:51.917000",
+            "updated_at": "2025-10-09T22:01:51.917000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 2.9315977096557617,
+        "user_email": "test_user_concurrent_17@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBkMDJmYzMxNjFiNjZkOTZlNmIiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzE3QGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTE0LCJpYXQiOjE3NjAwNDczMTQsInR5cGUiOiJhY2Nlc3MifQ.SsgzUoLvNcpLu55ynii1N6vCpkMLF0ikmKJ-hGWgaRw",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830d02fc3161b66d96e6b",
+            "email": "test_user_concurrent_17@example.com",
+            "full_name": "Test Concurrent_17 User",
+            "created_at": "2025-10-09T22:01:52.658000",
+            "updated_at": "2025-10-09T22:01:52.658000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.006929397583008,
+        "user_email": "test_user_concurrent_18@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBkMTJmYzMxNjFiNjZkOTZlNmQiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzE4QGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTE0LCJpYXQiOjE3NjAwNDczMTQsInR5cGUiOiJhY2Nlc3MifQ.LGH-d8DIa9CceB6lxWfdBKOkmlKbj17tFs7XyFbCBGM",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830d12fc3161b66d96e6d",
+            "email": "test_user_concurrent_18@example.com",
+            "full_name": "Test Concurrent_18 User",
+            "created_at": "2025-10-09T22:01:53.380000",
+            "updated_at": "2025-10-09T22:01:53.380000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 2.873440980911255,
+        "user_email": "test_user_concurrent_19@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBkMTJmYzMxNjFiNjZkOTZlNmUiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzE5QGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTE0LCJpYXQiOjE3NjAwNDczMTQsInR5cGUiOiJhY2Nlc3MifQ.s3xNsrXF0vZueKOQwch-P65SICR8nZSg-7BgphtvVWU",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830d12fc3161b66d96e6e",
+            "email": "test_user_concurrent_19@example.com",
+            "full_name": "Test Concurrent_19 User",
+            "created_at": "2025-10-09T22:01:53.642000",
+            "updated_at": "2025-10-09T22:01:53.642000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 2.9968178272247314,
+        "user_email": "test_user_concurrent_20@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBkMDJmYzMxNjFiNjZkOTZlNmEiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzIwQGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTE0LCJpYXQiOjE3NjAwNDczMTQsInR5cGUiOiJhY2Nlc3MifQ.8FF929m8zNqPES9S3KhEyn9jwGNUZRnZBMyYOz5SoaY",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830d02fc3161b66d96e6a",
+            "email": "test_user_concurrent_20@example.com",
+            "full_name": "Test Concurrent_20 User",
+            "created_at": "2025-10-09T22:01:52.256000",
+            "updated_at": "2025-10-09T22:01:52.256000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 3.077352285385132,
+        "user_email": "test_user_concurrent_21@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBkMjJmYzMxNjFiNjZkOTZlNzAiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzIxQGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTE0LCJpYXQiOjE3NjAwNDczMTQsInR5cGUiOiJhY2Nlc3MifQ.A5wuPBVGQJXaKvtx_09NJ-VwROL-y_siY7Km15fl3Jg",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830d22fc3161b66d96e70",
+            "email": "test_user_concurrent_21@example.com",
+            "full_name": "Test Concurrent_21 User",
+            "created_at": "2025-10-09T22:01:54.071000",
+            "updated_at": "2025-10-09T22:01:54.071000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 2.881579875946045,
+        "user_email": "test_user_concurrent_22@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBkMTJmYzMxNjFiNjZkOTZlNmMiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzIyQGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTE0LCJpYXQiOjE3NjAwNDczMTQsInR5cGUiOiJhY2Nlc3MifQ.2BasTjEsysiezpg2Zw-y_HAnstOfW9NrVvkDoOBkims",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830d12fc3161b66d96e6c",
+            "email": "test_user_concurrent_22@example.com",
+            "full_name": "Test Concurrent_22 User",
+            "created_at": "2025-10-09T22:01:53.083000",
+            "updated_at": "2025-10-09T22:01:53.083000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 2.895089626312256,
+        "user_email": "test_user_concurrent_23@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBkMTJmYzMxNjFiNjZkOTZlNmYiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzIzQGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTE0LCJpYXQiOjE3NjAwNDczMTQsInR5cGUiOiJhY2Nlc3MifQ.6yG_Xdqjwxm7W2VrLiWoMhbyLvUcazDJBB_hGyzPQic",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830d12fc3161b66d96e6f",
+            "email": "test_user_concurrent_23@example.com",
+            "full_name": "Test Concurrent_23 User",
+            "created_at": "2025-10-09T22:01:53.856000",
+            "updated_at": "2025-10-09T22:01:53.856000",
+            "is_active": true
+          }
+        }
+      },
+      {
+        "success": true,
+        "status_code": 201,
+        "response_time": 0.8820087909698486,
+        "user_email": "test_user_concurrent_24@example.com",
+        "error": null,
+        "response_data": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU4MzBkMzJmYzMxNjFiNjZkOTZlNzkiLCJlbWFpbCI6InRlc3RfdXNlcl9jb25jdXJyZW50XzI0QGV4YW1wbGUuY29tIiwiZXhwIjoxNzYwMDU0NTE1LCJpYXQiOjE3NjAwNDczMTUsInR5cGUiOiJhY2Nlc3MifQ.Yhd8SwbEbDdgFffmd6d6FznV9UhE4NJaclSisvg6R_s",
+          "token_type": "bearer",
+          "expires_in": 7200,
+          "user": {
+            "id": "68e830d32fc3161b66d96e79",
+            "email": "test_user_concurrent_24@example.com",
+            "full_name": "Test Concurrent_24 User",
+            "created_at": "2025-10-09T22:01:55.636000",
+            "updated_at": "2025-10-09T22:01:55.636000",
+            "is_active": true
+          }
+        }
+      }
+    ],
+    "passed": true
+  },
+  "performance_metrics": {
+    "single_user_performance": {
+      "response_time": 0.8528616428375244,
+      "status": "good"
+    },
+    "concurrent_performance": {
+      "avg_response_time": 3.2218484592437746,
+      "p95_response_time": 3.6625221490859987,
+      "success_rate": 100.0,
+      "timeout_errors": 0
+    },
+    "overall_assessment": "excellent"
+  },
+  "connection_pool_validation": {
+    "rapid_requests_sent": 10,
+    "successful_requests": 10,
+    "failed_requests": 0,
+    "total_time": 3.333359956741333,
+    "avg_time_per_request": 0.3333359956741333,
+    "pool_exhaustion_errors": 0,
+    "passed": true
+  },
+  "errors": [],
+  "recommendations": [
+    "\u2705 Concurrent registration timeout issues appear to be resolved",
+    "\u2705 Connection pool is handling concurrent requests effectively"
+  ]
+}
