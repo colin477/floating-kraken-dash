@@ -320,30 +320,23 @@ class DatabasePoolConfig:
         
         # Apply SSL/TLS configuration if enabled
         if tls_enabled:
-            # Production-safe SSL/TLS options
+            # Simplified SSL/TLS options compatible with PyMongo 4.8.0
             ssl_options = {
                 "tls": True
             }
             
-            # Handle certificate validation - these options are mutually exclusive
+            # Only add certificate validation option if explicitly disabled for development
             allow_invalid_certs = DatabasePoolConfig._get_env_bool(
                 "MONGODB_TLS_ALLOW_INVALID_CERTIFICATES",
                 False  # Default to strict certificate validation in production
             )
             
             if allow_invalid_certs:
-                # Use tlsAllowInvalidCertificates for development/testing
                 ssl_options["tlsAllowInvalidCertificates"] = True
-            else:
-                # Use strict validation for production
-                ssl_options["tlsAllowInvalidCertificates"] = False
             
-            # Add additional SSL/TLS options for production environments
+            # Add authSource for Atlas connections (moved outside SSL options)
             if is_atlas:
-                # MongoDB Atlas specific optimizations
-                ssl_options.update({
-                    "authSource": "admin"  # Atlas typically uses admin auth source
-                })
+                options["authSource"] = "admin"
             
             options.update(ssl_options)
             logger.info(f"SSL/TLS configuration applied: {ssl_options}")
