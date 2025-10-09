@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User, UserProfile, Recipe } from '@/types';
 import { storage } from '@/lib/storage';
 import { AuthForm } from '@/components/AuthForm';
@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { OnboardingGuard } from '@/components/OnboardingGuard';
 import { Dashboard } from '@/components/Dashboard';
 import { ReceiptScan } from '@/components/ReceiptScan';
+import { ReceiptHistory } from '@/components/ReceiptHistory';
 import { MealPhotoAnalysis } from '@/components/MealPhotoAnalysis';
 import { AddFromLink } from '@/components/AddFromLink';
 import { CreateRecipe } from '@/components/CreateRecipe';
@@ -23,6 +24,13 @@ import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import { shouldBypassAuth, isDemoModeEnabled } from '@/lib/demoMode';
+
+// GLOBAL TEST FUNCTION TO DEBUG NAVIGATION ISSUE
+(window as any).testNavigationFunction = (page: string) => {
+  console.log('🌍 [GLOBAL] Test navigation function called with page:', page);
+  alert('🌍 GLOBAL TEST FUNCTION CALLED with page: ' + page);
+  return true;
+};
 
 const Index = () => {
   const { user: authUser, isAuthenticated, isLoading: authLoading, logout } = useAuth();
@@ -56,6 +64,19 @@ const Index = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  
+  // DEBUG: Watch currentPage changes with detailed stack trace
+  useEffect(() => {
+    console.log('🔍 [Index] currentPage changed to:', currentPage);
+    console.log('🔍 [Index] currentPage change stack trace:', new Error().stack);
+    
+    // Special logging for receipts page changes
+    if (currentPage === 'receipts') {
+      console.log('🧾 [Index] SUCCESS! currentPage is now receipts');
+    } else if (currentPage === 'dashboard') {
+      console.log('📊 [Index] currentPage is dashboard - checking if this was unexpected');
+    }
+  }, [currentPage]);
   const [editingListId, setEditingListId] = useState<string | null>(null);
   
   // Sidebar state management
@@ -66,6 +87,10 @@ const Index = () => {
   };
 
   useEffect(() => {
+    console.log('🔍 [Index] Main useEffect triggered - this might reset currentPage!');
+    console.log('🔍 [Index] Main useEffect - currentPage before:', currentPage);
+    console.log('🔍 [Index] Main useEffect - dependencies:', { isAuthenticated, authUser: !!authUser });
+    
     // Check for reset parameter in URL for testing purposes
     const urlParams = new URLSearchParams(window.location.search);
     const shouldReset = urlParams.get('reset') === 'true';
@@ -91,7 +116,6 @@ const Index = () => {
           mealPreferences: ['Quick meals (under 30 min)', 'Kid-friendly'],
           kitchenEquipment: ['Oven', 'Stovetop', 'Microwave'],
           weeklyBudget: 150,
-          zipCode: '80202',
           familyMembers: [],
           preferredGrocers: ['kroger-local', 'safeway-local']
         };
@@ -102,6 +126,8 @@ const Index = () => {
       
       setProfile(savedProfile);
     }
+    
+    console.log('🔍 [Index] Main useEffect completed - currentPage after:', currentPage);
   }, [isAuthenticated, authUser]);
 
   const handleAuthSuccess = (newUser: User, isNewUserFlag: boolean) => {
@@ -143,31 +169,96 @@ const Index = () => {
     }, 100);
   };
 
+  // Create a completely new function to force React to recognize the change
   const handleNavigate = (page: string) => {
-    // Handle recipe detail navigation
-    if (page.startsWith('recipe-')) {
-      const recipeId = page.replace('recipe-', '');
-      const recipes = storage.getRecipes();
-      const recipe = recipes.find(r => r.id === recipeId);
-      if (recipe) {
-        setSelectedRecipe(recipe);
-        setCurrentPage('recipe-detail');
-      }
-    } else {
-      // Refresh profile data when navigating back to dashboard
-      if (page === 'dashboard') {
-        const updatedProfile = storage.getProfile();
-        setProfile(updatedProfile);
-      }
-      
-      setCurrentPage(page);
-      setSelectedRecipe(null);
-      setEditingListId(null);
+    // FORCE FRESH FUNCTION - NO USECALLBACK TO AVOID STALE CLOSURES
+    const debugTimestamp = Date.now();
+    console.log('🔥🔥🔥 [Index] BRAND NEW handleNavigate FUNCTION CALL:', debugTimestamp);
+    console.log('🚨🚨🚨 [Index] handleNavigate called - THIS SHOULD ALWAYS SHOW! 🚨🚨🚨');
+    console.log('🔍 [Index] handleNavigate DETAILED DEBUG:', {
+      page,
+      currentPage,
+      currentPageBefore: currentPage,
+      windowWidth: window.innerWidth,
+      isSidebarOpen,
+      timestamp: new Date().toISOString(),
+      callStack: new Error().stack
+    });
+    
+    // Add alert for receipts specifically
+    if (page === 'receipts') {
+      alert('🧾 BRAND NEW FUNCTION - handleNavigate called for receipts! Current page: ' + currentPage);
+      console.log('🧾🧾🧾 [Index] RECEIPTS NAVIGATION TRIGGERED! 🧾🧾🧾');
+      console.log('🧾 [Index] About to set currentPage from:', currentPage, 'to:', page);
     }
     
-    // Close sidebar on mobile after navigation
-    if (window.innerWidth <= 1023) {
-      setIsSidebarOpen(false);
+    try {
+      // Handle recipe detail navigation
+      if (page.startsWith('recipe-')) {
+        const recipeId = page.replace('recipe-', '');
+        const recipes = storage.getRecipes();
+        const recipe = recipes.find(r => r.id === recipeId);
+        if (recipe) {
+          console.log('📖 [Index] Navigating to recipe detail:', recipeId);
+          setSelectedRecipe(recipe);
+          setCurrentPage('recipe-detail');
+        } else {
+          console.warn('⚠️ [Index] Recipe not found:', recipeId);
+        }
+      } else {
+        console.log('📄 [Index] Navigating to page:', page);
+        console.log('📄 [Index] Current page before setState:', currentPage);
+        
+        // Refresh profile data when navigating back to dashboard
+        if (page === 'dashboard') {
+          const updatedProfile = storage.getProfile();
+          setProfile(updatedProfile);
+          console.log('🔄 [Index] Refreshed profile for dashboard');
+        }
+        
+        // Special logging for receipts navigation
+        if (page === 'receipts') {
+          console.log('🧾 [Index] Navigating to receipts page - this should work!');
+          console.log('🧾 [Index] BEFORE setCurrentPage - currentPage:', currentPage);
+        }
+        
+        // Log before state change
+        console.log('🔄 [Index] About to call setCurrentPage with:', page);
+        // Use functional update to ensure we get the latest state
+        setCurrentPage((prevPage) => {
+          console.log('🔄 [Index] setCurrentPage functional update - prev:', prevPage, 'new:', page);
+          return page;
+        });
+        console.log('🔄 [Index] setCurrentPage called with:', page);
+        
+        setSelectedRecipe(null);
+        setEditingListId(null);
+        
+        // Special logging after receipts navigation
+        if (page === 'receipts') {
+          console.log('🧾 [Index] AFTER setCurrentPage - should be receipts now');
+          // Force a re-render check with multiple timeouts
+          setTimeout(() => {
+            console.log('🧾 [Index] TIMEOUT CHECK 100ms - currentPage should be receipts but might still be stale:', currentPage);
+          }, 100);
+          setTimeout(() => {
+            console.log('🧾 [Index] TIMEOUT CHECK 500ms - currentPage should definitely be receipts now:', currentPage);
+          }, 500);
+        }
+        
+        console.log('✅ [Index] Page state updated to:', page);
+      }
+      
+      // Close sidebar on mobile after navigation
+      if (window.innerWidth <= 1023) {
+        console.log('📱 [Index] Closing sidebar on mobile/tablet');
+        setIsSidebarOpen(false);
+      }
+      
+      console.log('✅ [Index] Navigation completed successfully');
+    } catch (error) {
+      console.error('❌ [Index] Error during navigation:', error);
+      alert('❌ Navigation error: ' + String(error));
     }
   };
 
@@ -199,11 +290,49 @@ const Index = () => {
 
   // Use OnboardingGuard to handle server-authoritative onboarding flow
   const renderCurrentPage = () => {
+    console.log('🔍 [Index] renderCurrentPage called with currentPage:', currentPage);
+    console.log('🔍 [Index] renderCurrentPage - auth state:', {
+      effectivelyAuthenticated,
+      effectiveUser: !!effectiveUser,
+      isAuthenticated,
+      authUser: !!authUser,
+      demoModeEnabled,
+      bypassAuth
+    });
+    
     switch (currentPage) {
       case 'dashboard':
+        console.log('📊 [Index] Rendering Dashboard');
         return <Dashboard user={effectiveUser} profile={profile} onNavigate={handleNavigate} />;
       case 'receipt-scan':
+        console.log('📷 [Index] Rendering ReceiptScan');
         return <ReceiptScan onBack={() => handleNavigate('dashboard')} />;
+      case 'receipts':
+        console.log('🧾 [Index] Rendering ReceiptHistory - THIS SHOULD SHOW THE RECEIPTS PAGE!');
+        try {
+          return <ReceiptHistory onBack={() => handleNavigate('dashboard')} />;
+        } catch (error) {
+          console.error('❌ [Index] Error rendering ReceiptHistory:', error);
+          return (
+            <div className="min-h-screen bg-gray-50 p-4">
+              <div className="max-w-7xl mx-auto">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <h2 className="text-xl font-semibold text-red-800 mb-4">Error Loading Receipts</h2>
+                  <p className="text-red-600 mb-4">There was an error loading the receipts page:</p>
+                  <pre className="bg-red-100 p-4 rounded text-sm text-red-800 overflow-auto">
+                    {String(error)}
+                  </pre>
+                  <button
+                    onClick={() => handleNavigate('dashboard')}
+                    className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                  >
+                    ← Back to Dashboard
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        }
       case 'meal-photo':
         return <MealPhotoAnalysis onBack={() => handleNavigate('dashboard')} />;
       case 'add-from-link':
@@ -275,7 +404,11 @@ const Index = () => {
           isOpen={isSidebarOpen}
           onToggle={toggleSidebar}
           currentPage={currentPage}
-          onNavigate={handleNavigate}
+          onNavigate={(page: string) => {
+            console.log('🔥 [INLINE] Inline onNavigate called with page:', page);
+            alert('🔥 INLINE FUNCTION CALLED with page: ' + page);
+            handleNavigate(page);
+          }}
           user={effectiveUser ? {
             name: effectiveUser.name,
             email: effectiveUser.email,

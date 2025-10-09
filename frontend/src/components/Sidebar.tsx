@@ -2,22 +2,23 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Home, 
-  Package, 
-  ChefHat, 
-  Calendar, 
-  ShoppingCart, 
-  RefreshCw, 
-  Users, 
-  User, 
-  Camera, 
-  Link, 
+import {
+  Home,
+  Package,
+  ChefHat,
+  Calendar,
+  ShoppingCart,
+  RefreshCw,
+  Users,
+  User,
+  Camera,
+  Link,
   Edit,
   ChevronDown,
   ChevronRight,
   X,
-  Menu
+  Menu,
+  Receipt
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -84,6 +85,7 @@ export const Sidebar = ({ isOpen, onToggle, currentPage, onNavigate, user }: Sid
   const primaryNavItems: NavigationItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, page: 'dashboard' },
     { id: 'pantry', label: 'Pantry', icon: Package, page: 'pantry' },
+    { id: 'receipts', label: 'Receipts', icon: Receipt, page: 'receipts' },
     { id: 'recipes', label: 'Recipes', icon: ChefHat, page: 'recipes' },
     { id: 'meal-planner', label: 'Meal Planner', icon: Calendar, page: 'meal-planner' },
     { id: 'shopping-lists', label: 'Shopping Lists', icon: ShoppingCart, page: 'shopping-lists' },
@@ -106,10 +108,29 @@ export const Sidebar = ({ isOpen, onToggle, currentPage, onNavigate, user }: Sid
   ];
 
   const handleNavigation = (page: string) => {
-    onNavigate(page);
-    // Close sidebar on mobile after navigation
-    if (isMobile && isOpen) {
-      onToggle();
+    console.log('🔍 [Sidebar] Navigation clicked:', {
+      page,
+      isMobile,
+      isOpen,
+      currentPage,
+      timestamp: new Date().toISOString()
+    });
+    
+    console.log('🔍 [Sidebar] onNavigate function type:', typeof onNavigate);
+    console.log('🔍 [Sidebar] onNavigate function:', onNavigate);
+    
+    try {
+      console.log('🔍 [Sidebar] About to call onNavigate with page:', page);
+      onNavigate(page);
+      console.log('✅ [Sidebar] onNavigate called successfully for page:', page);
+      
+      // Close sidebar on mobile after navigation
+      if (isMobile && isOpen) {
+        console.log('📱 [Sidebar] Closing mobile sidebar after navigation');
+        onToggle();
+      }
+    } catch (error) {
+      console.error('❌ [Sidebar] Error during navigation:', error);
     }
   };
 
@@ -184,11 +205,14 @@ export const Sidebar = ({ isOpen, onToggle, currentPage, onNavigate, user }: Sid
                         variant={isActive ? "default" : "ghost"}
                         className={cn(
                           "w-full justify-start h-11 px-3",
-                          isActive 
-                            ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" 
+                          isActive
+                            ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
                             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                         )}
-                        onClick={() => handleNavigation(item.page)}
+                        onClick={() => {
+                          console.log('🔥 [Sidebar] Button clicked:', item.id, item.page);
+                          handleNavigation(item.page);
+                        }}
                         onKeyDown={(e) => handleKeyDown(e, () => handleNavigation(item.page))}
                         aria-current={isActive ? "page" : undefined}
                       >

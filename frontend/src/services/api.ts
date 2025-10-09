@@ -10,6 +10,13 @@ import {
   mockGetPantryItem
 } from '@/lib/mockPantryData';
 import { simulateReceiptProcessing } from '@/lib/mockData';
+import {
+  getMockReceiptsResponse,
+  getMockReceipt,
+  getMockReceiptImageUrl,
+  getMockReceiptStatsResponse,
+  mockDeleteReceipt
+} from '@/lib/mockReceiptData';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_APP_BASE_URL || 'http://localhost:8000/api/v1';
 
@@ -738,6 +745,124 @@ export const receiptApi = {
         items: mockItems,
         message: 'Receipt processed successfully (demo mode fallback)'
       };
+    }
+  },
+
+  // Get all receipts with filtering
+  getReceipts: async (params?: {
+    page?: number;
+    page_size?: number;
+    store?: string;
+    date_from?: string;
+    date_to?: string;
+    min_total?: number;
+    max_total?: number;
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
+  }) => {
+    if (shouldUseMockData()) {
+      console.log('🧪 [Demo Mode] Using mock receipts data');
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return getMockReceiptsResponse(params);
+    }
+
+    try {
+      const searchParams = new URLSearchParams();
+      if (params?.page) searchParams.append('page', params.page.toString());
+      if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
+      if (params?.store) searchParams.append('store', params.store);
+      if (params?.date_from) searchParams.append('date_from', params.date_from);
+      if (params?.date_to) searchParams.append('date_to', params.date_to);
+      if (params?.min_total) searchParams.append('min_total', params.min_total.toString());
+      if (params?.max_total) searchParams.append('max_total', params.max_total.toString());
+      if (params?.sort_by) searchParams.append('sort_by', params.sort_by);
+      if (params?.sort_order) searchParams.append('sort_order', params.sort_order);
+      
+      const query = searchParams.toString();
+      const endpoint = `/receipts/${query ? `?${query}` : ''}`;
+      
+      const response = await apiRequest(endpoint);
+      return response.json();
+    } catch (error) {
+      console.warn('🧪 [Demo Mode] API failed, falling back to mock receipts:', error);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return getMockReceiptsResponse(params);
+    }
+  },
+
+  // Get specific receipt
+  getReceipt: async (receiptId: string) => {
+    if (shouldUseMockData()) {
+      console.log('🧪 [Demo Mode] Getting mock receipt:', receiptId);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      return getMockReceipt(receiptId);
+    }
+
+    try {
+      const response = await apiRequest(`/receipts/${receiptId}`);
+      return response.json();
+    } catch (error) {
+      console.warn('🧪 [Demo Mode] API failed, falling back to mock receipt:', error);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      return getMockReceipt(receiptId);
+    }
+  },
+
+  // Delete receipt
+  deleteReceipt: async (receiptId: string) => {
+    if (shouldUseMockData()) {
+      console.log('🧪 [Demo Mode] Deleting mock receipt:', receiptId);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      mockDeleteReceipt(receiptId);
+      return { success: true };
+    }
+
+    try {
+      const response = await apiRequest(`/receipts/${receiptId}`, {
+        method: 'DELETE',
+      });
+      return response.json();
+    } catch (error) {
+      console.warn('🧪 [Demo Mode] API failed, falling back to mock deletion:', error);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      mockDeleteReceipt(receiptId);
+      return { success: true };
+    }
+  },
+
+  // Get receipt image URL
+  getReceiptImageUrl: async (receiptId: string) => {
+    if (shouldUseMockData()) {
+      console.log('🧪 [Demo Mode] Getting mock receipt image URL:', receiptId);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      return getMockReceiptImageUrl(receiptId);
+    }
+
+    try {
+      const response = await apiRequest(`/receipts/${receiptId}/image-url`);
+      return response.json();
+    } catch (error) {
+      console.warn('🧪 [Demo Mode] API failed, falling back to mock image URL:', error);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      return getMockReceiptImageUrl(receiptId);
+    }
+  },
+
+  // Get receipt statistics
+  getReceiptStats: async () => {
+    if (shouldUseMockData()) {
+      console.log('🧪 [Demo Mode] Getting mock receipt stats');
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return getMockReceiptStatsResponse();
+    }
+
+    try {
+      const response = await apiRequest('/receipts/stats/overview');
+      return response.json();
+    } catch (error) {
+      console.warn('🧪 [Demo Mode] API failed, falling back to mock receipt stats:', error);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return getMockReceiptStatsResponse();
     }
   },
 };
