@@ -9,7 +9,7 @@ from typing import Optional, List, Dict, Any, Tuple
 from datetime import datetime, timedelta
 import json
 import os
-from fuzzywuzzy import fuzz, process
+from thefuzz import fuzz, process
 
 from app.models.nutrition import (
     IngredientNutrition,
