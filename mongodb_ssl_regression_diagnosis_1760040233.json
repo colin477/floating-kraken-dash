@@ -1,0 +1,108 @@
+{
+  "timestamp": "2025-10-09T14:03:53.036837",
+  "diagnosis_type": "SSL_REGRESSION_ANALYSIS",
+  "tests": {
+    "environment_variable_loading": {
+      "success": true,
+      "details": {
+        "MONGODB_URI": "mongodb+srv://colin_db_user:FnaPFUQh6aAjhfiR@cluster0.vcpyxwh.mongodb.net/ez_eatin?retryWrites=true&w=majority&appName=Cluster0",
+        "MONGODB_TLS_ENABLED": "true",
+        "MONGODB_TLS_ALLOW_INVALID_CERTIFICATES": "true",
+        "MONGODB_SERVER_SELECTION_TIMEOUT_MS": "30000",
+        "MONGODB_CONNECT_TIMEOUT_MS": "30000",
+        "MONGODB_SOCKET_TIMEOUT_MS": "30000",
+        "IS_ATLAS_URI": true,
+        "URI_MASKED": "mongodb+srv://colin_db_user:FnaPFUQh6aAjhfiR@clust..."
+      },
+      "timestamp": "2025-10-09T14:03:53.038515"
+    },
+    "database_pool_config_generation": {
+      "success": true,
+      "details": {
+        "has_tls_enabled": true,
+        "has_required_timeouts": true,
+        "tls_allow_invalid_certs": true,
+        "server_selection_timeout": 30000,
+        "connect_timeout": 30000,
+        "socket_timeout": 30000,
+        "max_pool_size": 100,
+        "auth_source": "admin"
+      },
+      "timestamp": "2025-10-09T14:03:53.151444"
+    },
+    "system_ssl_info": {
+      "success": true,
+      "details": {
+        "python_version": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
+        "ssl_version": "OpenSSL 3.0.16 11 Feb 2025",
+        "ssl_version_info": [
+          3,
+          0,
+          0,
+          16,
+          0
+        ],
+        "supported_protocols": [
+          "TLSv1",
+          "TLSv1_1",
+          "TLSv1_2"
+        ],
+        "default_ca_certs": {
+          "cafile": null,
+          "capath": null,
+          "openssl_cafile_env": "SSL_CERT_FILE",
+          "openssl_cafile": "C:\\Program Files\\Common Files\\SSL/cert.pem",
+          "openssl_capath_env": "SSL_CERT_DIR",
+          "openssl_capath": "C:\\Program Files\\Common Files\\SSL/certs"
+        },
+        "default_context_protocol": "16",
+        "default_verify_mode": "2"
+      },
+      "timestamp": "2025-10-09T14:03:53.055836"
+    },
+    "direct_ssl_handshake": {
+      "success": false,
+      "details": {
+        "Default SSL Context": {
+          "success": false,
+          "error": "[Errno 11001] getaddrinfo failed",
+          "error_type": "gaierror"
+        },
+        "No Certificate Verification": {
+          "success": false,
+          "error": "[Errno 11001] getaddrinfo failed",
+          "error_type": "gaierror"
+        },
+        "TLS 1.2+ Only": {
+          "success": false,
+          "error": "[Errno 11001] getaddrinfo failed",
+          "error_type": "gaierror"
+        },
+        "successful_context": null
+      },
+      "timestamp": "2025-10-09T14:03:53.136863"
+    },
+    "pymongo_current_config": {
+      "success": false,
+      "details": {
+        "error": "pymongo.mongo_client.MongoClient() got multiple values for keyword argument 'serverSelectionTimeoutMS'",
+        "error_type": "TypeError",
+        "is_ssl_error": false,
+        "is_timeout_error": true,
+        "options_attempted": "{'maxPoolSize': 100, 'minPoolSize': 10, 'maxIdleTimeMS': 30000, 'waitQueueTimeoutMS': 5000, 'serverSelectionTimeoutMS': 30000, 'connectTimeoutMS': 30000, 'socketTimeoutMS': 30000, 'retryWrites': True, 'retryReads': True, 'readPreference': 'secondaryPreferred', 'authSource': 'admin', 'tls': True, 'tlsAllowInvalidCertificates': True}"
+      },
+      "timestamp": "2025-10-09T14:03:53.147646"
+    },
+    "motor_current_config": {
+      "success": false,
+      "details": {
+        "error": "motor.motor_asyncio.AsyncIOMotorClient() got multiple values for keyword argument 'serverSelectionTimeoutMS'",
+        "error_type": "TypeError",
+        "is_ssl_error": false,
+        "is_timeout_error": true,
+        "options_attempted": "{'maxPoolSize': 100, 'minPoolSize': 10, 'maxIdleTimeMS': 30000, 'waitQueueTimeoutMS': 5000, 'serverSelectionTimeoutMS': 30000, 'connectTimeoutMS': 30000, 'socketTimeoutMS': 30000, 'retryWrites': True, 'retryReads': True, 'readPreference': 'secondaryPreferred', 'authSource': 'admin', 'tls': True, 'tlsAllowInvalidCertificates': True}"
+      },
+      "timestamp": "2025-10-09T14:03:53.154932"
+    }
+  }
+}
