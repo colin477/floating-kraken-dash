@@ -275,15 +275,15 @@ class DatabasePoolConfig:
         mongodb_uri = os.getenv("MONGODB_URI", "")
         is_atlas = DatabasePoolConfig._is_mongodb_atlas_uri(mongodb_uri)
         
-        # Base connection options with optimized defaults for concurrent load
+        # Base connection options optimized for MongoDB Atlas free tier stability
         options = {
-            "maxPoolSize": DatabasePoolConfig._get_env_int("MONGODB_MAX_POOL_SIZE", 150),
-            "minPoolSize": DatabasePoolConfig._get_env_int("MONGODB_MIN_POOL_SIZE", 20),
+            "maxPoolSize": DatabasePoolConfig._get_env_int("MONGODB_MAX_POOL_SIZE", 50),
+            "minPoolSize": DatabasePoolConfig._get_env_int("MONGODB_MIN_POOL_SIZE", 5),
             "maxIdleTimeMS": DatabasePoolConfig._get_env_int("MONGODB_MAX_IDLE_TIME_MS", 30000),
             "waitQueueTimeoutMS": DatabasePoolConfig._get_env_int("MONGODB_WAIT_QUEUE_TIMEOUT_MS", 15000),
-            "serverSelectionTimeoutMS": DatabasePoolConfig._get_env_int("MONGODB_SERVER_SELECTION_TIMEOUT_MS", 30000),
-            "connectTimeoutMS": DatabasePoolConfig._get_env_int("MONGODB_CONNECT_TIMEOUT_MS", 30000),
-            "socketTimeoutMS": DatabasePoolConfig._get_env_int("MONGODB_SOCKET_TIMEOUT_MS", 30000),
+            "serverSelectionTimeoutMS": DatabasePoolConfig._get_env_int("MONGODB_SERVER_SELECTION_TIMEOUT_MS", 45000),
+            "connectTimeoutMS": DatabasePoolConfig._get_env_int("MONGODB_CONNECT_TIMEOUT_MS", 45000),
+            "socketTimeoutMS": DatabasePoolConfig._get_env_int("MONGODB_SOCKET_TIMEOUT_MS", 45000),
             "retryWrites": True,
             "retryReads": True,
             "readPreference": "secondaryPreferred"

@@ -1,0 +1,81 @@
+{
+  "timestamp": "2025-10-10T03:46:21.300847",
+  "base_url": "http://localhost:8000",
+  "tests": {
+    "health_endpoint": {
+      "status": "PASS",
+      "response_time": 0.3778107166290283,
+      "status_code": 200,
+      "response_data": {
+        "status": "healthy",
+        "message": "API is running and database is connected",
+        "database_connected": true,
+        "timestamp": "2025-10-10T03:42:35.243125"
+      }
+    },
+    "connection_health_monitoring": {
+      "status": "PASS",
+      "response_time": 0.10439872741699219,
+      "status_code": 200,
+      "connection_stats": {
+        "status": "healthy",
+        "message": "Database connection is operational",
+        "database": "MongoDB",
+        "connection_stats": {
+          "status": "connected",
+          "current_connections": 7,
+          "available_connections": 493,
+          "total_created": 15110,
+          "last_health_check": 1760067981.6928349,
+          "health_check_interval": 30
+        },
+        "timestamp": "2025-10-10T03:46:21.785439"
+      }
+    },
+    "single_registration": {
+      "status": "PASS",
+      "response_time": 0.6829369068145752,
+      "status_code": 201,
+      "user_created": true,
+      "has_access_token": true,
+      "user_data": {
+        "email": "test_user_y8vojch6@example.com",
+        "full_name": "Test User y8vojch6",
+        "is_active": true
+      }
+    },
+    "ssl_tls_configuration": {
+      "status": "PASS",
+      "ssl_handshake": "SUCCESS",
+      "connection_established": true,
+      "response_time": 0.6309216022491455
+    },
+    "timeout_and_retry_logic": {
+      "status": "PASS",
+      "total_response_time": 1.036695957183838,
+      "timeout_handling": "SUCCESS",
+      "within_expected_timeout": true,
+      "retry_logic": "NOT_TRIGGERED"
+    },
+    "concurrent_registrations": {
+      "status": "PASS",
+      "total_duration": 5.494595766067505,
+      "concurrent_requests": 15,
+      "successful": 15,
+      "failed": 0,
+      "errors": 0,
+      "service_unavailable_count": 0,
+      "average_response_time": 5.278852653503418,
+      "max_response_time": 5.479707479476929,
+      "min_response_time": 5.130773544311523,
+      "connection_pool_stress_test": "PASS"
+    }
+  },
+  "summary": {
+    "total_tests": 6,
+    "passed": 6,
+    "failed": 0,
+    "success_rate": "100.0%",
+    "errors": []
+  }
+}

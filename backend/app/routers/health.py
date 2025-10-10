@@ -4,6 +4,7 @@ Health check and system status endpoints
 
 from fastapi import APIRouter
 from typing import Dict, Any
+from datetime import datetime
 from app.models.responses import SuccessResponse
 
 router = APIRouter()
@@ -78,27 +79,38 @@ def _get_ocr_recommendations(status: Dict[str, Any]) -> list:
 
 @router.get("/database")
 async def database_health_check():
-    """Check database connection health"""
+    """Check database connection health with detailed connection pool stats"""
     try:
-        from app.database import get_collection
+        from app.database import check_connection_health, get_connection_stats
         
-        # Try to access a collection to test connection
-        collection = await get_collection("users")
+        # Check connection health using our new monitoring
+        is_healthy = await check_connection_health()
         
-        # Simple ping test
-        await collection.find_one({}, {"_id": 1})
+        # Get detailed connection statistics
+        connection_stats = await get_connection_stats()
         
-        return {
-            "status": "healthy",
-            "message": "Database connection is operational",
-            "database": "MongoDB"
-        }
-        
+        if is_healthy:
+            return {
+                "status": "healthy",
+                "message": "Database connection is operational",
+                "database": "MongoDB",
+                "connection_stats": connection_stats,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        else:
+            return {
+                "status": "unhealthy",
+                "message": "Database connection health check failed",
+                "database": "MongoDB",
+                "connection_stats": connection_stats,
+                "timestamp": datetime.utcnow().isoformat()
+            }
     except Exception as e:
         return {
-            "status": "unhealthy",
-            "message": f"Database connection failed: {str(e)}",
-            "database": "MongoDB"
+            "status": "error",
+            "message": f"Database health check error: {str(e)}",
+            "database": "MongoDB",
+            "timestamp": datetime.utcnow().isoformat()
         }
 
 
@@ -149,7 +161,7 @@ async def system_health_check():
                 "database": db_health,
                 "storage": storage_health
             },
-            "timestamp": "2024-01-01T00:00:00Z"  # This would be actual timestamp in production
+            "timestamp": datetime.utcnow().isoformat()
         }
         
     except Exception as e:

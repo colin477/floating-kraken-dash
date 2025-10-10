@@ -1,0 +1,140 @@
+{
+  "timestamp": "2025-10-10T03:29:01.494339",
+  "environment_analysis": {
+    "mongodb_uri_present": true,
+    "mongodb_uri_type": "atlas",
+    "ssl_tls_enabled": true,
+    "ssl_allow_invalid_certs": true,
+    "timeouts": {
+      "server_selection": 30000,
+      "connect": 30000,
+      "socket": 30000
+    },
+    "pool_settings": {
+      "max_pool_size": 150,
+      "min_pool_size": 20,
+      "wait_queue_timeout": 15000,
+      "max_idle_time": 30000
+    },
+    "retry_settings": {
+      "max_retries": 4,
+      "retry_delay": 3.0
+    },
+    "identified_issues": [
+      "WARNING: MONGODB_TLS_ALLOW_INVALID_CERTIFICATES=true may cause SSL handshake issues with Atlas",
+      "WARNING: maxPoolSize > 100 may overwhelm Atlas free tier"
+    ]
+  },
+  "connection_tests": {
+    "basic": {
+      "success": true,
+      "error": "Unexpected error: object NoneType can't be used in 'await' expression",
+      "connection_time": 2.3091304302215576,
+      "server_info": {
+        "version": "8.0.14",
+        "git_version": "bbdb887c2ac94424af0ee8fcaad39203bdf98671",
+        "openssl": {}
+      },
+      "ssl_info": null,
+      "error_type": "unexpected"
+    }
+  },
+  "ssl_analysis": {
+    "minimal_ssl": {
+      "description": "Minimal SSL configuration for Atlas",
+      "options": {
+        "tls": true,
+        "authSource": "admin",
+        "serverSelectionTimeoutMS": 30000,
+        "connectTimeoutMS": 30000,
+        "socketTimeoutMS": 30000
+      },
+      "result": {
+        "success": true,
+        "error": "object NoneType can't be used in 'await' expression",
+        "connection_time": 0.9342539310455322,
+        "error_type": "TypeError"
+      }
+    },
+    "strict_ssl": {
+      "description": "Strict SSL without invalid certificates",
+      "options": {
+        "tls": true,
+        "authSource": "admin",
+        "serverSelectionTimeoutMS": 30000,
+        "connectTimeoutMS": 30000,
+        "socketTimeoutMS": 30000,
+        "retryWrites": true,
+        "retryReads": true
+      },
+      "result": {
+        "success": true,
+        "error": "object NoneType can't be used in 'await' expression",
+        "connection_time": 1.0171773433685303,
+        "error_type": "TypeError"
+      }
+    },
+    "relaxed_ssl": {
+      "description": "Relaxed SSL with invalid certificates allowed",
+      "options": {
+        "tls": true,
+        "tlsAllowInvalidCertificates": true,
+        "authSource": "admin",
+        "serverSelectionTimeoutMS": 30000,
+        "connectTimeoutMS": 30000,
+        "socketTimeoutMS": 30000
+      },
+      "result": {
+        "success": true,
+        "error": "object NoneType can't be used in 'await' expression",
+        "connection_time": 1.0501055717468262,
+        "error_type": "TypeError"
+      }
+    }
+  },
+  "pool_analysis": {
+    "retry_attempts": [
+      {
+        "attempt": 1,
+        "delay": 3,
+        "success": true,
+        "error": "object NoneType can't be used in 'await' expression",
+        "connection_time": 0.837169885635376,
+        "error_type": "TypeError"
+      },
+      {
+        "attempt": 2,
+        "delay": 6,
+        "success": true,
+        "error": "object NoneType can't be used in 'await' expression",
+        "connection_time": 0.6941967010498047,
+        "error_type": "TypeError"
+      },
+      {
+        "attempt": 3,
+        "delay": 12,
+        "success": true,
+        "error": "object NoneType can't be used in 'await' expression",
+        "connection_time": 0.8342418670654297,
+        "error_type": "TypeError"
+      },
+      {
+        "attempt": 4,
+        "delay": 24,
+        "success": true,
+        "error": "object NoneType can't be used in 'await' expression",
+        "connection_time": 0.7346479892730713,
+        "error_type": "TypeError"
+      }
+    ],
+    "connection_stability": {},
+    "pool_behavior": {}
+  },
+  "recommendations": [
+    "CRITICAL: Set MONGODB_TLS_ALLOW_INVALID_CERTIFICATES=false for production. Invalid certificate handling can cause SSL handshake failures with MongoDB Atlas.",
+    "Reduce MONGODB_MAX_POOL_SIZE to 50-100 for Atlas free tier to prevent connection exhaustion.",
+    "Implement exponential backoff with jitter to prevent thundering herd problems during retries.",
+    "Add connection health checks and circuit breaker pattern to prevent cascading failures.",
+    "Monitor connection pool metrics to identify connection leaks or exhaustion."
+  ]
+}
