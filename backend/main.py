@@ -9,6 +9,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import os
+import time
 from dotenv import load_dotenv
 
 from app.database import connect_to_mongo, close_mongo_connection
@@ -165,6 +166,58 @@ async def health_check(request: Request):
             status="partial",
             message=f"API is running but database connection failed: {str(e)}",
             database_connected=False
+        )
+
+# Database-specific health check endpoint with rate limiting
+@app.get("/healthz/db")
+@limiter.limit("50/minute")
+async def database_health_check(request: Request):
+    """Database-specific health check endpoint for monitoring MongoDB connection status"""
+    try:
+        from app.database import db, check_connection_health, get_connection_stats
+        
+        # Check connection health
+        is_healthy = await check_connection_health()
+        
+        # Get connection statistics
+        connection_stats = await get_connection_stats()
+        
+        if is_healthy and db.database is not None:
+            # Test database connection with a simple operation
+            await db.database.command("ping")
+            
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": "healthy",
+                    "message": "Database connection is healthy",
+                    "database_connected": True,
+                    "connection_stats": connection_stats,
+                    "timestamp": time.time()
+                }
+            )
+        else:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "status": "unhealthy",
+                    "message": "Database connection is not healthy",
+                    "database_connected": False,
+                    "connection_stats": connection_stats,
+                    "timestamp": time.time()
+                }
+            )
+            
+    except Exception as e:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "error",
+                "message": f"Database health check failed: {str(e)}",
+                "database_connected": False,
+                "error": str(e),
+                "timestamp": time.time()
+            }
         )
 
 # Include API routers

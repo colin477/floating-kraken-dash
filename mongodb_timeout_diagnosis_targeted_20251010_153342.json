@@ -1,0 +1,177 @@
+{
+  "timestamp": "2025-10-10T15:32:46.824978",
+  "diagnosis_focus": "Environment Variables & SSL/TLS Issues",
+  "environment_validation": {
+    "critical_variables": {
+      "MONGODB_URI": {
+        "present": true,
+        "value": "mongodb+srv://colin_db_user:FnaPFUQh6aAjhfiR@cluster0.vcpyxwh.mongodb.net/ez_eatin?retryWrites=true&w=majority&appName=Cluster0",
+        "masked_value": "mongodb+srv://colin_db_user:***@cluster0.vcpyxwh.mongodb.net/ez_eatin?retryWrites=true&w=majority&appName=Cluster0"
+      },
+      "DATABASE_NAME": {
+        "present": true,
+        "value": "ez_eatin",
+        "masked_value": "ez_eatin"
+      },
+      "MONGODB_TLS_ENABLED": {
+        "present": true,
+        "value": "true",
+        "masked_value": "true"
+      },
+      "MONGODB_SERVER_SELECTION_TIMEOUT_MS": {
+        "present": true,
+        "value": "45000",
+        "masked_value": "45000"
+      },
+      "MONGODB_CONNECT_TIMEOUT_MS": {
+        "present": true,
+        "value": "45000",
+        "masked_value": "45000"
+      },
+      "MONGODB_SOCKET_TIMEOUT_MS": {
+        "present": true,
+        "value": "45000",
+        "masked_value": "45000"
+      }
+    },
+    "configuration_issues": [],
+    "production_readiness": "READY"
+  },
+  "ssl_handshake_tests": {
+    "tests": {
+      "production_ssl_strict": {
+        "description": "Production SSL with strict certificate validation",
+        "options": {
+          "tls": true,
+          "authSource": "admin",
+          "serverSelectionTimeoutMS": 15000,
+          "connectTimeoutMS": 15000,
+          "socketTimeoutMS": 15000,
+          "retryWrites": true,
+          "retryReads": true
+        },
+        "result": {
+          "success": true,
+          "error": "Unexpected error: object NoneType can't be used in 'await' expression",
+          "error_type": "unexpected",
+          "connection_time": 2.006805419921875,
+          "ssl_handshake_success": true,
+          "server_info": {
+            "version": "8.0.14",
+            "openssl": "Unknown"
+          }
+        }
+      },
+      "ssl_with_longer_timeout": {
+        "description": "SSL with extended timeouts for slow networks",
+        "options": {
+          "tls": true,
+          "authSource": "admin",
+          "serverSelectionTimeoutMS": 60000,
+          "connectTimeoutMS": 60000,
+          "socketTimeoutMS": 60000,
+          "retryWrites": true,
+          "retryReads": true
+        },
+        "result": {
+          "success": true,
+          "error": "Unexpected error: object NoneType can't be used in 'await' expression",
+          "error_type": "unexpected",
+          "connection_time": 0.6999292373657227,
+          "ssl_handshake_success": true,
+          "server_info": {
+            "version": "8.0.14",
+            "openssl": "Unknown"
+          }
+        }
+      },
+      "minimal_ssl": {
+        "description": "Minimal SSL configuration",
+        "options": {
+          "tls": true,
+          "serverSelectionTimeoutMS": 30000,
+          "connectTimeoutMS": 30000
+        },
+        "result": {
+          "success": true,
+          "error": "Unexpected error: object NoneType can't be used in 'await' expression",
+          "error_type": "unexpected",
+          "connection_time": 0.7750294208526611,
+          "ssl_handshake_success": true,
+          "server_info": {
+            "version": "8.0.14",
+            "openssl": "Unknown"
+          }
+        }
+      }
+    }
+  },
+  "connection_attempts": [
+    {
+      "attempt": 1,
+      "delay_before": 0,
+      "success": true,
+      "error": "Connection error: object NoneType can't be used in 'await' expression",
+      "connection_time": 0.7730345726013184,
+      "timeout_reached": false
+    },
+    {
+      "attempt": 2,
+      "delay_before": 3.0,
+      "success": true,
+      "error": "Connection error: object NoneType can't be used in 'await' expression",
+      "connection_time": 0.7645492553710938,
+      "timeout_reached": false
+    },
+    {
+      "attempt": 3,
+      "delay_before": 6.0,
+      "success": true,
+      "error": "Connection error: object NoneType can't be used in 'await' expression",
+      "connection_time": 0.7531611919403076,
+      "timeout_reached": false
+    },
+    {
+      "attempt": 4,
+      "delay_before": 12.0,
+      "success": true,
+      "error": "Connection error: object NoneType can't be used in 'await' expression",
+      "connection_time": 0.6952135562896729,
+      "timeout_reached": false
+    },
+    {
+      "attempt": 5,
+      "delay_before": 24.0,
+      "success": true,
+      "error": "Connection error: object NoneType can't be used in 'await' expression",
+      "connection_time": 0.8431992530822754,
+      "timeout_reached": false
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "MEDIUM",
+      "category": "Timeout Configuration",
+      "issue": "Production timeout settings may be insufficient",
+      "recommendation": "Optimize timeout settings for production deployment",
+      "action_items": [
+        "Increase MONGODB_CONNECT_TIMEOUT_MS to 60000ms (60 seconds)",
+        "Increase MONGODB_SERVER_SELECTION_TIMEOUT_MS to 60000ms",
+        "Set MONGODB_SOCKET_TIMEOUT_MS to 60000ms",
+        "Add connection health checks and retry logic"
+      ]
+    },
+    {
+      "priority": "HIGH",
+      "category": "Production Deployment",
+      "issue": "Render deployment environment considerations",
+      "recommendation": "Configure deployment for MongoDB Atlas connectivity",
+      "action_items": [
+        "Verify Render can reach MongoDB Atlas (network/firewall)",
+        "Set environment variables in Render dashboard",
+        "Configure health checks with appropriate timeouts",
+        "Monitor connection pool usage and adjust as needed"
+      ]
+    }
+  ]
+}

@@ -27,33 +27,84 @@ class Database:
 
 db = Database()
 
+def _is_production_environment() -> bool:
+    """Detect if running in production environment (Render deployment)"""
+    # Check for Render-specific environment variables
+    render_indicators = [
+        os.getenv("RENDER"),
+        os.getenv("RENDER_SERVICE_ID"),
+        os.getenv("RENDER_SERVICE_NAME")
+    ]
+    
+    # Check for explicit production environment setting
+    env = os.getenv("ENVIRONMENT", "").lower()
+    is_prod_env = env in ["production", "prod"]
+    
+    # Check if any Render indicators are present
+    is_render = any(indicator for indicator in render_indicators)
+    
+    # Log detection result for debugging
+    logger.info(
+        "Production environment detection",
+        environment=env,
+        render_detected=is_render,
+        is_production=is_prod_env or is_render
+    )
+    
+    return is_prod_env or is_render
+
 async def get_database():
     """Get database instance"""
     return db.database
 
 async def connect_to_mongo():
-    """Create database connection with retry logic and proper SSL/TLS handling"""
+    """Create database connection with retry logic and production-optimized timeouts"""
     mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
     database_name = os.getenv("DATABASE_NAME", "ez_eatin")
     
-    # Retry configuration with optimized defaults
+    # Detect production environment
+    is_production = _is_production_environment()
+    
+    # Retry configuration with production-optimized defaults
     max_retries = int(os.getenv("MONGODB_MAX_RETRIES", "4"))
     retry_delay = float(os.getenv("MONGODB_RETRY_DELAY", "3.0"))
     
-    logger.info(f"Attempting to connect to MongoDB at {mongodb_uri[:50]}...")
+    logger.info(
+        f"Attempting to connect to MongoDB at {mongodb_uri[:50]}...",
+        is_production=is_production,
+        max_retries=max_retries,
+        retry_delay=retry_delay
+    )
+    
+    # Production connection warmup delay for network stack initialization
+    if is_production:
+        logger.info("Production environment detected - applying connection warmup delay")
+        await asyncio.sleep(2.0)  # 2-second warmup delay for production
     
     for attempt in range(max_retries + 1):
         try:
             # Get connection options from DatabasePoolConfig
             connection_options = DatabasePoolConfig.get_connection_options()
             
+            # Apply production-specific timeout optimizations
+            if is_production:
+                # Increase timeouts for production resilience (60s instead of 45s)
+                production_timeouts = {
+                    'serverSelectionTimeoutMS': 60000,  # 60 seconds
+                    'connectTimeoutMS': 60000,           # 60 seconds
+                    'socketTimeoutMS': 60000             # 60 seconds
+                }
+                connection_options.update(production_timeouts)
+                logger.info("Applied production timeout optimizations", **production_timeouts)
+            
             # Create client with connection options (no duplicate parameters)
             db.client = AsyncIOMotorClient(mongodb_uri, **connection_options)
             
-            # Test the connection with a ping (with timeout)
+            # Test the connection with a ping (with production-optimized timeout)
+            ping_timeout = connection_options.get('serverSelectionTimeoutMS', 30000) / 1000
             await asyncio.wait_for(
                 db.client.admin.command('ping'),
-                timeout=connection_options.get('serverSelectionTimeoutMS', 30000) / 1000
+                timeout=ping_timeout
             )
             
             db.database = db.client[database_name]
@@ -83,23 +134,62 @@ async def connect_to_mongo():
             
         except asyncio.TimeoutError as e:
             error_msg = f"MongoDB connection timeout on attempt {attempt + 1}"
+            
+            # Enhanced production error logging
+            logger.error(
+                "MongoDB connection timeout details",
+                attempt=attempt + 1,
+                max_retries=max_retries,
+                is_production=is_production,
+                timeout_duration=ping_timeout,
+                mongodb_uri_prefix=mongodb_uri[:50],
+                error=str(e)
+            )
+            
             if attempt < max_retries:
                 # Add random jitter to prevent thundering herd
                 jitter = random.uniform(0.1, 0.5) * retry_delay
                 total_delay = retry_delay + jitter
-                logger.warning(f"{error_msg}. Retrying in {total_delay:.2f} seconds (base: {retry_delay}s + jitter: {jitter:.2f}s)...")
+                logger.warning(
+                    f"{error_msg}. Retrying in {total_delay:.2f} seconds",
+                    base_delay=retry_delay,
+                    jitter=jitter,
+                    total_delay=total_delay,
+                    remaining_attempts=max_retries - attempt
+                )
                 await asyncio.sleep(total_delay)
                 retry_delay *= 2
             else:
-                logger.error(f"{error_msg}. Max retries exceeded.")
+                logger.error(
+                    f"{error_msg}. Max retries exceeded.",
+                    total_attempts=max_retries + 1,
+                    is_production=is_production,
+                    final_timeout=ping_timeout
+                )
                 raise ConnectionFailure(f"Connection timeout after {max_retries + 1} attempts: {e}")
                 
         except ConnectionFailure as e:
             error_msg = f"MongoDB connection failed on attempt {attempt + 1}: {e}"
             
+            # Enhanced production error logging for ConnectionFailure
+            logger.error(
+                "MongoDB ConnectionFailure details",
+                attempt=attempt + 1,
+                max_retries=max_retries,
+                is_production=is_production,
+                mongodb_uri_prefix=mongodb_uri[:50],
+                error_type=type(e).__name__,
+                error_message=str(e)
+            )
+            
             # Check for specific SSL/TLS errors
             if any(ssl_indicator in str(e).lower() for ssl_indicator in ['ssl', 'tls', 'certificate', 'handshake']):
-                logger.error(f"SSL/TLS connection error: {e}")
+                logger.error(
+                    "SSL/TLS connection error detected",
+                    error=str(e),
+                    is_production=is_production,
+                    attempt=attempt + 1
+                )
                 if attempt < max_retries:
                     logger.warning("SSL/TLS error detected. Retrying with current configuration...")
                 else:
@@ -109,20 +199,46 @@ async def connect_to_mongo():
                 # Add random jitter to prevent thundering herd
                 jitter = random.uniform(0.1, 0.5) * retry_delay
                 total_delay = retry_delay + jitter
-                logger.warning(f"{error_msg} Retrying in {total_delay:.2f} seconds (base: {retry_delay}s + jitter: {jitter:.2f}s)...")
+                logger.warning(
+                    f"{error_msg} Retrying in {total_delay:.2f} seconds",
+                    base_delay=retry_delay,
+                    jitter=jitter,
+                    total_delay=total_delay,
+                    remaining_attempts=max_retries - attempt
+                )
                 await asyncio.sleep(total_delay)
                 retry_delay *= 2
             else:
-                logger.error(f"Failed to connect to MongoDB after {max_retries + 1} attempts: {e}")
+                logger.error(
+                    f"Failed to connect to MongoDB after {max_retries + 1} attempts",
+                    total_attempts=max_retries + 1,
+                    is_production=is_production,
+                    final_error=str(e)
+                )
                 raise
                 
         except Exception as e:
             error_msg = f"Unexpected MongoDB connection error on attempt {attempt + 1}: {e}"
-            logger.error(error_msg)
+            
+            # Enhanced production error logging for unexpected errors
+            logger.error(
+                "Unexpected MongoDB connection error",
+                attempt=attempt + 1,
+                max_retries=max_retries,
+                is_production=is_production,
+                mongodb_uri_prefix=mongodb_uri[:50],
+                error_type=type(e).__name__,
+                error_message=str(e)
+            )
             
             # Check for DNS resolution errors
             if 'getaddrinfo failed' in str(e) or 'Name or service not known' in str(e):
-                logger.error("DNS resolution failed. Check network connectivity and MongoDB URI hostname.")
+                logger.error(
+                    "DNS resolution failed",
+                    error=str(e),
+                    is_production=is_production,
+                    attempt=attempt + 1
+                )
                 if attempt < max_retries:
                     logger.warning("DNS error detected. Retrying...")
                 else:
@@ -132,10 +248,22 @@ async def connect_to_mongo():
                 # Add random jitter to prevent thundering herd
                 jitter = random.uniform(0.1, 0.5) * retry_delay
                 total_delay = retry_delay + jitter
-                logger.warning(f"Retrying in {total_delay:.2f} seconds (base: {retry_delay}s + jitter: {jitter:.2f}s)...")
+                logger.warning(
+                    f"Retrying in {total_delay:.2f} seconds",
+                    base_delay=retry_delay,
+                    jitter=jitter,
+                    total_delay=total_delay,
+                    remaining_attempts=max_retries - attempt
+                )
                 await asyncio.sleep(total_delay)
                 retry_delay *= 2
             else:
+                logger.error(
+                    "All MongoDB connection attempts failed",
+                    total_attempts=max_retries + 1,
+                    is_production=is_production,
+                    final_error=str(e)
+                )
                 raise
 
 async def close_mongo_connection():

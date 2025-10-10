@@ -1,0 +1,216 @@
+{
+  "timestamp": "2025-10-10T09:46:55.230441",
+  "base_url": "http://localhost:8000",
+  "tests": {
+    "health_check": {
+      "status": "PASSED",
+      "response_code": 200,
+      "response_time": 0.43446826934814453,
+      "response_data": {
+        "status": "healthy",
+        "message": "Database connection is healthy",
+        "database_connected": true,
+        "connection_stats": {
+          "status": "connected",
+          "current_connections": 7,
+          "available_connections": 493,
+          "total_created": 15904,
+          "last_health_check": 1760111215.52514,
+          "health_check_interval": 30
+        },
+        "timestamp": 1760111215.6608365
+      },
+      "database_connected": true,
+      "connection_stats": {
+        "status": "connected",
+        "current_connections": 7,
+        "available_connections": 493,
+        "total_created": 15904,
+        "last_health_check": 1760111215.52514,
+        "health_check_interval": 30
+      },
+      "error": null
+    },
+    "signup_basic": {
+      "status": "PASSED",
+      "response_code": 201,
+      "response_time": 0.64630126953125,
+      "response_data": {
+        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGU5MmE3MDIyOGZkNWM4NWJmNzg5N2IiLCJlbWFpbCI6InRlc3RfdXNlcl9hdTlreGowdkBleGFtcGxlLmNvbSIsImV4cCI6MTc2MDExODQxNiwiaWF0IjoxNzYwMTExMjE2LCJ0eXBlIjoiYWNjZXNzIn0.pJO87Uj16DeuA-c-GnlpZOH9mEwZI0VNS-qSgZ5Q0Y4",
+        "token_type": "bearer",
+        "expires_in": 7200,
+        "user": {
+          "id": "68e92a70228fd5c85bf7897b",
+          "email": "test_user_au9kxj0v@example.com",
+          "full_name": "Test User au9kxj0v",
+          "created_at": "2025-10-10T15:46:56",
+          "updated_at": "2025-10-10T15:46:56",
+          "is_active": true
+        }
+      },
+      "user_data": {
+        "email": "test_user_au9kxj0v@example.com",
+        "password": "TestPassword123!",
+        "full_name": "Test User au9kxj0v"
+      },
+      "error": null
+    },
+    "signup_load": {
+      "status": "PASSED",
+      "concurrent_requests": 5,
+      "successful_requests": 5,
+      "service_unavailable_count": 0,
+      "error_count": 0,
+      "total_duration": 1.5672807693481445,
+      "average_response_time": 1.462641191482544,
+      "individual_results": [
+        {
+          "status_code": 201,
+          "response_time": 1.4260060787200928,
+          "success": true,
+          "service_unavailable": false,
+          "user_email": "test_user_5g5hg8rs@example.com"
+        },
+        {
+          "status_code": 201,
+          "response_time": 1.4061236381530762,
+          "success": true,
+          "service_unavailable": false,
+          "user_email": "test_user_porv4rdu@example.com"
+        },
+        {
+          "status_code": 201,
+          "response_time": 1.474430799484253,
+          "success": true,
+          "service_unavailable": false,
+          "user_email": "test_user_bme4kolq@example.com"
+        },
+        {
+          "status_code": 201,
+          "response_time": 1.4442381858825684,
+          "success": true,
+          "service_unavailable": false,
+          "user_email": "test_user_03d4pk6u@example.com"
+        },
+        {
+          "status_code": 201,
+          "response_time": 1.5624072551727295,
+          "success": true,
+          "service_unavailable": false,
+          "user_email": "test_user_dkptfyg8@example.com"
+        }
+      ],
+      "error": null
+    },
+    "production_detection": {
+      "status": "PASSED",
+      "average_response_time": 0.9105135599772135,
+      "response_times": [
+        1.1584672927856445,
+        0.8507766723632812,
+        0.7222967147827148
+      ],
+      "first_response_code": 201,
+      "production_indicators": {
+        "consistent_response_times": true,
+        "reasonable_response_time": true,
+        "no_timeout_errors": true
+      },
+      "error": null
+    },
+    "connection_stability": {
+      "status": "PASSED",
+      "test_duration": 30,
+      "total_checks": 6,
+      "successful_checks": 6,
+      "stability_percentage": 100.0,
+      "stability_results": [
+        {
+          "timestamp": 1760111221.279817,
+          "health_check": {
+            "status_code": 200,
+            "response_time": 0.09879922866821289,
+            "database_connected": true
+          },
+          "signup_test": {
+            "status_code": 201,
+            "response_time": 0.5549135208129883,
+            "success": true
+          }
+        },
+        {
+          "timestamp": 1760111227.4200466,
+          "health_check": {
+            "status_code": 200,
+            "response_time": 0.3908727169036865,
+            "database_connected": true
+          },
+          "signup_test": {
+            "status_code": 201,
+            "response_time": 0.7421755790710449,
+            "success": true
+          }
+        },
+        {
+          "timestamp": 1760111232.9950433,
+          "health_check": {
+            "status_code": 200,
+            "response_time": 0.10772514343261719,
+            "database_connected": true
+          },
+          "signup_test": {
+            "status_code": 201,
+            "response_time": 0.4658520221710205,
+            "success": true
+          }
+        },
+        {
+          "timestamp": 1760111239.539467,
+          "health_check": {
+            "status_code": 200,
+            "response_time": 0.41925954818725586,
+            "database_connected": true
+          },
+          "signup_test": {
+            "status_code": 201,
+            "response_time": 1.1208653450012207,
+            "success": true
+          }
+        },
+        {
+          "timestamp": 1760111245.2423797,
+          "health_check": {
+            "status_code": 200,
+            "response_time": 0.0933079719543457,
+            "database_connected": true
+          },
+          "signup_test": {
+            "status_code": 201,
+            "response_time": 0.6059801578521729,
+            "success": true
+          }
+        },
+        {
+          "timestamp": 1760111251.3781285,
+          "health_check": {
+            "status_code": 200,
+            "response_time": 0.4119422435760498,
+            "database_connected": true
+          },
+          "signup_test": {
+            "status_code": 201,
+            "response_time": 0.712820291519165,
+            "success": true
+          }
+        }
+      ],
+      "error": null
+    }
+  },
+  "summary": {
+    "total_tests": 5,
+    "passed": 5,
+    "failed": 0,
+    "errors": []
+  }
+}
