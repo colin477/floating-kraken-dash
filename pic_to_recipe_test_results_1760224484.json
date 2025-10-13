@@ -1,0 +1,170 @@
+{
+  "test_suite": "Pic-to-Recipe End-to-End Tests",
+  "timestamp": "2025-10-11T23:14:44.856627",
+  "total_tests": 9,
+  "passed_tests": 5,
+  "failed_tests": 4,
+  "success_rate": 55.55555555555556,
+  "total_time_seconds": 15.355526447296143,
+  "overall_success": false,
+  "test_results": [
+    {
+      "test_name": "Food Vision Service Status",
+      "success": true,
+      "timestamp": "2025-10-11T23:14:29.495420",
+      "details": {
+        "status": {
+          "enabled": true,
+          "demo_mode": true,
+          "fallback_enabled": true,
+          "credentials_configured": true,
+          "google_vision_available": true,
+          "client_initialized": false
+        },
+        "missing_keys": [],
+        "demo_mode": true,
+        "enabled": true
+      }
+    },
+    {
+      "test_name": "AI Recipe Generator Status",
+      "success": true,
+      "timestamp": "2025-10-11T23:14:29.496542",
+      "details": {
+        "status": {
+          "enabled": true,
+          "demo_mode": false,
+          "fallback_enabled": true,
+          "api_key_configured": true,
+          "openai_available": true,
+          "model": "gpt-4",
+          "client_initialized": true
+        },
+        "missing_keys": [],
+        "demo_mode": false,
+        "enabled": true,
+        "model": "gpt-4"
+      }
+    },
+    {
+      "test_name": "Food Vision Analysis",
+      "success": true,
+      "timestamp": "2025-10-11T23:14:29.530171",
+      "details": {
+        "missing_keys": [],
+        "detected_foods_count": 6,
+        "confidence_score": 0.83,
+        "has_recipe": true,
+        "detected_foods": [
+          "Pasta",
+          "Tomato Sauce",
+          "Ground Beef"
+        ],
+        "service_mode": "demo"
+      }
+    },
+    {
+      "test_name": "AI Recipe Generation",
+      "success": true,
+      "timestamp": "2025-10-11T23:14:29.533076",
+      "details": {
+        "recipe_title": "Italian Pasta and Tomato Sauce Dish",
+        "ingredients_count": 7,
+        "instructions_count": 8,
+        "servings": 4,
+        "difficulty": "easy",
+        "matched_ingredients": 4,
+        "total_test_ingredients": 6,
+        "match_percentage": "66.7%",
+        "tags": [
+          "ai-generated",
+          "from-ingredients",
+          "demo-mode"
+        ],
+        "service_mode": "live"
+      }
+    },
+    {
+      "test_name": "Recipe Validation",
+      "success": true,
+      "timestamp": "2025-10-11T23:14:29.536170",
+      "details": {
+        "is_valid": false,
+        "overall_score": 0.8,
+        "safety_score": 0.7,
+        "practicality_score": 0.9,
+        "safety_issues_count": 1,
+        "practicality_issues_count": 1,
+        "recommendation": "modify"
+      }
+    },
+    {
+      "test_name": "Meal Photo Upload Endpoint",
+      "success": false,
+      "timestamp": "2025-10-11T23:14:31.616126",
+      "details": {
+        "status_code": 403,
+        "response_keys": [],
+        "has_detected_foods": false,
+        "has_recipe": false,
+        "success_flag": false,
+        "confidence_score": 0.0,
+        "processing_time_ms": 0.0,
+        "error_message": null
+      }
+    },
+    {
+      "test_name": "AI Recipe Generation Endpoint",
+      "success": false,
+      "timestamp": "2025-10-11T23:14:33.657308",
+      "details": {
+        "status_code": 403,
+        "response_keys": [],
+        "success_flag": false,
+        "has_recipe": false,
+        "confidence_score": 0.0,
+        "ingredient_match_percentage": 0.0,
+        "processing_time_ms": 0.0,
+        "fallback_used": false,
+        "ai_model_used": "unknown",
+        "error_message": null
+      }
+    },
+    {
+      "test_name": "AI Service Status Endpoint",
+      "success": false,
+      "timestamp": "2025-10-11T23:14:35.772654",
+      "details": {
+        "status_code": 403,
+        "missing_keys": [
+          "service_name",
+          "status",
+          "capabilities",
+          "supported_features",
+          "limitations"
+        ],
+        "service_name": "unknown",
+        "demo_mode": true,
+        "capabilities_count": 0,
+        "supported_features_count": 0,
+        "limitations": {},
+        "error_message": null
+      }
+    },
+    {
+      "test_name": "Error Handling",
+      "success": false,
+      "timestamp": "2025-10-11T23:14:44.847067",
+      "details": {
+        "error_tests_passed": 0,
+        "total_error_tests": 3,
+        "pass_rate": "0.0%"
+      }
+    }
+  ],
+  "system_status": {
+    "food_vision_demo_mode": true,
+    "ai_generator_demo_mode": false,
+    "backend_url": "http://localhost:8000/api/v1"
+  }
+}

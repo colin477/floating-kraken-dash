@@ -47,41 +47,67 @@ async def upload_receipt(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_active_user)
 ):
-    """Upload a receipt image file and process it"""
+    """Upload a receipt image file and process it with enhanced validation"""
+    from app.utils.file_validator import validate_image_file, sanitize_filename
+    from app.utils.storage_metrics import storage_metrics, storage_operation_timer
+    import time
+    
     user_id = str(current_user["_id"])
+    original_filename = file.filename or "receipt.jpg"
     
-    # Validate file type
-    if not file.content_type or not file.content_type.startswith('image/'):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File must be an image (JPG, PNG, HEIC, etc.)"
-        )
-    
-    # Validate file size (10MB limit)
+    # Read file content once
     file_content = await file.read()
-    if len(file_content) > 10 * 1024 * 1024:  # 10MB
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File size must be less than 10MB"
-        )
+    file_size = len(file_content)
     
-    # Reset file pointer
-    await file.seek(0)
+    # Record upload attempt
+    storage_metrics.record_upload_attempt(user_id, original_filename, file_size)
     
     try:
-        # Upload file to cloud storage or local fallback
-        file_url = await cloud_storage_service.upload_file(
-            file_content=file_content,
-            filename=file.filename or "receipt.jpg",
-            content_type=file.content_type or "image/jpeg",
-            user_id=user_id
+        # Enhanced file validation
+        is_valid, validation_message, validation_details = validate_image_file(
+            file_content, original_filename
         )
         
+        if not is_valid:
+            storage_metrics.record_validation_failure(
+                user_id, original_filename, file_size, validation_message
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"File validation failed: {validation_message}"
+            )
+        
+        # Sanitize filename for safe storage
+        safe_filename = sanitize_filename(original_filename)
+        
+        # Upload file to cloud storage or local fallback with timing
+        upload_start_time = time.time()
+        
+        async with storage_operation_timer():
+            file_url = await cloud_storage_service.upload_file(
+                file_content=file_content,
+                filename=safe_filename,
+                content_type=file.content_type or "image/jpeg",
+                user_id=user_id
+            )
+        
+        upload_duration = time.time() - upload_start_time
+        
         if not file_url:
+            storage_metrics.record_upload_failure(
+                user_id, safe_filename, file_size, "storage_service_error",
+                "Failed to upload file to storage"
+            )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to upload file to storage"
             )
+        
+        # Record successful upload
+        storage_type = cloud_storage_service.get_storage_type(file_url)
+        storage_metrics.record_upload_success(
+            user_id, safe_filename, file_size, storage_type, upload_duration
+        )
         
         # Create receipt record with file URL
         from datetime import date
@@ -97,6 +123,10 @@ async def upload_receipt(
         if receipt is None:
             # Clean up uploaded file if receipt creation failed
             await cloud_storage_service.delete_file(file_url)
+            storage_metrics.record_upload_failure(
+                user_id, safe_filename, file_size, "database_error",
+                "Failed to create receipt record"
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to create receipt"
@@ -113,13 +143,18 @@ async def upload_receipt(
         
         return result
         
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
         # Clean up uploaded file on error
         if 'file_url' in locals():
             await cloud_storage_service.delete_file(file_url)
         
-        if isinstance(e, HTTPException):
-            raise e
+        # Record the failure
+        storage_metrics.record_upload_failure(
+            user_id, original_filename, file_size, "unexpected_error", str(e)
+        )
         
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -269,42 +304,78 @@ async def add_receipt_items_to_pantry_endpoint(
     current_user: dict = Depends(get_current_active_user)
 ):
     """Add selected receipt items to user's pantry"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     user_id = str(current_user["_id"])
     
-    # First check if receipt exists and is processed
-    receipt = await get_receipt_by_id(user_id=user_id, receipt_id=receipt_id)
-    if receipt is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Receipt not found"
+    try:
+        logger.info(f"Adding receipt items to pantry for user {user_id}, receipt {receipt_id}")
+        logger.info(f"Request data: {request_data.dict()}")
+        
+        # First check if receipt exists and is processed
+        receipt = await get_receipt_by_id(user_id=user_id, receipt_id=receipt_id)
+        if receipt is None:
+            logger.error(f"Receipt {receipt_id} not found for user {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Receipt not found"
+            )
+        
+        logger.info(f"Receipt found: {receipt.store_name}, status: {receipt.processing_status}, items: {len(receipt.items)}")
+        
+        if receipt.processing_status != ReceiptProcessingStatus.COMPLETED:
+            logger.error(f"Receipt {receipt_id} not processed (status: {receipt.processing_status})")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Receipt must be processed before adding items to pantry"
+            )
+        
+        if not receipt.items:
+            logger.error(f"Receipt {receipt_id} has no items")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Receipt has no items to add to pantry"
+            )
+        
+        # Validate selected item indices
+        max_index = len(receipt.items) - 1
+        invalid_indices = [idx for idx in request_data.selected_items if idx < 0 or idx > max_index]
+        if invalid_indices:
+            logger.error(f"Invalid item indices {invalid_indices} for receipt {receipt_id} with {len(receipt.items)} items")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid item indices: {invalid_indices}. Receipt has {len(receipt.items)} items (indices 0-{max_index})"
+            )
+        
+        logger.info(f"Adding {len(request_data.selected_items)} items to pantry: indices {request_data.selected_items}")
+        
+        result = await add_receipt_items_to_pantry(
+            user_id=user_id,
+            receipt_id=receipt_id,
+            selected_items=request_data.selected_items,
+            expiration_days=request_data.expiration_days or 7
         )
-    
-    if receipt.processing_status != ReceiptProcessingStatus.COMPLETED:
+        
+        if result is None:
+            logger.error(f"Failed to add receipt items to pantry for user {user_id}, receipt {receipt_id}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to add items to pantry"
+            )
+        
+        logger.info(f"Successfully added {result.items_added} items to pantry, {result.items_failed} failed")
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error adding receipt items to pantry: {str(e)}", exc_info=True)
+        logger.error(f"User: {user_id}, Receipt: {receipt_id}, Request: {request_data.dict()}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Receipt must be processed before adding items to pantry"
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Validation error: {str(e)}"
         )
-    
-    if not receipt.items:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Receipt has no items to add to pantry"
-        )
-    
-    result = await add_receipt_items_to_pantry(
-        user_id=user_id,
-        receipt_id=receipt_id,
-        selected_items=request_data.selected_items,
-        expiration_days=request_data.expiration_days or 7
-    )
-    
-    if result is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to add items to pantry"
-        )
-    
-    return result
 
 
 @router.get("/stats/overview", response_model=ReceiptStatsResponse)

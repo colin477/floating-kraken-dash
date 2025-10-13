@@ -72,17 +72,34 @@ async def add_pantry_item(
     current_user: dict = Depends(get_current_active_user)
 ):
     """Add new pantry item for the authenticated user"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     user_id = str(current_user["_id"])
     
-    result = await create_pantry_item(user_id=user_id, item_data=item_data)
-    
-    if result is None:
+    try:
+        logger.info(f"Creating pantry item for user {user_id}: {item_data.dict()}")
+        result = await create_pantry_item(user_id=user_id, item_data=item_data)
+        
+        if result is None:
+            logger.error(f"Failed to create pantry item for user {user_id}: {item_data.dict()}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create pantry item. Item with this name may already exist."
+            )
+        
+        logger.info(f"Successfully created pantry item {result.id} for user {user_id}")
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error creating pantry item for user {user_id}: {str(e)}", exc_info=True)
+        logger.error(f"Item data that caused error: {item_data.dict()}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to create pantry item. Item with this name may already exist."
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Validation error: {str(e)}"
         )
-    
-    return result
 
 
 @router.get("/{item_id}", response_model=PantryItemResponse)

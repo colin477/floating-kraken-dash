@@ -1,0 +1,122 @@
+{
+  "timestamp": "2025-10-11T22:30:27.033383",
+  "tests": {
+    "Database Connectivity": {
+      "success": true,
+      "details": {
+        "database_connected": true,
+        "health_status": "healthy"
+      },
+      "error": null,
+      "timestamp": "2025-10-11T22:30:50.399246"
+    },
+    "Authentication Required": {
+      "success": true,
+      "details": {
+        "status_code": 403,
+        "message": "Properly requires authentication"
+      },
+      "error": null,
+      "timestamp": "2025-10-11T22:30:52.187496"
+    },
+    "Receipt Endpoints Exist": {
+      "success": true,
+      "details": {
+        "endpoints": {
+          "POST /receipts/upload": "EXISTS",
+          "GET /receipts/": "EXISTS",
+          "GET /receipts/test-id": "EXISTS",
+          "POST /receipts/test-id/process": "EXISTS",
+          "GET /receipts/test-id/suggest-recipes": "EXISTS"
+        }
+      },
+      "error": null,
+      "timestamp": "2025-10-11T22:30:55.132392"
+    },
+    "File Upload Capability": {
+      "success": true,
+      "details": {
+        "status_code": 403,
+        "message": "File upload endpoint accepts files but requires auth",
+        "file_size_bytes": 4427
+      },
+      "error": null,
+      "timestamp": "2025-10-11T22:30:57.003759"
+    },
+    "OCR Service Availability": {
+      "success": true,
+      "details": {
+        "note": "OCR service availability will be tested during receipt processing",
+        "demo_mode_expected": true
+      },
+      "error": null,
+      "timestamp": "2025-10-11T22:30:57.005021"
+    },
+    "Leftover Suggestions Integration": {
+      "success": true,
+      "details": {
+        "status_code": 403,
+        "message": "Endpoint exists and requires authentication"
+      },
+      "error": null,
+      "timestamp": "2025-10-11T22:30:57.248344"
+    },
+    "Recipe Suggestions Endpoint": {
+      "success": true,
+      "details": {
+        "status_code": 403,
+        "message": "Endpoint exists and requires authentication"
+      },
+      "error": null,
+      "timestamp": "2025-10-11T22:30:57.399012"
+    },
+    "Error Handling": {
+      "success": true,
+      "details": {
+        "error_tests": [
+          {
+            "test": "Invalid Receipt ID",
+            "expected": [
+              401,
+              403,
+              404,
+              422
+            ],
+            "actual": 403,
+            "passed": true
+          },
+          {
+            "test": "Invalid File Type",
+            "expected": [
+              400,
+              401,
+              403,
+              422
+            ],
+            "actual": 403,
+            "passed": true
+          },
+          {
+            "test": "Missing File",
+            "expected": [
+              400,
+              401,
+              403,
+              422
+            ],
+            "actual": 403,
+            "passed": true
+          }
+        ]
+      },
+      "error": null,
+      "timestamp": "2025-10-11T22:30:57.700571"
+    }
+  },
+  "summary": {
+    "total_tests": 8,
+    "passed": 8,
+    "failed": 0,
+    "errors": []
+  }
+}

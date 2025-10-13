@@ -17,7 +17,10 @@ import {
   ChefHat,
   Clock,
   Users,
-  Lightbulb
+  Lightbulb,
+  Plus,
+  Check,
+  AlertCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -40,6 +43,10 @@ export const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [addingToPantry, setAddingToPantry] = useState(false);
+  const [addToPantryError, setAddToPantryError] = useState<string | null>(null);
+  const [addToPantrySuccess, setAddToPantrySuccess] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchImageUrl = async () => {
@@ -98,6 +105,56 @@ export const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
       setSuggestionsError('Failed to load recipe suggestions. Please try again.');
     } finally {
       setSuggestionsLoading(false);
+    }
+  };
+
+  const handleItemSelection = (index: number) => {
+    setSelectedItems(prev =>
+      prev.includes(index)
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedItems.length === receipt.items.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(receipt.items.map((_, index) => index));
+    }
+  };
+
+  const handleAddToPantry = async () => {
+    if (selectedItems.length === 0) {
+      setAddToPantryError('Please select at least one item to add to pantry');
+      return;
+    }
+
+    setAddingToPantry(true);
+    setAddToPantryError(null);
+    setAddToPantrySuccess(null);
+
+    try {
+      const result = await receiptApi.addReceiptItemsToPantry(receipt.id, {
+        selected_items: selectedItems,
+        expiration_days: 7 // Default to 7 days
+      });
+
+      setAddToPantrySuccess(
+        `Successfully added ${result.items_added} items to pantry${
+          result.items_failed > 0 ? ` (${result.items_failed} failed)` : ''
+        }`
+      );
+      setSelectedItems([]); // Clear selection after successful add
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setAddToPantrySuccess(null), 5000);
+      
+    } catch (error) {
+      console.error('Failed to add items to pantry:', error);
+      setAddToPantryError(error instanceof Error ? error.message : 'Failed to add items to pantry');
+    } finally {
+      setAddingToPantry(false);
     }
   };
 
@@ -312,22 +369,92 @@ export const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
             {/* Items List */}
             <Card>
               <CardHeader>
-                <CardTitle>Items ({receipt.items.length})</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Items ({receipt.items.length})</CardTitle>
+                  {receipt.processed && receipt.items.length > 0 && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSelectAll}
+                        className="text-xs"
+                      >
+                        {selectedItems.length === receipt.items.length ? 'Deselect All' : 'Select All'}
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={handleAddToPantry}
+                        disabled={addingToPantry || selectedItems.length === 0}
+                        className="text-xs"
+                      >
+                        {addingToPantry ? (
+                          <>
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                            Adding...
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="h-3 w-3 mr-1" />
+                            Add to Pantry ({selectedItems.length})
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                {(addToPantryError || addToPantrySuccess) && (
+                  <div className="mt-2">
+                    {addToPantryError && (
+                      <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-2 rounded">
+                        <AlertCircle className="h-4 w-4" />
+                        {addToPantryError}
+                      </div>
+                    )}
+                    {addToPantrySuccess && (
+                      <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded">
+                        <Check className="h-4 w-4" />
+                        {addToPantrySuccess}
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {receipt.items.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium">{item.name}</span>
-                          <Badge className={`text-xs ${getCategoryColor(item.category)}`}>
-                            {item.category.replace('_', ' ')}
-                          </Badge>
-                        </div>
-                        {item.quantity > 1 && (
-                          <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                    <div
+                      key={index}
+                      className={`flex items-center justify-between p-3 rounded-lg border-2 transition-colors ${
+                        selectedItems.includes(index)
+                          ? 'bg-green-50 border-green-200'
+                          : 'bg-gray-50 border-transparent hover:bg-gray-100'
+                      } ${receipt.processed ? 'cursor-pointer' : ''}`}
+                      onClick={() => receipt.processed && handleItemSelection(index)}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        {receipt.processed && (
+                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                            selectedItems.includes(index)
+                              ? 'bg-green-500 border-green-500'
+                              : 'border-gray-300'
+                          }`}>
+                            {selectedItems.includes(index) && (
+                              <Check className="h-3 w-3 text-white" />
+                            )}
+                          </div>
                         )}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium">{item.name}</span>
+                            <Badge className={`text-xs ${getCategoryColor(item.category)}`}>
+                              {item.category.replace('_', ' ')}
+                            </Badge>
+                          </div>
+                          {item.quantity > 1 && (
+                            <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                          )}
+                        </div>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-lg">${item.price.toFixed(2)}</p>
@@ -340,6 +467,13 @@ export const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
                     </div>
                   ))}
                 </div>
+                {receipt.processed && receipt.items.length > 0 && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      💡 <strong>Tip:</strong> Click on items to select them, then use "Add to Pantry" to add them to your pantry with a 7-day default expiration.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

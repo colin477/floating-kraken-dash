@@ -1,0 +1,45 @@
+{
+  "timestamp": "2025-10-11T16:20:48.504785",
+  "google_vision_api": {
+    "enabled": false,
+    "demo_mode": true,
+    "fallback_enabled": true,
+    "credentials_configured": false,
+    "google_vision_available": true,
+    "client_initialized": false
+  },
+  "openai_api": {
+    "enabled": false,
+    "demo_mode": true,
+    "fallback_enabled": true,
+    "api_key_configured": false,
+    "openai_available": true,
+    "model": "gpt-4",
+    "client_initialized": false
+  },
+  "environment_variables": {
+    "OCR_ENABLED": "Not Set",
+    "OCR_FALLBACK_ENABLED": "Not Set",
+    "GOOGLE_CLOUD_PROJECT_ID": "Not Set",
+    "GOOGLE_APPLICATION_CREDENTIALS": "Not Set",
+    "AI_RECIPE_GENERATION_ENABLED": "Not Set",
+    "AI_RECIPE_GENERATION_FALLBACK_ENABLED": "Not Set",
+    "OPENAI_API_KEY": "Not Set",
+    "OPENAI_MODEL": "Not Set"
+  },
+  "service_status": {
+    "food_vision": {
+      "enabled": false,
+      "demo_mode": true,
+      "fallback_enabled": true,
+      "credentials_configured": false,
+      "google_vision_available": true,
+      "client_initialized": false
+    }
+  },
+  "recommendations": [
+    "Configure Google Vision API credentials for real OCR processing",
+    "Configure OpenAI API key for real AI recipe generation"
+  ],
+  "overall_status": "\u26a0\ufe0f  DEMO MODE"
+}

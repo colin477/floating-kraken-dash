@@ -1,0 +1,677 @@
+{
+  "timestamp": "2025-10-12T18:32:26.869557",
+  "test_suite": "Comprehensive Integration Tests",
+  "system_info": {
+    "backend_url": "http://localhost:8000/api/v1",
+    "frontend_url": "http://localhost:3002",
+    "test_start_time": "2025-10-12T18:32:26.870689",
+    "python_version": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
+    "platform": "nt"
+  },
+  "tests": {
+    "System Health Check": {
+      "success": true,
+      "details": {
+        "api_status": "healthy",
+        "database_connected": true,
+        "response_time_ms": 19528.058528900146
+      },
+      "error": null,
+      "warning": null,
+      "duration_ms": 19528.058528900146,
+      "timestamp": "2025-10-12T18:32:46.400446"
+    },
+    "Database Connectivity": {
+      "success": true,
+      "details": {
+        "status": "healthy",
+        "connection_stats": {
+          "status": "connected",
+          "current_connections": 3,
+          "available_connections": 497,
+          "total_created": 18235,
+          "last_health_check": 1760229728.605682,
+          "health_check_interval": 30
+        },
+        "response_time_ms": 152.74691581726074
+      },
+      "error": null,
+      "warning": null,
+      "duration_ms": 152.74691581726074,
+      "timestamp": "2025-10-12T18:32:46.587614"
+    },
+    "Frontend Accessibility": {
+      "success": true,
+      "details": {
+        "status_code": 200,
+        "response_time_ms": 229.85196113586426,
+        "content_length": 576
+      },
+      "error": null,
+      "warning": null,
+      "duration_ms": 229.85196113586426,
+      "timestamp": "2025-10-12T18:32:46.827413"
+    },
+    "Authentication Requirements": {
+      "success": true,
+      "details": {
+        "endpoints_tested": 5,
+        "all_protected": true,
+        "results": {
+          "Receipt Upload": {
+            "endpoint": "/receipts/upload",
+            "method": "POST",
+            "status_code": 403,
+            "is_protected": true
+          },
+          "Meal Photo Analysis": {
+            "endpoint": "/recipes/from-photo",
+            "method": "POST",
+            "status_code": 403,
+            "is_protected": true
+          },
+          "AI Recipe Generation": {
+            "endpoint": "/recipes/generate-from-ingredients",
+            "method": "POST",
+            "status_code": 403,
+            "is_protected": true
+          },
+          "AI Service Status": {
+            "endpoint": "/recipes/ai-service-status",
+            "method": "GET",
+            "status_code": 403,
+            "is_protected": true
+          },
+          "Leftover Suggestions": {
+            "endpoint": "/leftovers/suggestions",
+            "method": "GET",
+            "status_code": 403,
+            "is_protected": true
+          }
+        }
+      },
+      "error": null,
+      "warning": null,
+      "duration_ms": 35.44354438781738,
+      "timestamp": "2025-10-12T18:32:46.866659"
+    },
+    "Receipt Workflow Integration": {
+      "success": true,
+      "details": {
+        "upload_endpoint_protected": true,
+        "file_upload_capable": true,
+        "endpoints": {
+          "List Receipts": {
+            "status_code": 403,
+            "exists": true
+          },
+          "Process Receipt": {
+            "status_code": 403,
+            "exists": true
+          },
+          "Recipe Suggestions": {
+            "status_code": 403,
+            "exists": true
+          }
+        },
+        "workflow_structure_valid": true
+      },
+      "error": null,
+      "warning": null,
+      "duration_ms": 304.8841953277588,
+      "timestamp": "2025-10-12T18:32:47.196262"
+    },
+    "Pic-to-Recipe Workflow Integration": {
+      "success": true,
+      "details": {
+        "endpoints_exist": true,
+        "endpoints_protected": true,
+        "workflow_results": {
+          "photo_analysis_endpoint": {
+            "status_code": 403,
+            "exists": true,
+            "protected": true
+          },
+          "ai_generation_endpoint": {
+            "status_code": 403,
+            "exists": true,
+            "protected": true
+          },
+          "service_status_endpoint": {
+            "status_code": 403,
+            "exists": true,
+            "protected": true
+          }
+        }
+      },
+      "error": null,
+      "warning": null,
+      "duration_ms": 8.916854858398438,
+      "timestamp": "2025-10-12T18:32:47.225875"
+    },
+    "Service Integration": {
+      "success": true,
+      "details": {
+        "services_tested": 2,
+        "all_healthy": true,
+        "results": [
+          {
+            "service": "Main Health Check",
+            "status_code": 200,
+            "success": true,
+            "response_time_ms": 50.344
+          },
+          {
+            "service": "Database Health Check",
+            "status_code": 200,
+            "success": true,
+            "response_time_ms": 131.02
+          }
+        ]
+      },
+      "error": null,
+      "warning": null,
+      "duration_ms": 183.4421157836914,
+      "timestamp": "2025-10-12T18:32:47.416515"
+    },
+    "Error Handling Integration": {
+      "success": true,
+      "details": {
+        "tests_run": 3,
+        "all_handled_correctly": true,
+        "results": [
+          {
+            "test": "Invalid File Type",
+            "status_code": 403,
+            "expected_codes": [
+              400,
+              401,
+              403,
+              422
+            ],
+            "handled_correctly": true
+          },
+          {
+            "test": "Invalid JSON Data",
+            "status_code": 403,
+            "expected_codes": [
+              400,
+              401,
+              403,
+              422
+            ],
+            "handled_correctly": true
+          },
+          {
+            "test": "Non-existent Endpoint",
+            "status_code": 404,
+            "expected_codes": [
+              404
+            ],
+            "handled_correctly": true
+          }
+        ]
+      },
+      "error": null,
+      "warning": null,
+      "duration_ms": 25.25186538696289,
+      "timestamp": "2025-10-12T18:32:47.445218"
+    },
+    "Performance Integration": {
+      "success": true,
+      "details": {
+        "concurrent_requests": 10,
+        "success_rate": "100.0%",
+        "avg_response_time_ms": "2068.6",
+        "performance_acceptable": true
+      },
+      "error": null,
+      "warning": null,
+      "duration_ms": 2499.4916915893555,
+      "timestamp": "2025-10-12T18:32:49.949452"
+    },
+    "Security Integration": {
+      "success": true,
+      "details": {
+        "tests_run": 3,
+        "security_measures_present": true,
+        "results": [
+          {
+            "test": "CORS Headers",
+            "status_code": 405,
+            "cors_configured": false,
+            "headers": {
+              "Access-Control-Allow-Origin": null,
+              "Access-Control-Allow-Methods": null,
+              "Access-Control-Allow-Headers": null
+            }
+          },
+          {
+            "test": "Security Headers",
+            "status_code": 200,
+            "has_security_headers": true,
+            "headers": {
+              "X-Content-Type-Options": "nosniff",
+              "X-Frame-Options": "DENY",
+              "X-XSS-Protection": "1; mode=block",
+              "Strict-Transport-Security": "max-age=31536000; includeSubDomains"
+            }
+          },
+          {
+            "test": "File Size Limits",
+            "status_code": 413,
+            "size_limit_enforced": true,
+            "file_size_mb": 11
+          }
+        ]
+      },
+      "error": null,
+      "warning": null,
+      "duration_ms": 108.64067077636719,
+      "timestamp": "2025-10-12T18:32:50.069289"
+    },
+    "Data Flow Integration": {
+      "success": true,
+      "details": {
+        "endpoints_tested": 3,
+        "consistent_responses": true,
+        "results": [
+          {
+            "endpoint": "Recipe Generation",
+            "status_code": 403,
+            "has_json_response": true,
+            "has_error_structure": true,
+            "content_type": "application/json",
+            "response_size": 30
+          },
+          {
+            "endpoint": "Receipt Upload",
+            "status_code": 403,
+            "has_json_response": true,
+            "has_error_structure": true,
+            "content_type": "application/json",
+            "response_size": 30
+          },
+          {
+            "endpoint": "Health Check",
+            "status_code": 200,
+            "has_json_response": true,
+            "has_error_structure": true,
+            "content_type": "application/json",
+            "response_size": 140
+          }
+        ]
+      },
+      "error": null,
+      "warning": null,
+      "duration_ms": 109.23647880554199,
+      "timestamp": "2025-10-12T18:32:50.197985"
+    },
+    "Frontend-Backend Integration": {
+      "success": true,
+      "details": {
+        "tests_run": 3,
+        "all_passed": true,
+        "results": [
+          {
+            "test": "Frontend Accessibility",
+            "status_code": 200,
+            "success": true,
+            "content_type": "text/html"
+          },
+          {
+            "test": "CORS Configuration",
+            "status_code": 405,
+            "cors_configured": true,
+            "allowed_origin": "http://localhost:3002",
+            "success": true
+          },
+          {
+            "test": "API Response Structure",
+            "status_code": 200,
+            "has_expected_structure": true,
+            "response_fields": [
+              "status",
+              "message",
+              "database_connected",
+              "timestamp"
+            ],
+            "success": true
+          }
+        ]
+      },
+      "error": null,
+      "warning": null,
+      "duration_ms": 99.05576705932617,
+      "timestamp": "2025-10-12T18:32:50.308700"
+    }
+  },
+  "diagnostics": {
+    "system_health": [
+      {
+        "timestamp": "2025-10-12T18:32:46.399536",
+        "data": {
+          "api_status": "healthy",
+          "database_connected": true,
+          "response_time_ms": 19528.058528900146
+        }
+      }
+    ],
+    "database_connectivity": [
+      {
+        "timestamp": "2025-10-12T18:32:46.587336",
+        "data": {
+          "status": "healthy",
+          "message": "Database connection is healthy",
+          "database_connected": true,
+          "connection_stats": {
+            "status": "connected",
+            "current_connections": 3,
+            "available_connections": 497,
+            "total_created": 18235,
+            "last_health_check": 1760229728.605682,
+            "health_check_interval": 30
+          },
+          "timestamp": 1760293966.5825706
+        }
+      }
+    ],
+    "authentication_requirements": [
+      {
+        "timestamp": "2025-10-12T18:32:46.866573",
+        "data": {
+          "Receipt Upload": {
+            "endpoint": "/receipts/upload",
+            "method": "POST",
+            "status_code": 403,
+            "is_protected": true
+          },
+          "Meal Photo Analysis": {
+            "endpoint": "/recipes/from-photo",
+            "method": "POST",
+            "status_code": 403,
+            "is_protected": true
+          },
+          "AI Recipe Generation": {
+            "endpoint": "/recipes/generate-from-ingredients",
+            "method": "POST",
+            "status_code": 403,
+            "is_protected": true
+          },
+          "AI Service Status": {
+            "endpoint": "/recipes/ai-service-status",
+            "method": "GET",
+            "status_code": 403,
+            "is_protected": true
+          },
+          "Leftover Suggestions": {
+            "endpoint": "/leftovers/suggestions",
+            "method": "GET",
+            "status_code": 403,
+            "is_protected": true
+          }
+        }
+      }
+    ],
+    "receipt_workflow": [
+      {
+        "timestamp": "2025-10-12T18:32:47.175830",
+        "data": {
+          "upload_endpoint_exists": true,
+          "requires_auth": true,
+          "file_size_bytes": 25433
+        }
+      }
+    ],
+    "pic_to_recipe_workflow": [
+      {
+        "timestamp": "2025-10-12T18:32:47.209674",
+        "data": {
+          "photo_endpoint_exists": true,
+          "requires_auth": true,
+          "file_size_bytes": 10182
+        }
+      }
+    ],
+    "service_integration": [
+      {
+        "timestamp": "2025-10-12T18:32:47.416452",
+        "data": {
+          "service_tests": [
+            {
+              "service": "Main Health Check",
+              "status_code": 200,
+              "success": true,
+              "response_time_ms": 50.344
+            },
+            {
+              "service": "Database Health Check",
+              "status_code": 200,
+              "success": true,
+              "response_time_ms": 131.02
+            }
+          ]
+        }
+      }
+    ],
+    "error_handling": [
+      {
+        "timestamp": "2025-10-12T18:32:47.445147",
+        "data": {
+          "error_tests": [
+            {
+              "test": "Invalid File Type",
+              "status_code": 403,
+              "expected_codes": [
+                400,
+                401,
+                403,
+                422
+              ],
+              "handled_correctly": true
+            },
+            {
+              "test": "Invalid JSON Data",
+              "status_code": 403,
+              "expected_codes": [
+                400,
+                401,
+                403,
+                422
+              ],
+              "handled_correctly": true
+            },
+            {
+              "test": "Non-existent Endpoint",
+              "status_code": 404,
+              "expected_codes": [
+                404
+              ],
+              "handled_correctly": true
+            }
+          ]
+        }
+      }
+    ],
+    "performance": [
+      {
+        "timestamp": "2025-10-12T18:32:49.949208",
+        "data": {
+          "concurrent_requests": 10,
+          "successful_requests": 10,
+          "success_rate": 1.0,
+          "avg_response_time_ms": 2068.6455726623535,
+          "results": [
+            {
+              "success": true,
+              "duration_ms": 56.90741539001465,
+              "status_code": 200
+            },
+            {
+              "success": true,
+              "duration_ms": 2099.987506866455,
+              "status_code": 200
+            },
+            {
+              "success": true,
+              "duration_ms": 2153.6009311676025,
+              "status_code": 200
+            },
+            {
+              "success": true,
+              "duration_ms": 2187.7872943878174,
+              "status_code": 200
+            },
+            {
+              "success": true,
+              "duration_ms": 2255.6374073028564,
+              "status_code": 200
+            },
+            {
+              "success": true,
+              "duration_ms": 2290.8356189727783,
+              "status_code": 200
+            },
+            {
+              "success": true,
+              "duration_ms": 2333.181858062744,
+              "status_code": 200
+            },
+            {
+              "success": true,
+              "duration_ms": 2382.3978900909424,
+              "status_code": 200
+            },
+            {
+              "success": true,
+              "duration_ms": 2463.312864303589,
+              "status_code": 200
+            },
+            {
+              "success": true,
+              "duration_ms": 2462.8069400787354,
+              "status_code": 200
+            }
+          ]
+        }
+      }
+    ],
+    "security": [
+      {
+        "timestamp": "2025-10-12T18:32:50.069104",
+        "data": {
+          "security_tests": [
+            {
+              "test": "CORS Headers",
+              "status_code": 405,
+              "cors_configured": false,
+              "headers": {
+                "Access-Control-Allow-Origin": null,
+                "Access-Control-Allow-Methods": null,
+                "Access-Control-Allow-Headers": null
+              }
+            },
+            {
+              "test": "Security Headers",
+              "status_code": 200,
+              "has_security_headers": true,
+              "headers": {
+                "X-Content-Type-Options": "nosniff",
+                "X-Frame-Options": "DENY",
+                "X-XSS-Protection": "1; mode=block",
+                "Strict-Transport-Security": "max-age=31536000; includeSubDomains"
+              }
+            },
+            {
+              "test": "File Size Limits",
+              "status_code": 413,
+              "size_limit_enforced": true,
+              "file_size_mb": 11
+            }
+          ]
+        }
+      }
+    ],
+    "data_flow": [
+      {
+        "timestamp": "2025-10-12T18:32:50.197874",
+        "data": {
+          "data_flow_tests": [
+            {
+              "endpoint": "Recipe Generation",
+              "status_code": 403,
+              "has_json_response": true,
+              "has_error_structure": true,
+              "content_type": "application/json",
+              "response_size": 30
+            },
+            {
+              "endpoint": "Receipt Upload",
+              "status_code": 403,
+              "has_json_response": true,
+              "has_error_structure": true,
+              "content_type": "application/json",
+              "response_size": 30
+            },
+            {
+              "endpoint": "Health Check",
+              "status_code": 200,
+              "has_json_response": true,
+              "has_error_structure": true,
+              "content_type": "application/json",
+              "response_size": 140
+            }
+          ]
+        }
+      }
+    ],
+    "frontend_backend_integration": [
+      {
+        "timestamp": "2025-10-12T18:32:50.308554",
+        "data": {
+          "integration_tests": [
+            {
+              "test": "Frontend Accessibility",
+              "status_code": 200,
+              "success": true,
+              "content_type": "text/html"
+            },
+            {
+              "test": "CORS Configuration",
+              "status_code": 405,
+              "cors_configured": true,
+              "allowed_origin": "http://localhost:3002",
+              "success": true
+            },
+            {
+              "test": "API Response Structure",
+              "status_code": 200,
+              "has_expected_structure": true,
+              "response_fields": [
+                "status",
+                "message",
+                "database_connected",
+                "timestamp"
+              ],
+              "success": true
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "performance_metrics": {
+    "total_duration_seconds": 23.447416305541992,
+    "tests_per_second": 0.511783466614345,
+    "average_test_duration": 1.953951358795166
+  },
+  "summary": {
+    "total_tests": 12,
+    "passed": 12,
+    "failed": 0,
+    "errors": [],
+    "warnings": []
+  },
+  "test_completion_time": "2025-10-12T18:32:50.329673",
+  "total_duration_seconds": 23.447416305541992
+}

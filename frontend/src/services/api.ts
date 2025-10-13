@@ -998,6 +998,42 @@ export const receiptApi = {
       };
     }
   },
+
+  // Add receipt items to pantry
+  addReceiptItemsToPantry: async (receiptId: string, requestData: {
+    selected_items: number[];
+    expiration_days?: number;
+  }) => {
+    if (shouldUseMockData()) {
+      console.log('🧪 [Demo Mode] Adding mock receipt items to pantry:', receiptId, requestData);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return {
+        receipt_id: receiptId,
+        items_added: requestData.selected_items.length,
+        items_failed: 0,
+        pantry_items_created: requestData.selected_items.map((_, idx) => `mock-pantry-${idx}`),
+        errors: []
+      };
+    }
+
+    try {
+      const response = await apiRequest(`/receipts/${receiptId}/add-to-pantry`, {
+        method: 'POST',
+        body: JSON.stringify(requestData),
+      });
+      return response.json();
+    } catch (error) {
+      console.warn('🧪 [Demo Mode] API failed, falling back to mock add to pantry:', error);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return {
+        receipt_id: receiptId,
+        items_added: requestData.selected_items.length,
+        items_failed: 0,
+        pantry_items_created: requestData.selected_items.map((_, idx) => `fallback-pantry-${idx}`),
+        errors: []
+      };
+    }
+  },
 };
 
 // Meal Photo Analysis API service

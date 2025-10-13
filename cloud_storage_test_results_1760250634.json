@@ -1,0 +1,155 @@
+{
+  "timestamp": "2025-10-12T00:30:34.726616",
+  "tests": {
+    "environment_configuration": {
+      "status": "warning",
+      "details": {
+        "environment_variables": {
+          "CLOUD_STORAGE_ENABLED": "false",
+          "CLOUD_STORAGE_FALLBACK_LOCAL": "true",
+          "AWS_ACCESS_KEY_ID": "",
+          "AWS_SECRET_ACCESS_KEY": "",
+          "AWS_REGION": "us-east-1",
+          "S3_BUCKET_NAME": "",
+          "S3_BUCKET_PREFIX": "receipts/"
+        }
+      },
+      "issues": [
+        "Cloud storage is disabled",
+        "AWS Access Key ID not configured",
+        "AWS Secret Access Key not configured",
+        "S3 bucket name not configured"
+      ],
+      "recommendations": [
+        "Enable cloud storage for production",
+        "Configure AWS credentials for S3 access",
+        "Configure AWS secret key for S3 access",
+        "Configure S3 bucket for file storage"
+      ]
+    },
+    "storage_service_initialization": {
+      "status": "warning",
+      "details": {
+        "enabled": false,
+        "fallback_to_local": true,
+        "s3_client_available": false,
+        "cloud_storage_enabled": false,
+        "boto3_available": true
+      },
+      "issues": [
+        "Cloud storage service is disabled"
+      ],
+      "recommendations": [
+        "Enable cloud storage in environment configuration"
+      ]
+    },
+    "local_storage_functionality": {
+      "status": "passed",
+      "details": {
+        "uploads_directory_exists": true,
+        "existing_files_count": 7,
+        "total_size_mb": 2.7847232818603516,
+        "local_upload_test": "passed",
+        "test_file_path": "uploads\\e4badaf0-00fd-4e40-b682-2c40d2ff207a.txt",
+        "local_delete_test": "passed"
+      },
+      "issues": [],
+      "recommendations": []
+    },
+    "cloud_storage_configuration": {
+      "status": "warning",
+      "details": {
+        "aws_region": "us-east-1",
+        "s3_bucket_name": "Not configured",
+        "s3_bucket_prefix": "receipts/",
+        "credentials_configured": false
+      },
+      "issues": [
+        "Cloud storage is disabled"
+      ],
+      "recommendations": [
+        "Enable cloud storage for production deployment"
+      ]
+    },
+    "file_operations": {
+      "status": "passed",
+      "details": {
+        "upload_test": "passed",
+        "file_url": "uploads\\f09a1ccf-1aca-42be-be05-2d1c3ac6082c.jpg",
+        "storage_type": "local",
+        "presigned_url_test": "passed",
+        "file_info_test": "skipped",
+        "delete_test": "passed"
+      },
+      "issues": [],
+      "recommendations": []
+    },
+    "security_configuration": {
+      "status": "passed",
+      "details": {
+        "file_path_validation": "implemented",
+        "user_based_organization": true,
+        "presigned_url_support": "implemented"
+      },
+      "issues": [],
+      "recommendations": [
+        "Enable cloud storage with proper IAM roles for production",
+        "Implement file type validation in upload endpoints",
+        "Add virus scanning for uploaded files",
+        "Configure S3 bucket policies for restricted access",
+        "Enable S3 server-side encryption",
+        "Set up CloudFront for secure file delivery",
+        "Implement file size limits and rate limiting"
+      ]
+    },
+    "production_readiness": {
+      "status": "warning",
+      "details": {
+        "configuration_complete": false,
+        "fallback_enabled": true,
+        "error_handling": "implemented"
+      },
+      "issues": [
+        "Cloud storage configuration incomplete"
+      ],
+      "recommendations": [
+        "Complete cloud storage configuration for production",
+        "Set up S3 bucket with proper lifecycle policies",
+        "Configure CloudWatch monitoring for storage operations",
+        "Implement backup and disaster recovery procedures",
+        "Set up automated testing for storage functionality",
+        "Configure environment-specific storage buckets",
+        "Implement file cleanup procedures for old uploads"
+      ]
+    }
+  },
+  "summary": {
+    "total_tests": 7,
+    "passed_tests": 3,
+    "warning_tests": 4,
+    "failed_tests": 0,
+    "overall_status": "passed"
+  },
+  "recommendations": [
+    "Enable cloud storage for production",
+    "Configure AWS credentials for S3 access",
+    "Configure AWS secret key for S3 access",
+    "Configure S3 bucket for file storage",
+    "Enable cloud storage in environment configuration",
+    "Enable cloud storage for production deployment",
+    "Enable cloud storage with proper IAM roles for production",
+    "Implement file type validation in upload endpoints",
+    "Add virus scanning for uploaded files",
+    "Configure S3 bucket policies for restricted access",
+    "Enable S3 server-side encryption",
+    "Set up CloudFront for secure file delivery",
+    "Implement file size limits and rate limiting",
+    "Complete cloud storage configuration for production",
+    "Set up S3 bucket with proper lifecycle policies",
+    "Configure CloudWatch monitoring for storage operations",
+    "Implement backup and disaster recovery procedures",
+    "Set up automated testing for storage functionality",
+    "Configure environment-specific storage buckets",
+    "Implement file cleanup procedures for old uploads"
+  ]
+}

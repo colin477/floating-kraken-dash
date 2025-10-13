@@ -116,25 +116,32 @@ async def database_health_check():
 
 @router.get("/storage")
 async def storage_health_check():
-    """Check cloud storage service health"""
+    """Enhanced cloud storage service health check"""
     try:
         from app.utils.cloud_storage import cloud_storage_service
+        from app.utils.storage_metrics import storage_health_monitor
+
+        # Get comprehensive health check
+        health_data = await storage_health_monitor.check_storage_health(cloud_storage_service)
         
-        # Get storage service status
-        storage_type = "local" if not hasattr(cloud_storage_service, 'client') or cloud_storage_service.client is None else "cloud"
+        # Add basic compatibility fields for existing clients
+        health_data["message"] = f"Storage service is {health_data['overall_status']}"
+        health_data["storage_type"] = "cloud" if cloud_storage_service.is_cloud_storage_enabled() else "local"
+        health_data["fallback_enabled"] = getattr(cloud_storage_service, 'fallback_to_local', True)
         
-        return {
-            "status": "healthy",
-            "message": f"Storage service is operational ({storage_type})",
-            "storage_type": storage_type,
-            "fallback_enabled": getattr(cloud_storage_service, 'fallback_enabled', True)
-        }
+        # Set HTTP status based on health
+        health_data["status"] = health_data["overall_status"]
         
+        return health_data
+
     except Exception as e:
         return {
             "status": "unhealthy",
+            "overall_status": "unhealthy",
             "message": f"Storage service check failed: {str(e)}",
-            "storage_type": "unknown"
+            "storage_type": "unknown",
+            "error": str(e),
+            "timestamp": "2025-01-01T00:00:00Z"
         }
 
 

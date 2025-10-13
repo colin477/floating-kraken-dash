@@ -1,0 +1,87 @@
+{
+  "timestamp": "2025-10-12T20:20:54.802871",
+  "tests_run": 6,
+  "tests_passed": 5,
+  "tests_failed": 1,
+  "errors": [
+    "Add Items to Pantry - Empty Selection: Expected 400/422 status for empty selection, got 200"
+  ],
+  "detailed_results": {
+    "Receipt Upload and Processing": {
+      "success": true,
+      "timestamp": "2025-10-12T20:21:18.146266",
+      "receipt_id": "68ec621d13e406a5938bd7dd",
+      "processing_status": "completed",
+      "items_count": 9,
+      "message": "Receipt processed successfully. Extracted 9 items."
+    },
+    "Receipt Detail Retrieval": {
+      "success": true,
+      "timestamp": "2025-10-12T20:21:18.262171",
+      "receipt_id": "68ec621d13e406a5938bd7dd",
+      "store_name": "GROCERY MART",
+      "items_count": 9,
+      "processing_status": "completed",
+      "processed": true
+    },
+    "Add Items to Pantry - Success Case": {
+      "success": true,
+      "timestamp": "2025-10-12T20:21:18.836504",
+      "selected_items": [
+        0,
+        1,
+        2
+      ],
+      "items_added": 3,
+      "items_failed": 0,
+      "pantry_items_created": [
+        "68ec621e13e406a5938bd7de",
+        "68ec621e13e406a5938bd7df",
+        "68ec621e13e406a5938bd7e0"
+      ],
+      "errors": []
+    },
+    "Add Items to Pantry - Invalid Indices": {
+      "success": true,
+      "timestamp": "2025-10-12T20:21:18.951204",
+      "status_code": 422,
+      "error_detail": "Invalid item indices: [9, 10, -1]. Receipt has 9 items (indices 0-8)",
+      "invalid_indices": [
+        9,
+        10,
+        -1
+      ],
+      "proper_error_handling": true
+    },
+    "Add Items to Pantry - Empty Selection": {
+      "success": false,
+      "timestamp": "2025-10-12T20:21:19.093657",
+      "status_code": 200,
+      "error": "Expected 400/422 status for empty selection, got 200",
+      "response": "{\"receipt_id\":\"68ec621d13e406a5938bd7dd\",\"items_added\":0,\"items_failed\":0,\"pantry_items_created\":[],\"errors\":[]}"
+    },
+    "Frontend-Backend Data Flow Validation": {
+      "success": true,
+      "timestamp": "2025-10-12T20:21:19.314314",
+      "request_format": {
+        "selected_items": [
+          0,
+          1
+        ],
+        "expiration_days": 7
+      },
+      "response_format": {
+        "receipt_id": "68ec621d13e406a5938bd7dd",
+        "items_added": 0,
+        "items_failed": 2,
+        "pantry_items_created": [],
+        "errors": [
+          "Failed to create pantry item for: Anytown, ST",
+          "Failed to create pantry item for: BANANAS"
+        ]
+      },
+      "data_flow_valid": true,
+      "items_processed": 0
+    }
+  }
+}

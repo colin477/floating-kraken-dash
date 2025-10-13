@@ -1,5 +1,6 @@
 """
 Database configuration and connection management for MongoDB Atlas
+Enhanced with DNS resolution resilience for Windows environments
 """
 
 import os
@@ -24,8 +25,24 @@ class Database:
     _connection_healthy = False
     _last_health_check = 0
     _health_check_interval = 30  # seconds
+    _use_resilient_connection = True  # Enable resilient connection by default
 
 db = Database()
+
+# Import resilient database functions
+try:
+    from app.database_resilience_fix import (
+        resilient_db,
+        connect_to_mongo_resilient,
+        get_database_resilient,
+        get_collection_resilient,
+        close_mongo_connection_resilient,
+        check_connection_health_resilient
+    )
+    logger.info("Resilient database module loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load resilient database module: {e}")
+    db._use_resilient_connection = False
 
 def _is_production_environment() -> bool:
     """Detect if running in production environment (Render deployment)"""
@@ -58,7 +75,31 @@ async def get_database():
     return db.database
 
 async def connect_to_mongo():
-    """Create database connection with retry logic and production-optimized timeouts"""
+    """Create database connection with enhanced resilience for DNS resolution issues"""
+    # Try resilient connection first if available
+    if db._use_resilient_connection:
+        try:
+            logger.info("Using resilient MongoDB connection method")
+            await connect_to_mongo_resilient()
+            
+            # Update legacy db object for backward compatibility
+            db.client = resilient_db.client
+            db.database = resilient_db.database
+            db._connection_healthy = resilient_db._connection_healthy
+            db._last_health_check = resilient_db._last_health_check
+            
+            logger.info("Resilient MongoDB connection established successfully")
+            return
+            
+        except Exception as e:
+            logger.warning(f"Resilient connection failed, falling back to legacy method: {e}")
+            db._use_resilient_connection = False
+    
+    # Fallback to legacy connection method
+    await _connect_to_mongo_legacy()
+
+async def _connect_to_mongo_legacy():
+    """Legacy MongoDB connection method (fallback)"""
     mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
     database_name = os.getenv("DATABASE_NAME", "ez_eatin")
     
@@ -70,7 +111,7 @@ async def connect_to_mongo():
     retry_delay = float(os.getenv("MONGODB_RETRY_DELAY", "3.0"))
     
     logger.info(
-        f"Attempting to connect to MongoDB at {mongodb_uri[:50]}...",
+        f"Using legacy connection method for MongoDB at {mongodb_uri[:50]}...",
         is_production=is_production,
         max_retries=max_retries,
         retry_delay=retry_delay
@@ -113,7 +154,7 @@ async def connect_to_mongo():
             try:
                 server_info = await db.client.server_info()
                 logger.info(
-                    "MongoDB connection established successfully",
+                    "Legacy MongoDB connection established successfully",
                     database=database_name,
                     mongodb_version=server_info.get('version', 'Unknown'),
                     attempt=attempt + 1
@@ -132,148 +173,47 @@ async def connect_to_mongo():
             db._last_health_check = time.time()
             return
             
-        except asyncio.TimeoutError as e:
-            error_msg = f"MongoDB connection timeout on attempt {attempt + 1}"
-            
-            # Enhanced production error logging
-            logger.error(
-                "MongoDB connection timeout details",
-                attempt=attempt + 1,
-                max_retries=max_retries,
-                is_production=is_production,
-                timeout_duration=ping_timeout,
-                mongodb_uri_prefix=mongodb_uri[:50],
-                error=str(e)
-            )
-            
-            if attempt < max_retries:
-                # Add random jitter to prevent thundering herd
-                jitter = random.uniform(0.1, 0.5) * retry_delay
-                total_delay = retry_delay + jitter
-                logger.warning(
-                    f"{error_msg}. Retrying in {total_delay:.2f} seconds",
-                    base_delay=retry_delay,
-                    jitter=jitter,
-                    total_delay=total_delay,
-                    remaining_attempts=max_retries - attempt
-                )
-                await asyncio.sleep(total_delay)
-                retry_delay *= 2
-            else:
-                logger.error(
-                    f"{error_msg}. Max retries exceeded.",
-                    total_attempts=max_retries + 1,
-                    is_production=is_production,
-                    final_timeout=ping_timeout
-                )
-                raise ConnectionFailure(f"Connection timeout after {max_retries + 1} attempts: {e}")
-                
-        except ConnectionFailure as e:
-            error_msg = f"MongoDB connection failed on attempt {attempt + 1}: {e}"
-            
-            # Enhanced production error logging for ConnectionFailure
-            logger.error(
-                "MongoDB ConnectionFailure details",
-                attempt=attempt + 1,
-                max_retries=max_retries,
-                is_production=is_production,
-                mongodb_uri_prefix=mongodb_uri[:50],
-                error_type=type(e).__name__,
-                error_message=str(e)
-            )
-            
-            # Check for specific SSL/TLS errors
-            if any(ssl_indicator in str(e).lower() for ssl_indicator in ['ssl', 'tls', 'certificate', 'handshake']):
-                logger.error(
-                    "SSL/TLS connection error detected",
-                    error=str(e),
-                    is_production=is_production,
-                    attempt=attempt + 1
-                )
-                if attempt < max_retries:
-                    logger.warning("SSL/TLS error detected. Retrying with current configuration...")
-                else:
-                    logger.error("SSL/TLS connection failed after all retries. Check SSL configuration and network connectivity.")
-            
-            if attempt < max_retries:
-                # Add random jitter to prevent thundering herd
-                jitter = random.uniform(0.1, 0.5) * retry_delay
-                total_delay = retry_delay + jitter
-                logger.warning(
-                    f"{error_msg} Retrying in {total_delay:.2f} seconds",
-                    base_delay=retry_delay,
-                    jitter=jitter,
-                    total_delay=total_delay,
-                    remaining_attempts=max_retries - attempt
-                )
-                await asyncio.sleep(total_delay)
-                retry_delay *= 2
-            else:
-                logger.error(
-                    f"Failed to connect to MongoDB after {max_retries + 1} attempts",
-                    total_attempts=max_retries + 1,
-                    is_production=is_production,
-                    final_error=str(e)
-                )
-                raise
-                
         except Exception as e:
-            error_msg = f"Unexpected MongoDB connection error on attempt {attempt + 1}: {e}"
-            
-            # Enhanced production error logging for unexpected errors
-            logger.error(
-                "Unexpected MongoDB connection error",
-                attempt=attempt + 1,
-                max_retries=max_retries,
-                is_production=is_production,
-                mongodb_uri_prefix=mongodb_uri[:50],
-                error_type=type(e).__name__,
-                error_message=str(e)
-            )
-            
-            # Check for DNS resolution errors
-            if 'getaddrinfo failed' in str(e) or 'Name or service not known' in str(e):
-                logger.error(
-                    "DNS resolution failed",
-                    error=str(e),
-                    is_production=is_production,
-                    attempt=attempt + 1
-                )
-                if attempt < max_retries:
-                    logger.warning("DNS error detected. Retrying...")
-                else:
-                    logger.error("DNS resolution failed after all retries. Check network configuration.")
+            error_msg = f"Legacy MongoDB connection error on attempt {attempt + 1}: {e}"
+            logger.error(error_msg)
             
             if attempt < max_retries:
                 # Add random jitter to prevent thundering herd
                 jitter = random.uniform(0.1, 0.5) * retry_delay
                 total_delay = retry_delay + jitter
-                logger.warning(
-                    f"Retrying in {total_delay:.2f} seconds",
-                    base_delay=retry_delay,
-                    jitter=jitter,
-                    total_delay=total_delay,
-                    remaining_attempts=max_retries - attempt
-                )
+                logger.warning(f"Retrying in {total_delay:.2f} seconds")
                 await asyncio.sleep(total_delay)
                 retry_delay *= 2
             else:
-                logger.error(
-                    "All MongoDB connection attempts failed",
-                    total_attempts=max_retries + 1,
-                    is_production=is_production,
-                    final_error=str(e)
-                )
+                logger.error(f"All legacy connection attempts failed after {max_retries + 1} attempts")
                 raise
 
 async def close_mongo_connection():
-    """Close database connection"""
+    """Close database connection with resilience support"""
+    if db._use_resilient_connection:
+        try:
+            await close_mongo_connection_resilient()
+        except Exception as e:
+            logger.warning(f"Error closing resilient connection: {e}")
+    
     if db.client:
         db.client.close()
+        db.client = None
+        db.database = None
+        db._connection_healthy = False
         logger.info("Disconnected from MongoDB")
 
 async def check_connection_health() -> bool:
-    """Check if MongoDB connection is healthy with periodic health checks"""
+    """Check if MongoDB connection is healthy with enhanced resilience"""
+    # Use resilient health check if available
+    if db._use_resilient_connection:
+        try:
+            return await check_connection_health_resilient()
+        except Exception as e:
+            logger.warning(f"Resilient health check failed, using legacy method: {e}")
+            db._use_resilient_connection = False
+    
+    # Legacy health check
     current_time = time.time()
     
     # If we recently checked and connection was healthy, return cached result
@@ -302,7 +242,16 @@ async def check_connection_health() -> bool:
         return False
 
 async def get_collection(collection_name: str):
-    """Get a specific collection with connection health check"""
+    """Get a specific collection with enhanced resilience"""
+    # Use resilient collection getter if available
+    if db._use_resilient_connection:
+        try:
+            return await get_collection_resilient(collection_name)
+        except Exception as e:
+            logger.warning(f"Resilient collection access failed, using legacy method: {e}")
+            db._use_resilient_connection = False
+    
+    # Legacy collection access
     # Check connection health before returning collection
     if not await check_connection_health():
         logger.warning("MongoDB connection unhealthy, attempting reconnection...")

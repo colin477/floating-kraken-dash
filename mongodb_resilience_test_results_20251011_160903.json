@@ -1,0 +1,73 @@
+{
+  "timestamp": "2025-10-11T16:08:57.370453",
+  "test_results": {
+    "resilient_module_import": {
+      "success": true,
+      "details": "Resilient database module imported successfully",
+      "duration_seconds": 0,
+      "timestamp": "2025-10-11T16:08:58.808325"
+    },
+    "resilient_connection": {
+      "success": true,
+      "details": "Resilient connection established, found 12 collections",
+      "duration_seconds": 0.999037504196167,
+      "timestamp": "2025-10-11T16:08:59.847463"
+    },
+    "resilient_health_check": {
+      "success": true,
+      "details": "Health check passed",
+      "duration_seconds": 1.3589859008789062e-05,
+      "timestamp": "2025-10-11T16:08:59.847939"
+    },
+    "legacy_integration": {
+      "success": false,
+      "details": "Legacy integration threw exception",
+      "duration_seconds": 0,
+      "timestamp": "2025-10-11T16:09:00.601229",
+      "error": "Collection objects do not implement truth value testing or bool(). Please compare with None instead: collection is not None"
+    },
+    "connection_stability": {
+      "success": false,
+      "details": "Stability test: 5/10 operations successful (50.0%), avg duration: 0.000s",
+      "duration_seconds": 8.7738037109375e-05,
+      "timestamp": "2025-10-11T16:09:01.219821"
+    },
+    "error_recovery": {
+      "success": true,
+      "details": "Error recovery successful",
+      "duration_seconds": 0.04396963119506836,
+      "timestamp": "2025-10-11T16:09:01.265157"
+    },
+    "performance_analysis": {
+      "success": true,
+      "details": "Performance analysis: avg 0.000s, min 0.000s, max 0.000s",
+      "duration_seconds": 1.6689300537109375e-05,
+      "timestamp": "2025-10-11T16:09:03.778517"
+    }
+  },
+  "performance_metrics": {
+    "stability_test": {
+      "operations_count": 10,
+      "successful_operations": 5,
+      "success_rate": 0.5,
+      "average_duration": 8.7738037109375e-06,
+      "total_duration": 8.7738037109375e-05
+    },
+    "health_check_performance": {
+      "average_duration": 1.6689300537109375e-05,
+      "min_duration": 6.198883056640625e-06,
+      "max_duration": 3.528594970703125e-05,
+      "measurements": [
+        6.198883056640625e-06,
+        1.2159347534179688e-05,
+        3.528594970703125e-05,
+        1.52587890625e-05,
+        1.4543533325195312e-05
+      ]
+    }
+  },
+  "error_analysis": {},
+  "recommendations": [
+    "Investigate connection stability issues"
+  ]
+}

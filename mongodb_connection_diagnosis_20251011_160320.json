@@ -1,0 +1,123 @@
+{
+  "timestamp": "2025-10-11T16:02:45.196254",
+  "system_info": {
+    "platform": "Windows-11-10.0.26100-SP0",
+    "python_version": "3.13.3",
+    "architecture": [
+      "64bit",
+      "WindowsPE"
+    ],
+    "processor": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+    "hostname": "Colin-X1",
+    "fqdn": "Colin-X1.hsd1.ut.comcast.net",
+    "network_interfaces": {
+      "Local Area Connection* 1": [
+        "68-C6-AC-07-A4-0A",
+        "169.254.241.157",
+        "fe80::81d9:a036:64e5:75d7"
+      ],
+      "Local Area Connection* 2": [
+        "6A-C6-AC-07-A4-09",
+        "169.254.6.235",
+        "fe80::2f15:a74e:f364:a3ba"
+      ],
+      "Wi-Fi": [
+        "68-C6-AC-07-A4-09",
+        "10.0.0.88",
+        "2601:681:4000:72e0::ee26",
+        "2601:681:4000:72e0:ea6:23f2:94df:666e",
+        "2601:681:4000:72e0:c45e:c770:7233:cc68",
+        "fe80::bf1a:d4ef:8f2a:1eed"
+      ],
+      "vEthernet (Default Switch)": [
+        "00-15-5D-78-19-54",
+        "172.22.128.1",
+        "fe80::a49d:40d:738c:60b5"
+      ],
+      "Norton VPN": [
+        "169.254.125.75",
+        "fe80::6109:4177:1b30:1e0c"
+      ],
+      "Norton VPN OpenVPN Data Channel Offload": [
+        "169.254.191.25",
+        "fe80::6109:4177:1b30:1e0c"
+      ],
+      "Loopback Pseudo-Interface 1": [
+        "127.0.0.1",
+        "::1"
+      ]
+    }
+  },
+  "network_tests": {
+    "ping_test": {
+      "test": "ping_test",
+      "success": false,
+      "details": "Ping failed to cluster0.vcpyxwh.mongodb.net: ",
+      "timestamp": "2025-10-11T16:02:46.147068"
+    },
+    "nslookup_test": {
+      "test": "nslookup_test",
+      "success": true,
+      "details": "nslookup successful for cluster0.vcpyxwh.mongodb.net",
+      "timestamp": "2025-10-11T16:02:46.675513"
+    }
+  },
+  "dns_tests": {
+    "hostname_extraction": {
+      "test": "hostname_extraction",
+      "success": true,
+      "details": "Extracted hostname: cluster0.vcpyxwh.mongodb.net",
+      "timestamp": "2025-10-11T16:02:45.697305"
+    },
+    "dns_resolution": {
+      "test": "dns_resolution",
+      "success": false,
+      "details": "DNS resolution failed for cluster0.vcpyxwh.mongodb.net",
+      "timestamp": "2025-10-11T16:02:45.749708",
+      "error": "[Errno 11001] getaddrinfo failed"
+    }
+  },
+  "ssl_tests": {
+    "ssl_connection": {
+      "test": "ssl_connection",
+      "success": false,
+      "details": "SSL connection test failed",
+      "timestamp": "2025-10-11T16:02:45.854278",
+      "error": "[Errno 11001] getaddrinfo failed"
+    }
+  },
+  "mongodb_tests": {
+    "connection_basic": {
+      "test": "connection_basic",
+      "success": true,
+      "details": "Connection successful in 1.916s - MongoDB 8.0.14, 12 collections",
+      "timestamp": "2025-10-11T16:02:48.715661"
+    },
+    "connection_increased_timeouts": {
+      "test": "connection_increased_timeouts",
+      "success": true,
+      "details": "Connection successful in 0.640s - MongoDB 8.0.14, 12 collections",
+      "timestamp": "2025-10-11T16:02:49.489185"
+    },
+    "connection_no_ssl": {
+      "test": "connection_no_ssl",
+      "success": false,
+      "details": "Connection timeout",
+      "timestamp": "2025-10-11T16:03:19.579700",
+      "error": ""
+    },
+    "connection_minimal_pool": {
+      "test": "connection_minimal_pool",
+      "success": true,
+      "details": "Connection successful in 0.732s - MongoDB 8.0.14, 12 collections",
+      "timestamp": "2025-10-11T16:03:20.438785"
+    }
+  },
+  "recommendations": [
+    "Check DNS configuration and network connectivity",
+    "DNS resolution issues detected - check network configuration and DNS servers",
+    "Network connectivity issues detected - check firewall and network configuration",
+    "SSL/TLS issues detected - check certificate validation and SSL configuration",
+    "MongoDB connection issues detected - check credentials and connection parameters"
+  ]
+}
